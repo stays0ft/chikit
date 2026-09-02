@@ -369,7 +369,7 @@ private final class NotchMediaRemoteBridge {
         "kMRMediaRemoteNowPlayingApplicationDidChangeNotification",
     ]
 
-    private let queue = DispatchQueue(label: "com.vorssaint.utils.notch-now-playing", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "com.chikit.utils.notch-now-playing", qos: .userInitiated)
     private let handle: UnsafeMutableRawPointer?
     private let getInfo: InfoFunction?
     private let getPID: PIDFunction?
