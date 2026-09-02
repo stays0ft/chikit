@@ -6,7 +6,7 @@ import Darwin
 import Foundation
 
 /// Turns Dock's app/window switcher hotkeys off after explicit opt-in, and
-/// restores only keys Vorssaint found enabled before it changed them. The
+/// restores only keys Chikit found enabled before it changed them. The
 /// write-ahead marker lets a fresh process repair state left by a crash.
 enum SwitcherNativeHotkeys {
     private static let lock = NSLock()

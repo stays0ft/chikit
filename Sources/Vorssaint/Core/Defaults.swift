@@ -166,7 +166,7 @@ enum DefaultsKey {
     static let startupDidNotFinish = "startupDidNotFinish"
     static let bluetoothSleepEnabled = "bluetoothSleepEnabled"
     static let bluetoothSleepRestoreOnWake = "bluetoothSleepRestoreOnWake"
-    // Set only while Vorssaint owes a Bluetooth restore, so a Mac shut down
+    // Set only while Chikit owes a Bluetooth restore, so a Mac shut down
     // while asleep still gets it back on the next launch.
     static let bluetoothSleepRestorePending = "bluetoothSleepRestorePending"
     static let musicBlockEnabled = "musicBlockEnabled"
@@ -531,7 +531,7 @@ enum DefaultsKey {
     static let screenshotClipboardShortcutEnabled = "screenshotClipboardShortcutEnabled"
     static let screenshotClipboardShortcut = "screenshotClipboardShortcut"
     static let screenshotFreeze = "screenshotFreeze"
-    static let screenshotHideVorssaintWindows = "screenshotHideVorssaintWindows"
+    static let screenshotHideChikitWindows = "screenshotHideChikitWindows"
     static let screenshotSaveFolder = "screenshotSaveFolder"
     static let screenshotSaveSubfolder = "screenshotSaveSubfolder"
     static let screenshotFileNamePattern = "screenshotFileNamePattern"
@@ -718,7 +718,7 @@ enum KeepAwakeIconTint: String, CaseIterable, Identifiable {
 }
 
 enum KeepAwakeActiveIcon: String, CaseIterable, Identifiable {
-    case vorssaint, coffee, eye, moon, light
+    case chikit, coffee, eye, moon, light
 
     var id: String { rawValue }
 
@@ -730,7 +730,7 @@ enum KeepAwakeActiveIcon: String, CaseIterable, Identifiable {
 
     var systemSymbolName: String? {
         switch self {
-        case .vorssaint: return nil
+        case .chikit: return nil
         case .coffee: return "cup.and.saucer.fill"
         case .eye: return "eye.fill"
         case .moon: return "moon.fill"
@@ -745,13 +745,13 @@ enum KeepAwakeActiveIcon: String, CaseIterable, Identifiable {
         switch self {
         case .coffee: return 1
         case .light: return 0.5
-        case .vorssaint, .eye, .moon: return 0
+        case .chikit, .eye, .moon: return 0
         }
     }
 
     func title(_ strings: Strings) -> String {
         switch self {
-        case .vorssaint: return strings.keepAwakeActiveIconVorssaint
+        case .chikit: return strings.keepAwakeActiveIconChikit
         case .coffee: return strings.keepAwakeActiveIconCoffee
         case .eye: return strings.keepAwakeActiveIconEye
         case .moon: return strings.keepAwakeActiveIconMoon
@@ -830,7 +830,7 @@ enum Defaults {
         DefaultsKey.launchAtLoginWanted: false,
         DefaultsKey.keepAwakeShortcut: "control+option+command:40",
         DefaultsKey.keepAwakeIconTint: KeepAwakeIconTint.orange.rawValue,
-        DefaultsKey.keepAwakeActiveIcon: KeepAwakeActiveIcon.vorssaint.rawValue,
+        DefaultsKey.keepAwakeActiveIcon: KeepAwakeActiveIcon.chikit.rawValue,
         DefaultsKey.showCountdown: false,
         DefaultsKey.scrollInverterEnabled: false,
         DefaultsKey.scrollInverterHorizontalEnabled: false,
@@ -1267,7 +1267,7 @@ enum Defaults {
         DefaultsKey.screenshotClipboardShortcutEnabled: false,
         DefaultsKey.screenshotClipboardShortcut: GlobalShortcut.screenshotClipboardDefault.storageValue,
         DefaultsKey.screenshotFreeze: true,
-        DefaultsKey.screenshotHideVorssaintWindows: true,
+        DefaultsKey.screenshotHideChikitWindows: true,
         DefaultsKey.screenshotSaveFolder: "",
         DefaultsKey.screenshotSaveSubfolder: "",
         DefaultsKey.screenshotFileNamePattern: "",
@@ -1601,7 +1601,7 @@ enum Defaults {
     static func sanitizedKeepAwakeActiveIcon(_ rawValue: String?) -> KeepAwakeActiveIcon {
         guard let rawValue,
               let icon = KeepAwakeActiveIcon(rawValue: rawValue) else {
-            return .vorssaint
+            return .chikit
         }
         return icon
     }

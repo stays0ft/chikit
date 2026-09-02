@@ -16,7 +16,7 @@ enum ScreenshotCaptureEngine {
     /// Full-resolution capture of one display.
     static func captureDisplay(_ displayID: CGDirectDisplayID,
                                includePointer: Bool,
-                               hideVorssaintWindows: Bool,
+                               hideChikitWindows: Bool,
                                protectedWindowIDs: Set<CGWindowID>) async -> CGImage? {
         guard let content = try? await SCShareableContent.excludingDesktopWindows(
             false, onScreenWindowsOnly: true)
@@ -25,7 +25,7 @@ enum ScreenshotCaptureEngine {
         else { return nil }
 
         let ownWindows = excludedOwnWindows(in: content,
-                                            hideVorssaintWindows: hideVorssaintWindows,
+                                            hideChikitWindows: hideChikitWindows,
                                             protectedWindowIDs: protectedWindowIDs)
         return await captureDisplay(display,
                                     scale: screenScale(for: displayID),
@@ -36,7 +36,7 @@ enum ScreenshotCaptureEngine {
     static func captureDisplayRegion(displayID: CGDirectDisplayID,
                                      pixelRect: CGRect,
                                      includePointer: Bool,
-                                     hideVorssaintWindows: Bool,
+                                     hideChikitWindows: Bool,
                                      protectedWindowIDs: Set<CGWindowID>) async -> CGImage? {
         guard let content = try? await SCShareableContent.excludingDesktopWindows(
             false, onScreenWindowsOnly: true),
@@ -49,7 +49,7 @@ enum ScreenshotCaptureEngine {
         let clamped = ScreenshotSupport.clamp(pixelRect, to: displayPixels).integral
         guard !clamped.isEmpty else { return nil }
         let ownWindows = excludedOwnWindows(in: content,
-                                            hideVorssaintWindows: hideVorssaintWindows,
+                                            hideChikitWindows: hideChikitWindows,
                                             protectedWindowIDs: protectedWindowIDs)
         let filter = SCContentFilter(display: display, excludingWindows: ownWindows)
         let configuration = SCStreamConfiguration()
@@ -68,13 +68,13 @@ enum ScreenshotCaptureEngine {
     /// Captures every given screen, keyed by display id. Screens that fail
     /// are simply absent; the caller decides how to degrade.
     static func captureAllDisplays(includePointer: Bool,
-                                   hideVorssaintWindows: Bool,
+                                   hideChikitWindows: Bool,
                                    protectedWindowIDs: Set<CGWindowID>) async -> [CGDirectDisplayID: CGImage] {
         guard let content = try? await SCShareableContent.excludingDesktopWindows(
             false, onScreenWindowsOnly: true)
         else { return [:] }
         let ownWindows = excludedOwnWindows(in: content,
-                                            hideVorssaintWindows: hideVorssaintWindows,
+                                            hideChikitWindows: hideChikitWindows,
                                             protectedWindowIDs: protectedWindowIDs)
         var result: [CGDirectDisplayID: CGImage] = [:]
         for screen in NSScreen.screens {
@@ -95,13 +95,13 @@ enum ScreenshotCaptureEngine {
     /// The app's own windows a display capture must leave out, resolved
     /// against the same shareable-content snapshot the capture will use.
     private static func excludedOwnWindows(in content: SCShareableContent,
-                                           hideVorssaintWindows: Bool,
+                                           hideChikitWindows: Bool,
                                            protectedWindowIDs: Set<CGWindowID>) -> [SCWindow] {
         let ownWindowIDs = Set(content.windows.compactMap { window in
             window.owningApplication?.processID == getpid() ? window.windowID : nil
         })
         let excludedIDs = ScreenshotCapturePolicy.excludedWindowIDs(
-            hideVorssaintWindows: hideVorssaintWindows,
+            hideChikitWindows: hideChikitWindows,
             ownWindowIDs: ownWindowIDs,
             protectedWindowIDs: protectedWindowIDs)
         return content.windows.filter { excludedIDs.contains($0.windowID) }
@@ -313,7 +313,7 @@ enum ScreenshotCaptureEngine {
     /// On-screen windows a click can capture, front to back, in the window
     /// server's global top-left coordinates. Ordinary layer-zero windows from
     /// this process follow the visibility preference, except for capture UI.
-    static func pickableWindows(hideVorssaintWindows: Bool,
+    static func pickableWindows(hideChikitWindows: Bool,
                                 protectedWindowIDs: Set<CGWindowID>)
         -> [(id: CGWindowID, bounds: CGRect)] {
         guard let info = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements],
@@ -329,7 +329,7 @@ enum ScreenshotCaptureEngine {
             guard ScreenshotCapturePolicy.canPickWindow(
                 id,
                 isOwnWindow: pid == ownPID,
-                hideVorssaintWindows: hideVorssaintWindows,
+                hideChikitWindows: hideChikitWindows,
                 protectedWindowIDs: protectedWindowIDs)
             else { return nil }
             let bounds = CGRect(x: boundsDict["X"] ?? 0,

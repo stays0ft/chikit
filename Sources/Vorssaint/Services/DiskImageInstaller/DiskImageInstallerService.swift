@@ -46,7 +46,7 @@ final class DiskImageInstallerService {
         let output: Data
     }
 
-    private let workQueue = DispatchQueue(label: "com.vorssaint.utils.disk-image-installer",
+    private let workQueue = DispatchQueue(label: "com.chikit.utils.disk-image-installer",
                                           qos: .utility)
     private var mountObserver: NSObjectProtocol?
     private var pending: [Candidate] = []

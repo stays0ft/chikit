@@ -695,7 +695,7 @@ struct MetricsTests {
                     "org.nspasteboard.ConcealedType",
                     "the secret mark keeps the exact name the apps that write it use")
 
-        let pasteboardAccess = GeneralPasteboardAccess(label: "Vorssaint.Tests.PasteboardAccess")
+        let pasteboardAccess = GeneralPasteboardAccess(label: "Chikit.Tests.PasteboardAccess")
         let pasteboardGroup = DispatchGroup()
         let pasteboardStateLock = NSLock()
         var activePasteboardOperations = 0
@@ -1326,7 +1326,7 @@ struct MetricsTests {
                "launch, termination and mounted-volume changes refresh registered web handlers")
         expect(MouseNavigationSupport.shouldRefreshWebHandlers(
             isApplicationActivation: true, activatedPID: 41, ownPID: 41),
-               "activating Vorssaint refreshes registered web handlers")
+               "activating Chikit refreshes registered web handlers")
         expect(!MouseNavigationSupport.shouldRefreshWebHandlers(
             isApplicationActivation: true, activatedPID: 42, ownPID: 41),
                "activating another app does not repeat the handler lookup")
@@ -1891,7 +1891,7 @@ struct MetricsTests {
                                        compressorPages: 0, tagStoragePages: 0) == 16,
                "memory used clamps impossible used memory")
 
-        var vmStats = vorssaint_vm_statistics64_rev3_t()
+        var vmStats = chikit_vm_statistics64_rev3_t()
         vmStats.wire_count = 2
         vmStats.purgeable_count = 3
         vmStats.compressor_page_count = 4
@@ -2006,8 +2006,8 @@ struct MetricsTests {
                "keep awake shortcut defaults to Ctrl+Opt+Cmd+K")
         expect(registeredDefaults[DefaultsKey.keepAwakeIconTint] as? String == KeepAwakeIconTint.orange.rawValue,
                "keep-awake active icon tint defaults to orange")
-        expect(registeredDefaults[DefaultsKey.keepAwakeActiveIcon] as? String == KeepAwakeActiveIcon.vorssaint.rawValue,
-               "keep-awake active icon defaults to the Vorssaint glyph")
+        expect(registeredDefaults[DefaultsKey.keepAwakeActiveIcon] as? String == KeepAwakeActiveIcon.chikit.rawValue,
+               "keep-awake active icon defaults to the Chikit glyph")
         expect(registeredDefaults[DefaultsKey.keepAwakeMouseJiggleEnabled] as? Bool == false,
                "Keep Awake mouse movement is opt-in")
         expect(registeredDefaults[DefaultsKey.keepAwakeMouseJiggleInterval] as? Int == 5,
@@ -2022,8 +2022,8 @@ struct MetricsTests {
                "invalid keep-awake active icon tint falls back to orange")
         expect(Defaults.sanitizedKeepAwakeActiveIcon("coffee") == .coffee,
                "valid keep-awake active icon is preserved")
-        expect(Defaults.sanitizedKeepAwakeActiveIcon("bad") == .vorssaint,
-               "invalid keep-awake active icon falls back to the Vorssaint glyph")
+        expect(Defaults.sanitizedKeepAwakeActiveIcon("bad") == .chikit,
+               "invalid keep-awake active icon falls back to the Chikit glyph")
         expect(KeepAwakeActiveIcon.eye.systemSymbolName == "eye.fill",
                "keep-awake eye option maps to its menu bar symbol")
         expect(!KeepAwakeAutomationSupport.hasExternalDisplay(builtInFlags: []),
@@ -2094,7 +2094,7 @@ struct MetricsTests {
         expect(registeredDefaults[DefaultsKey.switcherWindowShortcut] as? String
                == GlobalShortcut.switcherWindowDefault.storageValue,
                "switcher window shortcut defaults to Cmd+Grave")
-        let shortcutSuite = "vorss.tests.switcher.shortcut"
+        let shortcutSuite = "chikit.tests.switcher.shortcut"
         if let migrationDefaults = UserDefaults(suiteName: shortcutSuite) {
             migrationDefaults.removePersistentDomain(forName: shortcutSuite)
             migrationDefaults.set("control+option+command:50", forKey: DefaultsKey.switcherWindowShortcut)
@@ -3621,15 +3621,15 @@ struct MetricsTests {
                                                                   showsCountdown: true,
                                                                   hasEndDate: false),
                "idle, hidden and indefinite Keep Awake titles need no timer")
-        let statusPlacementSuite = "com.vorssaint.tests.statusItemPlacement"
+        let statusPlacementSuite = "com.chikit.tests.statusItemPlacement"
         if let statusDefaults = UserDefaults(suiteName: statusPlacementSuite) {
             statusDefaults.removePersistentDomain(forName: statusPlacementSuite)
             expect(StatusItemPlacementSupport.placementGeneration(in: statusDefaults) == 0,
                    "initial placement generation is 0")
-            expect(StatusItemPlacementSupport.mainAutosaveName(in: statusDefaults) == "VorssaintMenuBarItem",
+            expect(StatusItemPlacementSupport.mainAutosaveName(in: statusDefaults) == "ChikitMenuBarItem",
                    "generation 0 uses base autosave name")
 
-            let legacyKey = "NSStatusItem Preferred Position VorssaintMenuBarItem"
+            let legacyKey = "NSStatusItem Preferred Position ChikitMenuBarItem"
             statusDefaults.set(64.0, forKey: legacyKey)
             StatusItemPlacementSupport.sanitizeStalePlacement(in: statusDefaults)
             expect(statusDefaults.object(forKey: legacyKey) == nil,
@@ -3642,9 +3642,9 @@ struct MetricsTests {
 
             StatusItemPlacementSupport.bumpPlacementGeneration(in: statusDefaults)
             let gen1Name = StatusItemPlacementSupport.mainAutosaveName(in: statusDefaults)
-            expect(gen1Name == "VorssaintMenuBarItem.1",
+            expect(gen1Name == "ChikitMenuBarItem.1",
                    "bumped generation produces numbered autosave name")
-            expect(statusDefaults.object(forKey: "NSStatusItem Preferred Position VorssaintMenuBarItem.1") == nil,
+            expect(statusDefaults.object(forKey: "NSStatusItem Preferred Position ChikitMenuBarItem.1") == nil,
                    "bumpPlacementGeneration does not seed any hardcoded preferred position")
             statusDefaults.removePersistentDomain(forName: statusPlacementSuite)
         }
@@ -4160,7 +4160,7 @@ struct MetricsTests {
 
         // MARK: WhatsApp downloads
 
-        let whatsAppEnabledSuite = "vorss.tests.whatsapp.enabled"
+        let whatsAppEnabledSuite = "chikit.tests.whatsapp.enabled"
         if let migrationDefaults = UserDefaults(suiteName: whatsAppEnabledSuite) {
             migrationDefaults.removePersistentDomain(forName: whatsAppEnabledSuite)
             Defaults.migrateWhatsAppDownloadsEnabled(in: migrationDefaults)
@@ -4453,7 +4453,7 @@ struct MetricsTests {
         expect(CleanerSupport.isProtectedBundleID("com.apple.Music")
                && CleanerSupport.isProtectedBundleID("com.apple")
                && CleanerSupport.isProtectedBundleID("group.com.apple.notes")
-               && CleanerSupport.isProtectedBundleID("com.vorssaint.utils"),
+               && CleanerSupport.isProtectedBundleID("com.chikit.utils"),
                "system domains and this app can never be junk owners")
         expect(!CleanerSupport.isProtectedBundleID("com.vendor.editor"),
                "third party identifiers are eligible for the leftover check")
@@ -4466,7 +4466,7 @@ struct MetricsTests {
                && UninstallerSupport.verifiedBundleID("") == nil
                && UninstallerSupport.verifiedBundleID("plain-name") == nil
                && UninstallerSupport.verifiedBundleID("com.vendor../escape") == nil
-               && UninstallerSupport.verifiedBundleID("com.vorssaint.utils") == nil
+               && UninstallerSupport.verifiedBundleID("com.chikit.utils") == nil
                && UninstallerSupport.verifiedBundleID("com.apple.system") == nil,
                "malformed, protected and current app identifiers never enter uninstall paths")
         let uninstallAppURL = URL(fileURLWithPath: "/Applications/Editor.app")
@@ -4710,7 +4710,7 @@ struct MetricsTests {
                && spotlightLaunchIdentity.nameTokens.isEmpty,
                "Spotlight preserves signed-group and technical-only rules for sensitive roots")
         let safetyFixture = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vorssaint-uninstaller-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("chikit-uninstaller-\(UUID().uuidString)", isDirectory: true)
         let safetyRoot = safetyFixture.appendingPathComponent("root", isDirectory: true)
         let outsideRoot = safetyFixture.appendingPathComponent("outside", isDirectory: true)
         let safeFile = safetyRoot.appendingPathComponent("safe.plist")
@@ -4990,7 +4990,7 @@ struct MetricsTests {
             exceptions: ["com.example.unrelated"]
         ), "AutoQuit does not protect a generated guest app without its host exception")
         let outerApp = FileManager.default.temporaryDirectory
-            .appendingPathComponent("VorssaintAutoQuitTests-\(UUID().uuidString)")
+            .appendingPathComponent("ChikitAutoQuitTests-\(UUID().uuidString)")
             .appendingPathComponent("Container.app")
         let nestedApp = outerApp.appendingPathComponent("Contents/MacOS/WindowHost.app")
         try? FileManager.default.createDirectory(at: nestedApp.appendingPathComponent("Contents"),
@@ -6320,7 +6320,7 @@ struct MetricsTests {
                && sanitizedProfiles[0].id != sanitizedProfiles[1].id,
                "Image profiles sanitize empty names and duplicate IDs")
         let uniqueDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vorssaint-media-unique-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("chikit-media-unique-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: uniqueDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: uniqueDir) }
         let firstImageOutput = MediaSupport.uniqueOutputURL(in: uniqueDir, baseName: "Export", fileExtension: "png")
@@ -6481,7 +6481,7 @@ struct MetricsTests {
                == "/tmp/Output.gif",
                "Media GIF output falls back when the visible source name is empty")
         let mediaVisibilityDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vorssaint-media-visibility-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("chikit-media-visibility-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: mediaVisibilityDir,
                                                  withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: mediaVisibilityDir) }
@@ -6589,7 +6589,7 @@ struct MetricsTests {
                "headphone disconnect protection lowers the speakers, it never silences them")
         expect(Defaults.sanitizedMixerHeadphonesDisconnectVolumePercent(105) == 100,
                "headphone disconnect volume clamps high values")
-        let headphonesSuite = "vorss.tests.mixer.headphones"
+        let headphonesSuite = "chikit.tests.mixer.headphones"
         if let silentHeadphoneVolume = UserDefaults(suiteName: headphonesSuite) {
             silentHeadphoneVolume.removePersistentDomain(forName: headphonesSuite)
             silentHeadphoneVolume.set(0, forKey: DefaultsKey.mixerHeadphonesDisconnectVolumePercent)
@@ -8959,13 +8959,13 @@ struct MetricsTests {
         expect(UpdateInstallerSupport.installFailureCode(fromMarker: "") == nil,
                "an empty marker is not a failure")
         expect(UpdateInstallerSupport.runsFromImmutableLocation(
-                   appPath: "/private/var/folders/ab/xyz/T/AppTranslocation/1F2/d/Vorssaint.app",
+                   appPath: "/private/var/folders/ab/xyz/T/AppTranslocation/1F2/d/Chikit.app",
                    volumeIsReadOnly: { _ in false }),
                "translocated apps are flagged as not updatable in place")
-        expect(UpdateInstallerSupport.runsFromImmutableLocation(appPath: "/Volumes/Vorssaint/Vorssaint.app",
+        expect(UpdateInstallerSupport.runsFromImmutableLocation(appPath: "/Volumes/Chikit/Chikit.app",
                                                                 volumeIsReadOnly: { _ in true }),
                "apps on a read-only volume (the DMG) are flagged as not updatable in place")
-        expect(!UpdateInstallerSupport.runsFromImmutableLocation(appPath: "/Volumes/ExternalSSD/Vorssaint.app",
+        expect(!UpdateInstallerSupport.runsFromImmutableLocation(appPath: "/Volumes/ExternalSSD/Chikit.app",
                                                                  volumeIsReadOnly: { _ in false }),
                "apps on a writable external volume stay updatable in place")
         let installerScript = UpdateInstallerSupport.installerScript()
@@ -8998,8 +8998,8 @@ struct MetricsTests {
                 && !installerScript.contains("note() { /bin/echo \"$1\" > \"$RESULT.progress\""),
                "elevated marker writes drop to the original user's credentials")
         let elevated = UpdateInstallerSupport.elevatedInstallCommand(
-            appPath: "/Applications/Vorssaint.app",
-            dmgPath: "/tmp/Vorssaint-update.dmg",
+            appPath: "/Applications/Chikit.app",
+            dmgPath: "/tmp/Chikit-update.dmg",
             pid: 123,
             resultPath: "/tmp/result",
             uid: 501,
@@ -9008,7 +9008,7 @@ struct MetricsTests {
                "elevated installer leaves this app's session so it outlives the app it replaces")
         expect(elevated.contains("nohup"),
                "elevated installer keeps the nohup fallback if setsid is unavailable")
-        expect(elevated.contains("'/Applications/Vorssaint.app'"),
+        expect(elevated.contains("'/Applications/Chikit.app'"),
                "elevated installer passes the app path quoted for the shell")
         expect(elevated.contains("'3.3.3'"),
                "elevated installer passes the expected version quoted for the shell")
@@ -9023,7 +9023,7 @@ struct MetricsTests {
         // is the payload's own. Every `exit 1` inside the installer script would
         // otherwise start the whole installer a second time, as root.
         let detachRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("VorssaintDetachTests-\(UUID().uuidString)")
+            .appendingPathComponent("ChikitDetachTests-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: detachRoot, withIntermediateDirectories: true)
         let detachPayload = detachRoot.appendingPathComponent("payload.sh")
         let detachLedger = detachRoot.appendingPathComponent("runs")
@@ -9070,7 +9070,7 @@ struct MetricsTests {
         // the same. 0/1/2 must still be open (on /dev/null), or the child's
         // first open() takes stdout's slot.
         let fdRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("VorssaintDetachFDTests-\(UUID().uuidString)")
+            .appendingPathComponent("ChikitDetachFDTests-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: fdRoot, withIntermediateDirectories: true)
         let fdHolder = fdRoot.appendingPathComponent("holder")
         let fdReport = fdRoot.appendingPathComponent("report")
@@ -9165,8 +9165,8 @@ struct MetricsTests {
         expect(Defaults.registeredDefaults[DefaultsKey.includeBetaUpdates] as? Bool == false,
                "includeBetaUpdates defaults to false in registeredDefaults")
 
-        let testDefaults = UserDefaults(suiteName: "com.vorssaint.tests.betaActivation")!
-        testDefaults.removePersistentDomain(forName: "com.vorssaint.tests.betaActivation")
+        let testDefaults = UserDefaults(suiteName: "com.chikit.tests.betaActivation")!
+        testDefaults.removePersistentDomain(forName: "com.chikit.tests.betaActivation")
         Defaults.activateBetaChannelIfRunningBeta(in: testDefaults, version: "3.3.3-beta.1")
         expect(testDefaults.bool(forKey: DefaultsKey.includeBetaUpdates) == true,
                "beta channel is activated automatically on a beta build")
@@ -9176,13 +9176,13 @@ struct MetricsTests {
                "manual opt-out on a beta build is preserved across launches")
 
         // Stable version does not activate beta channel
-        let stableDefaults = UserDefaults(suiteName: "com.vorssaint.tests.stableActivation")!
-        stableDefaults.removePersistentDomain(forName: "com.vorssaint.tests.stableActivation")
+        let stableDefaults = UserDefaults(suiteName: "com.chikit.tests.stableActivation")!
+        stableDefaults.removePersistentDomain(forName: "com.chikit.tests.stableActivation")
         Defaults.activateBetaChannelIfRunningBeta(in: stableDefaults, version: "3.3.3")
         expect(stableDefaults.object(forKey: DefaultsKey.includeBetaUpdates) == nil,
                "stable release does not touch beta channel default")
-        stableDefaults.removePersistentDomain(forName: "com.vorssaint.tests.stableActivation")
-        testDefaults.removePersistentDomain(forName: "com.vorssaint.tests.betaActivation")
+        stableDefaults.removePersistentDomain(forName: "com.chikit.tests.stableActivation")
+        testDefaults.removePersistentDomain(forName: "com.chikit.tests.betaActivation")
 
         // Localization completeness & formatting
         for language in AppLanguage.allCases {
@@ -10059,8 +10059,8 @@ struct MetricsTests {
                "a click after hiding lets the Dock bring the app back")
         expect(DockClickSupport.repeatDecision(lastAction: .hide, elapsed: 0.1) == .swallow,
                "an accidental double-click never hides and immediately reopens the app")
-        expect(DockClickSupport.isOwnBundleIdentifier("com.vorssaint.utils")
-                && DockClickSupport.isOwnBundleIdentifier("com.vorssaint.utils.dev")
+        expect(DockClickSupport.isOwnBundleIdentifier("com.chikit.utils")
+                && DockClickSupport.isOwnBundleIdentifier("com.chikit.utils.dev")
                 && !DockClickSupport.isOwnBundleIdentifier("com.example.editor")
                 && !DockClickSupport.isOwnBundleIdentifier(nil),
                "Dock clicks never target either build of this app")
@@ -11341,7 +11341,7 @@ struct MetricsTests {
                "App Switcher leaves unrelated middle-mouse-up events alone")
         let searchRecords = [
             SwitcherSearchRecord(id: "alpha", title: "Inbox", appName: "Alpha"),
-            SwitcherSearchRecord(id: "beta", title: "Vorssaint Roadmap", appName: "Beta"),
+            SwitcherSearchRecord(id: "beta", title: "Chikit Roadmap", appName: "Beta"),
             SwitcherSearchRecord(id: "gamma", title: "Café notes", appName: "Gamma"),
         ]
         expect(SwitcherSupport.filteredSearchIDs(records: searchRecords, query: "") == ["alpha", "beta", "gamma"],
@@ -11424,7 +11424,7 @@ struct MetricsTests {
         ### Fixed
         - Update preview stays focused on changes.
 
-        Signed with an Apple Developer ID and notarized by Apple, so it downloads and opens normally. Requires macOS 14 or later. Open the .dmg below and drag Vorssaint to Applications.
+        Signed with an Apple Developer ID and notarized by Apple, so it downloads and opens normally. Requires macOS 14 or later. Open the .dmg below and drag Chikit to Applications.
         """
         let inAppUpdateBody = ReleaseNotes.inAppUpdateNotes(from: githubReleaseBodyWithFooter) ?? ""
         expect(!inAppUpdateBody.contains("Signed with an Apple Developer ID"),
@@ -12196,7 +12196,7 @@ struct MetricsTests {
         expect(bundleLocalizations.contains("tr"), "Info.plist declares Turkish as a bundle localization")
         expect(bundleLocalizations.contains("ko"), "Info.plist declares Korean as a bundle localization")
         let baseAudioPrompt = infoPlist?["NSAudioCaptureUsageDescription"] as? String ?? ""
-        expect(baseAudioPrompt.contains("Vorssaint taps individual app audio"),
+        expect(baseAudioPrompt.contains("Chikit taps individual app audio"),
                "base audio permission prompt is an English fallback")
         let organizerFolderPromptKeys = [
             "NSDesktopFolderUsageDescription", "NSDocumentsFolderUsageDescription",
@@ -13284,7 +13284,7 @@ struct MetricsTests {
                 && decodedLegacyFanSnapshot?.temperatures == nil,
                "fan snapshots remain compatible with an older installed helper")
 
-        let fanMigrationSuite = "com.vorssaint.tests.fan-migration.\(UUID().uuidString)"
+        let fanMigrationSuite = "com.chikit.tests.fan-migration.\(UUID().uuidString)"
         if let fanMigration = UserDefaults(suiteName: fanMigrationSuite) {
             fanMigration.set(true, forKey: DefaultsKey.monitorShowFanControlBeta)
             Defaults.migrateFanControlVisibility(in: fanMigration)
@@ -13699,7 +13699,7 @@ struct MetricsTests {
                "WindowServer is protected")
         expect(KillProcessSupport.isProtected(pid: 9999, name: "loginwindow", path: "/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow"),
                "loginwindow is protected")
-        expect(KillProcessSupport.isProtected(pid: ProcessInfo.processInfo.processIdentifier, name: "Vorssaint"),
+        expect(KillProcessSupport.isProtected(pid: ProcessInfo.processInfo.processIdentifier, name: "Chikit"),
                "current app PID is protected")
         expect(!KillProcessSupport.isProtected(pid: 12345, name: "Safari", path: "/Applications/Safari.app/Contents/MacOS/Safari"),
                "ordinary user app is not protected")
@@ -13920,7 +13920,7 @@ struct MetricsTests {
                    !$0.permissions.contains(.accessibility)
                },
                "battery and quiet needs no accessibility permission at all")
-        let firstRunSuiteName = "com.vorssaint.tests.first-run.\(UUID().uuidString)"
+        let firstRunSuiteName = "com.chikit.tests.first-run.\(UUID().uuidString)"
         if let firstRunDefaults = UserDefaults(suiteName: firstRunSuiteName) {
             firstRunDefaults.register(defaults: AppFeature.availabilityDefaults)
             FeaturePreset.prepareFirstRunAvailability(in: firstRunDefaults)
@@ -15225,8 +15225,8 @@ struct MetricsTests {
         expect(RadialMenuSupport.needsAccessibility([shortcutProfile]),
                "profile with keyboard shortcut slice needs Accessibility")
 
-        let profileTestDefaults = UserDefaults(suiteName: "com.vorssaint.tests.radialProfiles")!
-        profileTestDefaults.removePersistentDomain(forName: "com.vorssaint.tests.radialProfiles")
+        let profileTestDefaults = UserDefaults(suiteName: "com.chikit.tests.radialProfiles")!
+        profileTestDefaults.removePersistentDomain(forName: "com.chikit.tests.radialProfiles")
         profileTestDefaults.set(true, forKey: AppFeature.radialMenu.availabilityKey)
         profileTestDefaults.set(true, forKey: DefaultsKey.radialMenuEnabled)
 
@@ -15250,7 +15250,7 @@ struct MetricsTests {
         profileTestDefaults.set(false, forKey: DefaultsKey.radialMenuEnabled)
         expect(!RadialMenuSupport.claimsMouseButton(MouseButtonShortcutSupport.backButtonNumber, defaults: profileTestDefaults),
                "disabled radial menu never claims mouse buttons")
-        profileTestDefaults.removePersistentDomain(forName: "com.vorssaint.tests.radialProfiles")
+        profileTestDefaults.removePersistentDomain(forName: "com.chikit.tests.radialProfiles")
 
         let testImage = NSImage(size: NSSize(width: 16, height: 16))
         testImage.lockFocus()
@@ -15279,8 +15279,8 @@ struct MetricsTests {
                 && RadialMenuSupport.claimedMouseButtons(iconProfilesData) == fullyDecodedButtons,
                "claimed mouse buttons read without the items match the full profile decode")
 
-        let legacyButtonDefaults = UserDefaults(suiteName: "com.vorssaint.tests.radialLegacyButton")!
-        legacyButtonDefaults.removePersistentDomain(forName: "com.vorssaint.tests.radialLegacyButton")
+        let legacyButtonDefaults = UserDefaults(suiteName: "com.chikit.tests.radialLegacyButton")!
+        legacyButtonDefaults.removePersistentDomain(forName: "com.chikit.tests.radialLegacyButton")
         legacyButtonDefaults.set(RadialMenuMouseTrigger.forward.rawValue,
                                  forKey: DefaultsKey.radialMenuMouseButton)
         expect(RadialMenuSupport.claimedMouseButtons(nil, defaults: legacyButtonDefaults)
@@ -15289,7 +15289,7 @@ struct MetricsTests {
                                                          defaults: legacyButtonDefaults)
                 == [MouseButtonShortcutSupport.forwardButtonNumber],
                "claimed mouse buttons fall back to the legacy button key like the full decode")
-        legacyButtonDefaults.removePersistentDomain(forName: "com.vorssaint.tests.radialLegacyButton")
+        legacyButtonDefaults.removePersistentDomain(forName: "com.chikit.tests.radialLegacyButton")
 
         // The cheap read and the full decode can disagree on a corrupt blob,
         // so only one of them may decide whether the click is passed on: once
@@ -15475,46 +15475,46 @@ struct MetricsTests {
 
         let ownScreenshotWindows: Set<CGWindowID> = [11, 12, 13]
         let protectedScreenshotWindows: Set<CGWindowID> = [12, 99]
-        expect(Defaults.registeredDefaults[DefaultsKey.screenshotHideVorssaintWindows]
+        expect(Defaults.registeredDefaults[DefaultsKey.screenshotHideChikitWindows]
                 as? Bool == true,
-               "screenshots hide Vorssaint windows by default")
+               "screenshots hide Chikit windows by default")
         expect(SettingsBackupSupport.exportKeys().contains(
-            DefaultsKey.screenshotHideVorssaintWindows),
+            DefaultsKey.screenshotHideChikitWindows),
                "the screenshot window visibility preference travels in backups")
         expect(ScreenshotCapturePolicy.excludedWindowIDs(
-            hideVorssaintWindows: true,
+            hideChikitWindows: true,
             ownWindowIDs: ownScreenshotWindows,
             protectedWindowIDs: protectedScreenshotWindows
         ) == ownScreenshotWindows,
-        "screenshot hiding Vorssaint excludes every own window")
+        "screenshot hiding Chikit excludes every own window")
         expect(ScreenshotCapturePolicy.excludedWindowIDs(
-            hideVorssaintWindows: false,
+            hideChikitWindows: false,
             ownWindowIDs: ownScreenshotWindows,
             protectedWindowIDs: protectedScreenshotWindows
         ) == [12],
-        "screenshot keeps protected windows excluded while Vorssaint is visible")
+        "screenshot keeps protected windows excluded while Chikit is visible")
         expect(ScreenshotCapturePolicy.canPickWindow(
             7,
             isOwnWindow: false,
-            hideVorssaintWindows: true,
+            hideChikitWindows: true,
             protectedWindowIDs: protectedScreenshotWindows
         ), "screenshot can always pick an ordinary external window")
         expect(!ScreenshotCapturePolicy.canPickWindow(
             11,
             isOwnWindow: true,
-            hideVorssaintWindows: true,
+            hideChikitWindows: true,
             protectedWindowIDs: protectedScreenshotWindows
-        ), "screenshot cannot pick a Vorssaint window while hiding them")
+        ), "screenshot cannot pick a Chikit window while hiding them")
         expect(ScreenshotCapturePolicy.canPickWindow(
             11,
             isOwnWindow: true,
-            hideVorssaintWindows: false,
+            hideChikitWindows: false,
             protectedWindowIDs: protectedScreenshotWindows
-        ), "screenshot can pick an ordinary Vorssaint window when visible")
+        ), "screenshot can pick an ordinary Chikit window when visible")
         expect(!ScreenshotCapturePolicy.canPickWindow(
             12,
             isOwnWindow: true,
-            hideVorssaintWindows: false,
+            hideChikitWindows: false,
             protectedWindowIDs: protectedScreenshotWindows
         ), "screenshot cannot pick its own protected capture UI")
 
@@ -16071,32 +16071,32 @@ struct MetricsTests {
             for: .screenshot,
             screenshotFreeze: false,
             screenshotIncludePointer: true,
-            screenshotHideVorssaintWindows: true)
+            screenshotHideChikitWindows: true)
         let recorderPolicy = ScreenshotSupport.unifiedCapturePolicy(
             for: .recording,
             screenshotFreeze: false,
             screenshotIncludePointer: true,
-            screenshotHideVorssaintWindows: true)
+            screenshotHideChikitWindows: true)
         let textPolicy = ScreenshotSupport.unifiedCapturePolicy(
             for: .text,
             screenshotFreeze: false,
             screenshotIncludePointer: true,
-            screenshotHideVorssaintWindows: true)
+            screenshotHideChikitWindows: true)
         expect(liveScreenshotPolicy == .init(freeze: false, includePointer: true,
-                                             hideVorssaintWindows: true,
+                                             hideChikitWindows: true,
                                              usesGeometry: false)
                 && recorderPolicy == .init(freeze: true, includePointer: false,
-                                           hideVorssaintWindows: false,
+                                           hideChikitWindows: false,
                                            usesGeometry: true)
                 && textPolicy == .init(freeze: true, includePointer: false,
-                                       hideVorssaintWindows: true,
+                                       hideChikitWindows: true,
                                        usesGeometry: false),
                "switching capture mode rebuilds the frozen frame, pointer and window policy")
         let colorPolicy = ScreenshotSupport.unifiedCapturePolicy(
             for: .color,
             screenshotFreeze: false,
             screenshotIncludePointer: true,
-            screenshotHideVorssaintWindows: true)
+            screenshotHideChikitWindows: true)
         expect(textPolicy.sharesSource(with: colorPolicy)
                 && !textPolicy.sharesSource(with: recorderPolicy)
                 && !textPolicy.sharesSource(with: liveScreenshotPolicy),
@@ -16805,7 +16805,7 @@ struct MetricsTests {
             developerOverride: "https://test.example/")
         expect(testShareEndpoint.absoluteString == "https://test.example"
                 && ScreenshotSharingSupport.endpoint(
-                    bundleIdentifier: "com.vorssaint.utils",
+                    bundleIdentifier: "com.chikit.utils",
                     developerOverride: "https://test.example").absoluteString
                     == ScreenshotSharingSupport.productionEndpoint.absoluteString
                 && ScreenshotSharingSupport.endpoint(
@@ -17210,7 +17210,7 @@ struct MetricsTests {
 
         // Muting every microphone, not just the one the Mac is set to: an app
         // pointed at a device of its own has to go silent too.
-        expect(MicMuteSupport.isOwnDevice(name: "Vorssaint Mixer")
+        expect(MicMuteSupport.isOwnDevice(name: "Chikit Mixer")
                 && !MicMuteSupport.isOwnDevice(name: "MacBook Air Microphone"),
                "the mute skips the app's own mixing device and no other")
         expect(!MicMuteSupport.shouldSaveVolume(nil)
@@ -17966,13 +17966,13 @@ struct MetricsTests {
                 ),
                "a stop or replaced event tap invalidates a queued Super key mapping")
         expect(SuperKeyMappingGuard.cleanupSource(in: [
-            "Vorssaint", SuperKeyMappingGuard.cleanupArgument, "capsLock",
+            "Chikit", SuperKeyMappingGuard.cleanupArgument, "capsLock",
         ]) == .capsLock
                 && SuperKeyMappingGuard.cleanupSource(in: [
-                    "Vorssaint", SuperKeyMappingGuard.cleanupArgument, "rightCommand",
+                    "Chikit", SuperKeyMappingGuard.cleanupArgument, "rightCommand",
                 ]) == .rightCommand
                 && SuperKeyMappingGuard.cleanupSource(in: [
-                    "Vorssaint", SuperKeyMappingGuard.cleanupArgument, "invalid",
+                    "Chikit", SuperKeyMappingGuard.cleanupArgument, "invalid",
                 ]) == nil,
                "the crash guard accepts only a real Super key source")
 
@@ -18304,7 +18304,7 @@ struct MetricsTests {
         // answers /private/tmp/… for a file the running program answers
         // /tmp/… for. Both ends resolve, so they meet.
         let identityRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vorssaint-identity-\(getpid())", isDirectory: true)
+            .appendingPathComponent("chikit-identity-\(getpid())", isDirectory: true)
         let runtimeBinary = identityRoot.appendingPathComponent("runtime/bin/launcher")
         try? FileManager.default.createDirectory(at: runtimeBinary.deletingLastPathComponent(),
                                                  withIntermediateDirectories: true)
@@ -19152,12 +19152,12 @@ struct MetricsTests {
         expect(packageRows.allSatisfy { $0.canInstallInPlace },
                "package rows can be installed on the spot")
         let ownPackageRows = AppUpdatesSupport.packageUpdates(
-            outdated: [caskUpdate("vorssaint", installed: "3.1.12", current: "3.2.0")],
+            outdated: [caskUpdate("chikit", installed: "3.1.12", current: "3.2.0")],
             installed: [],
-            ignoredTokens: ["vorssaint"],
+            ignoredTokens: ["chikit"],
             apps: [])
         expect(ownPackageRows.isEmpty,
-               "the app update list never offers to replace Vorssaint through its own package")
+               "the app update list never offers to replace Chikit through its own package")
 
         let storeApps = [
             AppUpdatesSupport.InstalledApp(name: "Blocker", bundleID: "net.example.blocker",
@@ -20333,7 +20333,7 @@ struct MetricsTests {
                "a recording being written right now has no file yet and is left alone")
 
         let directSaveRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vorssaint-recorder-save-\(UUID().uuidString)",
+            .appendingPathComponent("chikit-recorder-save-\(UUID().uuidString)",
                                     isDirectory: true)
         try? FileManager.default.createDirectory(at: directSaveRoot,
                                                  withIntermediateDirectories: true)
@@ -21417,10 +21417,10 @@ struct MetricsTests {
         expect(CommandBarLinks.expand("https://x.com/{clipboard}", kind: .link,
                                       clipboard: "a+b") == "https://x.com/a%2Bb",
                "a plus sign inside a search is escaped, not read as a space")
-        expect(CommandBarLinks.trailingArgument(query: "gh vorssaint utils", name: "gh")
-                == "vorssaint utils",
+        expect(CommandBarLinks.trailingArgument(query: "gh chikit utils", name: "gh")
+                == "chikit utils",
                "what comes after the name is what the saved search opens with")
-        expect(CommandBarLinks.trailingArgument(query: "GH Vorssaint", name: "gh") == "Vorssaint",
+        expect(CommandBarLinks.trailingArgument(query: "GH Chikit", name: "gh") == "Chikit",
                "the name is matched without case; the argument keeps its own")
         expect(CommandBarLinks.trailingArgument(query: "ghost writer", name: "gh") == nil
                 && CommandBarLinks.trailingArgument(query: "gh", name: "gh") == nil,
@@ -21469,8 +21469,8 @@ struct MetricsTests {
         expect(CommandBarLinks.revealPath(for: CommandBarLink(name: "day", kind: .place,
                                                               destination: "~/Notes/{date}.md")) == nil,
                "a place still holding a placeholder is a different file every time it runs")
-        expect(CommandBarLinks.rankingTitle(name: "gh", query: "gh vorssaint utils")
-                == "gh vorssaint utils",
+        expect(CommandBarLinks.rankingTitle(name: "gh", query: "gh chikit utils")
+                == "gh chikit utils",
                "once an argument follows the name, the row is scored against the whole query")
         expect(CommandBarLinks.rankingTitle(name: "gh", query: "gh") == "gh",
                "the name alone still scores against its own name")
@@ -21480,10 +21480,10 @@ struct MetricsTests {
         // the list on the first word of the argument, which is the moment it
         // was about to run.
         expect(CommandBarSearch.score(title: "gh", keywords: "Link",
-                                      query: "gh vorssaint utils") == nil
+                                      query: "gh chikit utils") == nil
                 && CommandBarSearch.score(
-                    title: CommandBarLinks.rankingTitle(name: "gh", query: "gh vorssaint utils"),
-                    keywords: "Link", query: "gh vorssaint utils") != nil,
+                    title: CommandBarLinks.rankingTitle(name: "gh", query: "gh chikit utils"),
+                    keywords: "Link", query: "gh chikit utils") != nil,
                "a saved search stays in the list while what to look for is typed")
 
         expect(CommandBarLink.Kind.script.symbolName == "terminal",

@@ -2,19 +2,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Vorssaint
 
-# Cleanly removes Vorssaint and every piece of system state it created:
+# Cleanly removes Chikit and every piece of system state it created:
 # the fan helper daemon, the login item, TCC permissions, preferences, saved
 # state, the app's own data folder and (if present) the password-free
 # closed-lid sudoers rule. Leaves no dead entries behind.
 # Also clears the pre-rename "Vorssaint Utils.app" if it is still around.
 set -uo pipefail
 
-BUNDLE="com.vorssaint.utils"
-APP="/Applications/Vorssaint.app"
+BUNDLE="com.chikit.utils"
+APP="/Applications/Chikit.app"
 LEGACY_APP="/Applications/Vorssaint Utils.app"
 
 echo "▸ Quitting…"
-pkill -x Vorssaint 2>/dev/null || true
+pkill -x Chikit 2>/dev/null || true
 pkill -x VorssaintUtils 2>/dev/null || true
 sleep 0.5
 
@@ -24,7 +24,7 @@ sleep 0.5
 # deleting the app below cannot reach it. Only the binary can drop it, and the
 # check after the loop settles what its absence or failure left behind.
 detached=1
-for candidate in "$APP/Contents/MacOS/Vorssaint" "$LEGACY_APP/Contents/MacOS/VorssaintUtils"; do
+for candidate in "$APP/Contents/MacOS/Chikit" "$LEGACY_APP/Contents/MacOS/VorssaintUtils"; do
     if [[ -x "$candidate" ]]; then
         echo "▸ Detaching the fan helper and login item, restoring sleep…"
         if "$candidate" --uninstall; then detached=0; fi
@@ -46,7 +46,7 @@ fi
 
 # Whether the closed-lid feature is the reason sleep is off. Read here because
 # the preferences that hold it are deleted a few lines below, and without it a
-# check on the setting alone would blame Vorssaint for a `pmset disablesleep 1`
+# check on the setting alone would blame Chikit for a `pmset disablesleep 1`
 # that somebody else, or the user, had set.
 sleep_was_ours=0
 [[ "$(defaults read "$BUNDLE" vorssDisabledSleep 2>/dev/null)" == "1" ]] && sleep_was_ours=1
@@ -71,10 +71,10 @@ rm -rf "$HOME/Library/HTTPStorages/$BUNDLE" "$HOME/Library/HTTPStorages/$BUNDLE.
 # ordinary case, and prints an error over a successful uninstall.
 rm -f "$HOME/Library/Preferences/ByHost/$BUNDLE".*.plist(N)
 
-RULES="/etc/sudoers.d/vorssaint-clamshell /etc/sudoers.d/vorssaint-utils-clamshell /etc/sudoers.d/vorss-clamshell"
+RULES="/etc/sudoers.d/chikit-clamshell /etc/sudoers.d/vorssaint-clamshell /etc/sudoers.d/vorssaint-utils-clamshell /etc/sudoers.d/vorss-clamshell"
 if ls $RULES >/dev/null 2>&1; then
     echo "▸ Removing closed-lid sudoers rule (asks for your admin password)…"
-    osascript -e "do shell script \"rm -f $RULES\" with administrator privileges with prompt \"Vorssaint uninstaller\"" || true
+    osascript -e "do shell script \"rm -f $RULES\" with administrator privileges with prompt \"Chikit uninstaller\"" || true
 fi
 
 # `--uninstall` restores sleep, but it runs before the app has an
@@ -98,20 +98,20 @@ if (( sleep_was_ours )); then
 fi
 
 if (( detached == 0 && sleep_stuck == 0 && sleep_unknown == 0 )); then
-    echo "✓ Vorssaint fully removed."
+    echo "✓ Chikit fully removed."
     exit 0
 fi
 if (( detached )); then
-    echo "⚠ Vorssaint removed, but its fan helper is still registered with the system." >&2
-    echo "  Reinstall Vorssaint, then use Settings › Advanced to uninstall from inside the app." >&2
+    echo "⚠ Chikit removed, but its fan helper is still registered with the system." >&2
+    echo "  Reinstall Chikit, then use Settings › Advanced to uninstall from inside the app." >&2
 fi
 if (( sleep_stuck )); then
-    echo "⚠ Vorssaint removed, but this Mac still has sleep switched off." >&2
+    echo "⚠ Chikit removed, but this Mac still has sleep switched off." >&2
     echo "  Closed-lid mode disabled it, and restoring it needed a password this script could not ask for." >&2
     echo "  Put it back with: sudo pmset disablesleep 0" >&2
 fi
 if (( sleep_unknown )); then
-    echo "⚠ Vorssaint removed, but whether sleep came back could not be read." >&2
+    echo "⚠ Chikit removed, but whether sleep came back could not be read." >&2
     echo "  Closed-lid mode had switched it off. Check with: pmset -g | grep SleepDisabled" >&2
     echo "  If that reads 1, put it back with: sudo pmset disablesleep 0" >&2
 fi

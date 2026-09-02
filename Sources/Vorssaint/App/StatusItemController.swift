@@ -35,8 +35,8 @@ final class StatusItemController {
     /// is answered once afterwards rather than on top of it.
     private var isRefreshing = false
     private var refreshRequestedWhileRunning = false
-    private static let mainAutosaveName = "VorssaintMenuBarItem"
-    private static let metricAutosavePrefix = "VorssaintMetric"
+    private static let mainAutosaveName = "ChikitMenuBarItem"
+    private static let metricAutosavePrefix = "ChikitMetric"
     private static let maxPlacementGeneration = 10_000
     private static let emptyStatusImage = NSImage()
 

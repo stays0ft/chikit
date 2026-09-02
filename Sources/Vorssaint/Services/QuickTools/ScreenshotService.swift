@@ -39,8 +39,8 @@ final class ScreenshotService: ObservableObject {
         case scrolling
     }
 
-    private var hideVorssaintWindows: Bool {
-        UserDefaults.standard.bool(forKey: DefaultsKey.screenshotHideVorssaintWindows)
+    private var hideChikitWindows: Bool {
+        UserDefaults.standard.bool(forKey: DefaultsKey.screenshotHideChikitWindows)
     }
 
     private var protectedWindowIDs: Set<CGWindowID> {
@@ -232,7 +232,7 @@ final class ScreenshotService: ObservableObject {
                 : defaults.bool(forKey: DefaultsKey.screenshotFreeze),
             includePointer: defaults.bool(forKey: DefaultsKey.screenshotIncludePointer),
             showLastRegion: defaults.bool(forKey: DefaultsKey.screenshotShowLastRegion),
-            hideVorssaintWindows: hideVorssaintWindows,
+            hideChikitWindows: hideChikitWindows,
             protectedWindowIDs: { [weak self] in self?.protectedWindowIDs ?? [] },
             purpose: mode == .scrolling ? strings.scrollingCaptureTitle : nil,
             mode: mode == .scrolling ? .geometry : .image,
@@ -284,13 +284,13 @@ final class ScreenshotService: ObservableObject {
         let scale = screen.backingScaleFactor
         let frame = screen.frame
         let includePointer = UserDefaults.standard.bool(forKey: DefaultsKey.screenshotIncludePointer)
-        let hideWindows = hideVorssaintWindows
+        let hideWindows = hideChikitWindows
         let protectedIDs = protectedWindowIDs
         directCaptureTask = Task { @MainActor [weak self] in
             let image = await ScreenshotCaptureEngine.captureDisplay(
                 displayID,
                 includePointer: includePointer,
-                hideVorssaintWindows: hideWindows,
+                hideChikitWindows: hideWindows,
                 protectedWindowIDs: protectedIDs)
             guard let self, !Task.isCancelled else { return }
             self.directCaptureTask = nil
@@ -317,7 +317,7 @@ final class ScreenshotService: ObservableObject {
             onCancel: { [weak self] in self?.scrollingTask?.cancel() })
         // Read after the controls are on screen so their window is protected,
         // and once for the whole run: the picture must not change halfway.
-        let hideWindows = hideVorssaintWindows
+        let hideWindows = hideChikitWindows
         let protectedIDs = protectedWindowIDs
         let captureID = UUID()
         scrollingCaptureID = captureID
@@ -326,7 +326,7 @@ final class ScreenshotService: ObservableObject {
             let result = await ScreenshotScrollingCapture.capture(
                 region: region,
                 includePointer: false,
-                hideVorssaintWindows: hideWindows,
+                hideChikitWindows: hideWindows,
                 protectedWindowIDs: protectedIDs,
                 finishSignal: finishSignal,
                 onProgress: { height in
@@ -782,7 +782,7 @@ final class ScreenshotService: ObservableObject {
 /// without holding a full-resolution screenshot in memory while the app rests.
 enum ScreenshotLastCaptureStore {
     private static let writeQueue = DispatchQueue(
-        label: "com.vorssaint.utils.latest-screenshot",
+        label: "com.chikit.utils.latest-screenshot",
         qos: .utility)
     private static let stateLock = NSLock()
     private static var generation = 0

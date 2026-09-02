@@ -7,8 +7,8 @@ import Foundation
 /// how an incoming file is validated. Pure logic so the harness can pin down
 /// exactly which keys travel (and, more importantly, which never do).
 enum SettingsBackupSupport {
-    static let formatVersionKey = "vorssaintBackupVersion"
-    static let appVersionKey = "vorssaintBackupAppVersion"
+    static let formatVersionKey = "chikitBackupVersion"
+    static let appVersionKey = "chikitBackupAppVersion"
     static let settingsKey = "settings"
     static let formatVersion = 1
 
