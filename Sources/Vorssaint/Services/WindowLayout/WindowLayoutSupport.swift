@@ -21,14 +21,16 @@ enum WindowLayoutAction: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// The 9 core layouts kept in the trimmed-down Window Layout module:
+    /// four halves, four quarters, and maximize (fills the screen without
+    /// opening a new Space). Every other case below still exists — some
+    /// remain reachable through their engine logic, others are kept only so
+    /// a previously stored shortcut or hidden-action value never orphans —
+    /// but none of them are offered here for shortcut assignment any more.
     static let shortcutActions: [WindowLayoutAction] = [
         .leftHalf, .rightHalf, .topHalf, .bottomHalf,
-        .leftThird, .centerThird, .rightThird, .leftTwoThirds, .rightTwoThirds,
-        .topLeftSixth, .topCenterSixth, .topRightSixth,
-        .bottomLeftSixth, .bottomCenterSixth, .bottomRightSixth,
         .topLeft, .topRight, .bottomLeft, .bottomRight,
-        .maximize, .marginMaximize, .fullScreen, .center, .restore,
-        .previousDisplay, .nextDisplay,
+        .maximize,
     ]
 
     var supportsShortcut: Bool {

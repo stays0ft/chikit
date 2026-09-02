@@ -16,7 +16,6 @@ Vorssaint adds quit and close protections, expands screen text recognition, capt
 - Mouse settings now include an optional filter for rapid accidental extra clicks from worn primary, secondary and middle buttons.
 - Cleaning Mode now offers an option in Settings to keep the screen visible with a discreet corner indicator instead of blacking out the screen.
 - Mouse button shortcuts can now switch Spaces or open Mission Control and App Exposé by holding an extra button and dragging. Thanks to @iltonandrew.
-- Window Layout now offers configurable window and screen gaps, so snapped windows can keep a preset distance from each other and from the screen edge. Thanks to @marcelharinck.
 - Eject all disks can now exclude specific drives in Settings, keeping backup drives and permanent storage mounted when ejecting other external disks. Thanks to @PathGao.
 - Dock Preview now includes an option in Settings to quit an app from a thumbnail's × button instead of closing only that window, and closes the preview as soon as the quit request is accepted. Thanks to @arefshal.
 - Copy Text from Screen now includes an option in Settings to remove line breaks and join recognized lines as a single paragraph with script-aware spacing. Thanks to @ywu73.
@@ -30,6 +29,7 @@ Vorssaint adds quit and close protections, expands screen text recognition, capt
 - The screen recording editor can now blur any area of the picture for as long as you choose, keeping names, emails and other private details unreadable even inside zooms.
 
 ### Changed
+- Window Layout is now trimmed to 9 core zones — left, right, top and bottom half, the four quarter corners, and maximize — with thirds, sixths, center, margin maximize, native full screen, previous/next-display moves, restore history and the custom gap settings removed from the panel, Settings and the Command Bar to keep the module focused.
 - Window controls, Dock clicks and mouse exceptions now share consistent on-screen window parsing while preserving their existing behavior. Thanks to @PathGao.
 - The Command Bar now stays responsive while typing, doing less work on each keystroke and reading the battery and memory levels in the background. Thanks to @PathGao.
 - System monitor process breakdowns now normalize per-app CPU usage against total active processor cores and cap grouped GPU and energy percentages at 100%. Thanks to @pergioa.

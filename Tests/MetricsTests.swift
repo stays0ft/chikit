@@ -5661,20 +5661,28 @@ struct MetricsTests {
                                                        destinationVisibleFrame: portraitFrame)
                     == portraitWindow,
                "display transfer keeps size and edge insets across rotated frames")
-        expect(WindowLayoutAction.shortcutActions.count == WindowLayoutAction.allCases.count,
-               "every window layout action can register a global shortcut")
-        expect(WindowLayoutAction.shortcutActions.contains(.previousDisplay)
-                && WindowLayoutAction.shortcutActions.contains(.nextDisplay),
-               "both display directions can register a global shortcut")
+        // The trimmed-down Window Layout module offers only the 9 core
+        // layouts (4 halves, 4 quarters, maximize) for shortcut assignment;
+        // every other case stays defined (for engine reuse and so a
+        // previously stored shortcut/hidden-action/radial-menu value never
+        // orphans) but is no longer shortcut-assignable.
+        expect(WindowLayoutAction.shortcutActions.count == 9,
+               "only the 9 core layouts can register a global shortcut")
+        expect(!WindowLayoutAction.shortcutActions.contains(.previousDisplay)
+                && !WindowLayoutAction.shortcutActions.contains(.nextDisplay),
+               "display-move actions are no longer shortcut-assignable")
         expect(Set(WindowLayoutAction.shortcutActions.map(\.shortcutKey)).count
                == WindowLayoutAction.shortcutActions.count,
                "every window layout shortcut has its own defaults key")
         expect(WindowLayoutAction.shortcutActions.contains(.leftHalf),
                "existing half actions keep global shortcuts")
+        expect([WindowLayoutAction.topLeft, .topRight, .bottomLeft, .bottomRight]
+               .allSatisfy { $0.supportsShortcut },
+               "the 4 quarter actions remain shortcut-assignable")
         expect([WindowLayoutAction.topLeftSixth, .topCenterSixth, .topRightSixth,
                 .bottomLeftSixth, .bottomCenterSixth, .bottomRightSixth]
-               .allSatisfy { $0.supportsShortcut && $0.defaultShortcut == nil },
-               "sixth actions support optional shortcuts without claiming defaults")
+               .allSatisfy { !$0.supportsShortcut },
+               "sixth actions are hidden from shortcut assignment in the trimmed module")
         expect(WindowLayoutGeometry.rect(for: .topLeft, current: currentWindow, visibleFrame: visibleFrame)
                == CGRect(x: 0, y: 470, width: 720, height: 430),
                "window layout top left targets the upper-left quadrant")

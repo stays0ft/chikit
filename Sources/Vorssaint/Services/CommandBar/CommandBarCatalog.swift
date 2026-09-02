@@ -621,7 +621,10 @@ enum CommandBarCatalog {
             let layoutText = FeatureStrings.windowLayout(language)
             let layoutArea = area(.windowLayout)
             let axTrouble = accessibilityTrouble()
-            for action in WindowLayoutAction.allCases {
+            // Only the trimmed-down set of core layouts is offered here; the
+            // rest of the enum's cases stay defined for engine/back-compat
+            // reasons but are no longer exposed to the user.
+            for action in WindowLayoutAction.shortcutActions {
                 // The two ways of taking the whole screen answer to each
                 // other's names: someone typing "full screen" means either.
                 var keywords = layoutText.title

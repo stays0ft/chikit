@@ -31,15 +31,8 @@ struct PanelWindowLayoutView: View {
             header
             intro
             actionGroup(title: text.halves, actions: [.leftHalf, .rightHalf, .topHalf, .bottomHalf])
-            actionGroup(title: text.thirds, actions: [.leftThird, .centerThird, .rightThird, .leftTwoThirds, .rightTwoThirds])
-            actionGroup(title: text.sixths, actions: [
-                .topLeftSixth, .topCenterSixth, .topRightSixth,
-                .bottomLeftSixth, .bottomCenterSixth, .bottomRightSixth,
-            ])
             actionGroup(title: text.corners, actions: [.topLeft, .topRight, .bottomLeft, .bottomRight])
-            actionGroup(title: text.other, actions: [
-                .maximize, .marginMaximize, .fullScreen, .center, .previousDisplay, .nextDisplay, .restore,
-            ])
+            actionGroup(title: text.other, actions: [.maximize])
             if let message = resultMessage {
                 Label(message, systemImage: resultSymbol)
                     .font(.system(size: 10.5, weight: .medium))

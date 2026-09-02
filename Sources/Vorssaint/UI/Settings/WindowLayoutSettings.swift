@@ -15,8 +15,6 @@ struct WindowLayoutSettings: View {
     @AppStorage(DefaultsKey.windowGestureEnabled) private var gestureEnabled = false
     @AppStorage(DefaultsKey.windowGestureModifiers) private var gestureModifiers = WindowGestureSupport.defaultModifierStorageValue
     @AppStorage(DefaultsKey.windowGestureRaiseWindow) private var gestureRaiseWindow = false
-    @AppStorage(DefaultsKey.windowLayoutWindowGap) private var windowGap = 0
-    @AppStorage(DefaultsKey.windowLayoutScreenGap) private var screenGap = 0
     @State private var systemTilingEnabled = WindowEdgeSnapSupport.isSystemTilingEnabled
     // Same preference the Switcher page exposes next to Dock Preview; it is
     // mirrored here because it is a window-juggling behavior people look for
@@ -91,14 +89,6 @@ struct WindowLayoutSettings: View {
                 }
             }
 
-            Section(text.gapsSection) {
-                gapPicker(text.windowGap, selection: $windowGap)
-                gapPicker(text.screenGap, selection: $screenGap)
-                Text(text.gapsCaption)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
             Section(text.shortcuts) {
                 Toggle(text.shortcuts, isOn: $shortcutsEnabled)
                     .onChange(of: shortcutsEnabled) { _, _ in
@@ -151,23 +141,6 @@ struct WindowLayoutSettings: View {
                 actionRow(.bottomHalf)
             }
 
-            Section(text.thirds) {
-                actionRow(.leftThird)
-                actionRow(.centerThird)
-                actionRow(.rightThird)
-                actionRow(.leftTwoThirds)
-                actionRow(.rightTwoThirds)
-            }
-
-            Section(text.sixths) {
-                actionRow(.topLeftSixth)
-                actionRow(.topCenterSixth)
-                actionRow(.topRightSixth)
-                actionRow(.bottomLeftSixth)
-                actionRow(.bottomCenterSixth)
-                actionRow(.bottomRightSixth)
-            }
-
             Section(text.corners) {
                 actionRow(.topLeft)
                 actionRow(.topRight)
@@ -177,12 +150,6 @@ struct WindowLayoutSettings: View {
 
             Section(text.other) {
                 actionRow(.maximize)
-                actionRow(.marginMaximize)
-                actionRow(.fullScreen)
-                actionRow(.center)
-                actionRow(.previousDisplay)
-                actionRow(.nextDisplay)
-                actionRow(.restore)
                 if let message = resultMessage {
                     Text(message)
                         .font(.caption)
@@ -206,31 +173,6 @@ struct WindowLayoutSettings: View {
         guard service.directionalShortcutConflictTitle(shortcut) == nil else { return }
         directionalShortcutRaw = shortcut.storageValue
         service.syncWithPreferences()
-    }
-
-    /// The gaps take effect on the next placement — the engine reads them
-    /// per apply — so the pickers need no service sync.
-    private func gapPicker(_ title: String, selection: Binding<Int>) -> some View {
-        Picker(title, selection: selection) {
-            ForEach(WindowLayoutGaps.presets, id: \.self) { value in
-                Text(gapPresetTitle(value)).tag(value)
-            }
-        }
-        .pickerStyle(.menu)
-    }
-
-    private func gapPresetTitle(_ value: Int) -> String {
-        let name: String
-        switch value {
-        case 0: return text.gapNone
-        case 8: name = text.gapTiny
-        case 16: name = text.gapSmall
-        case 32: name = text.gapMedium
-        case 64: name = text.gapLarge
-        case 128: name = text.gapExtraLarge
-        default: return "\(value) px"
-        }
-        return "\(name) (\(value) px)"
     }
 
     private func refreshSystemTilingState() {
