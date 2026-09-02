@@ -100,93 +100,20 @@ final class UpdateService: ObservableObject {
     // MARK: - Check
 
     func check(manual: Bool) {
-        if AppInfo.isDeveloperBuild {
-            // No real update target; reflect the simulation default so the
-            // notification UI can be exercised locally.
-            if UserDefaults.standard.bool(forKey: DefaultsKey.simulateUpdate) {
-                state = .available(version: "9.9.9")
-                availableNotes = ReleaseNotes.rawNotes(for: AppInfo.version)
-            } else {
-                state = .upToDate
-                availableNotes = nil
-            }
-            lastChecked = Date()
-            return
+        // This personal fork has no release feed of its own, and the upstream
+        // repository this class used to poll builds a differently-branded
+        // app — never check it, so a click-through "install" can never
+        // silently replace this fork's rename and customizations with a
+        // stock upstream build. The developer build's simulation default is
+        // kept so the notification UI can still be exercised locally.
+        if AppInfo.isDeveloperBuild, UserDefaults.standard.bool(forKey: DefaultsKey.simulateUpdate) {
+            state = .available(version: "9.9.9")
+            availableNotes = ReleaseNotes.rawNotes(for: AppInfo.version)
+        } else {
+            state = .upToDate
+            availableNotes = nil
         }
-        if case .checking = state { return }
-        if case .downloading = state { return }
-        if case .installing = state { return }
-        state = .checking
-
-        let endpoint = includeBetaUpdates
-            ? "https://api.github.com/repos/\(repository)/releases?per_page=10"
-            : "https://api.github.com/repos/\(repository)/releases/latest"
-
-        var request = URLRequest(url: URL(string: endpoint)!)
-        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        request.setValue("Vorssaint/\(AppInfo.version)", forHTTPHeaderField: "User-Agent")
-        request.cachePolicy = .reloadIgnoringLocalCacheData
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
-            guard let self else { return }
-            DispatchQueue.main.async {
-                self.lastChecked = Date()
-                guard let data, error == nil else {
-                    self.availableNotes = nil
-                    self.state = .failed(error?.localizedDescription ?? "-")
-                    return
-                }
-
-                let releases: [GitHubRelease]
-                if self.includeBetaUpdates {
-                    releases = (try? JSONDecoder().decode([GitHubRelease].self, from: data)) ?? []
-                } else if let single = try? JSONDecoder().decode(GitHubRelease.self, from: data) {
-                    releases = [single]
-                } else {
-                    releases = []
-                }
-
-                guard !releases.isEmpty else {
-                    self.availableNotes = nil
-                    self.state = .failed(error?.localizedDescription ?? "-")
-                    return
-                }
-
-                let candidates = releases.map { rel -> UpdateServiceSupport.ReleaseCandidate in
-                    let asset = rel.assets.first { $0.name.hasSuffix(".dmg") }
-                    return UpdateServiceSupport.ReleaseCandidate(
-                        tagName: rel.tagName,
-                        isPrerelease: rel.prerelease ?? false,
-                        isDraft: rel.draft ?? false,
-                        dmgURL: asset?.browserDownloadURL,
-                        dmgExpectedBytes: asset?.size,
-                        body: rel.body
-                    )
-                }
-
-                if let chosen = UpdateServiceSupport.selectUpdate(
-                    from: candidates,
-                    currentVersion: AppInfo.version,
-                    includeBetas: self.includeBetaUpdates
-                ) {
-                    let versionClean = chosen.tagName.trimmingCharacters(in: CharacterSet(charactersIn: "vV "))
-                    self.downloadURL = chosen.dmgURL
-                    self.downloadExpectedBytes = chosen.dmgExpectedBytes
-                    self.availableNotes = ReleaseNotes.inAppUpdateNotes(from: chosen.body)
-                    self.state = .available(version: versionClean)
-                    // Notify once per distinct release, not on every hourly re-check.
-                    if !manual, versionClean != self.notifiedVersion {
-                        self.notifiedVersion = versionClean
-                        let s = L10n.shared.s
-                        Notifier.post(title: s.updateNotifyTitle,
-                                      body: "\(s.updateAvailablePrefix) \(versionClean)")
-                    }
-                } else {
-                    self.availableNotes = nil
-                    self.state = .upToDate
-                }
-            }
-        }.resume()
+        lastChecked = Date()
     }
 
     /// Re-checks only if the last check is stale — called when the app reactivates
