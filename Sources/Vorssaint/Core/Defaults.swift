@@ -176,6 +176,10 @@ enum DefaultsKey {
     static let cleanerScheduleNotify = "cleanerScheduleNotify"
     static let cleanerLastAutoRun = "cleanerLastAutoRun"                // Double, epoch seconds
     static let cleanerLastAutoFreed = "cleanerLastAutoFreed"            // Int bytes
+    // User whitelist: paths and leftover-owner bundle identifiers kept out of
+    // every future scan, on top of the built-in CleanerPolicy safety rules.
+    static let cleanerExcludedPaths = "cleanerExcludedPaths"
+    static let cleanerExcludedBundleIDs = "cleanerExcludedBundleIDs"
     // Confirmed WhatsApp downloads in the top level of ~/Downloads.
     static let whatsAppDownloadsEnabled = "whatsAppDownloadsEnabled"
     static let whatsAppDownloadsAutomaticEnabled = "whatsAppDownloadsAutomaticEnabled"

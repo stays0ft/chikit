@@ -372,6 +372,7 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Cleaner/CleanerSupport.swift \
         Sources/Vorssaint/Services/Cleaner/CleanerPolicy.swift \
         Sources/Vorssaint/Services/Cleaner/CleanerSchedule.swift \
+        Sources/Vorssaint/Services/Cleaner/CleanerExclusions.swift \
         Sources/Vorssaint/Services/Uninstall/UninstallerSupport.swift \
         Sources/Vorssaint/Services/ManagedDownloads/WhatsAppDownloadSupport.swift \
         Tests/MetricsTests.swift \

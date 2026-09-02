@@ -102,6 +102,21 @@ final class JunkCleaner: ObservableObject {
         phase = .idle
     }
 
+    /// Adds an item to the user's whitelist and drops it from the current
+    /// results immediately, so declining a find once means never seeing it
+    /// again without reopening Settings. Leftovers are excluded by their
+    /// owning bundle identifier (so the whole app's future data is spared,
+    /// not just this one path); everything else is excluded by exact path.
+    func excludeFromFutureScans(_ id: UUID) {
+        guard let item = items.first(where: { $0.id == id }) else { return }
+        if item.category == .leftovers, !item.detail.isEmpty {
+            CleanerExclusions.excludeOwner(item.detail)
+        } else {
+            CleanerExclusions.excludePath(item.url.standardizedFileURL.path)
+        }
+        items.removeAll { $0.id == id }
+    }
+
     // MARK: - Scan
 
     func scan() {
@@ -134,7 +149,14 @@ final class JunkCleaner: ObservableObject {
                     guard let self, self.scanToken == token else { return }
                     self.scanningCategory = category
                 }
-                let found = run()
+                // The user's own whitelist (CleanerExclusions) is applied on
+                // top of every built-in rule: an excluded path or leftover
+                // owner never reaches the review list at all.
+                let found = run().filter { item in
+                    !CleanerExclusions.isExcluded(
+                        path: item.url.standardizedFileURL.path,
+                        owner: item.category == .leftovers ? item.detail : nil)
+                }
                 DispatchQueue.main.async { [weak self] in
                     guard let self, self.scanToken == token else { return }
                     self.items.append(contentsOf: found)

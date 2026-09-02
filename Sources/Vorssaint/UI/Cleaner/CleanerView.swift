@@ -261,7 +261,10 @@ struct CleanerView: View {
             if !permissions.fullDiskAccess {
                 FullDiskAccessNote(compact: compact).frame(maxWidth: 380)
             }
-            if !compact { Spacer() }
+            if !compact {
+                CleanerExclusionsList().frame(maxWidth: 380)
+                Spacer()
+            }
         }
         .padding(compact ? 14 : 28)
         .frame(maxWidth: .infinity)
@@ -720,6 +723,11 @@ struct CleanerView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
+            Button { cleaner.scan() } label: {
+                Image(systemName: "arrow.clockwise").font(.system(size: 14)).foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help(l10n.s.cleanerScan)
             Button { cleaner.reset() } label: {
                 Image(systemName: "xmark.circle.fill").font(.system(size: 16)).foregroundStyle(.secondary)
             }
@@ -793,7 +801,15 @@ struct CleanerView: View {
             Button(l10n.s.cleanerRevealInFinder) {
                 NSWorkspace.shared.activateFileViewerSelecting([item.url])
             }
+            Divider()
+            Button(exclusionStrings.excludeAction) {
+                cleaner.excludeFromFutureScans(item.id)
+            }
         }
+    }
+
+    private var exclusionStrings: CleanerExclusionStrings {
+        FeatureStrings.cleanerExclusions(l10n.language)
     }
 
     private var resultsFooter: some View {
