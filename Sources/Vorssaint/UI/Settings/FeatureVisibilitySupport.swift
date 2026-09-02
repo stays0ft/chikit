@@ -49,6 +49,7 @@ enum SettingsSectionAnchor: String, CaseIterable, Hashable {
     case cleaningMode
     case soundOutputSwitcher
     case fanControl
+    case notchMediaControls
 
     var page: SettingsPage {
         switch self {
@@ -60,7 +61,8 @@ enum SettingsSectionAnchor: String, CaseIterable, Hashable {
         case .switcher, .dock, .dockClick: return .switcher
         case .finderCutPaste, .finderRename: return .cutPaste
         case .clipboardHistory, .pastePlain: return .clipboard
-        case .quickLauncher, .quickToggles, .micMute, .cameraPreview, .scratchpad, .cleaningMode:
+        case .quickLauncher, .quickToggles, .micMute, .cameraPreview, .scratchpad, .cleaningMode,
+             .notchMediaControls:
             return .quickTools
         case .screenshot, .screenRecorder, .colorPicker, .screenOCR:
             return .screenshot
@@ -241,6 +243,8 @@ extension AppFeature {
         case .radialMenu: return FeatureSettingsDestination(.radialMenu)
         case .scratchpad:
             return FeatureSettingsDestination(.quickTools, sectionAnchor: .scratchpad)
+        case .notchMediaControls:
+            return FeatureSettingsDestination(.quickTools, sectionAnchor: .notchMediaControls)
         case .commandBar: return FeatureSettingsDestination(.commandBar)
         case .screenRecorder:
             return FeatureSettingsDestination(.screenshot, sectionAnchor: .screenRecorder)
@@ -278,7 +282,7 @@ enum FeatureVisibilitySupport {
         case .shelf: return [.shelf]
         case .media: return [.mediaTools]
         case .quickTools: return [.quickLauncher, .quickToggles, .micMute,
-                                  .cameraPreview, .scratchpad, .cleaningMode]
+                                  .cameraPreview, .scratchpad, .cleaningMode, .notchMediaControls]
         case .urlCleaner: return [.urlCleaner]
         case .cleaner: return [.cleaner]
         case .homebrew: return [.homebrew]

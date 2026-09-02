@@ -106,6 +106,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             guard StatusItemAnchorSupport.isTrustworthyStatusFrame(frame) else { return nil }
             return frame
         }
+        // Same fallback anchor for the notch media widget on displays with
+        // no notch to hang from.
+        NotchMediaService.shared.statusItemFrameProvider = { [weak self] in
+            guard let item = self?.statusController.statusItem, item.isVisible,
+                  let window = self?.statusController.button?.window else { return nil }
+            let frame = window.frame
+            guard StatusItemAnchorSupport.isTrustworthyStatusFrame(frame) else { return nil }
+            return frame
+        }
 
         setUpPopover()
         bindManagers()

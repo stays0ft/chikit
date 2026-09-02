@@ -12738,7 +12738,7 @@ struct MetricsTests {
 
         // MARK: Features hub catalog
 
-        expect(AppFeature.allCases.count == 57, "feature catalog has 57 features")
+        expect(AppFeature.allCases.count == 58, "feature catalog has 58 features")
         expect(Set(AppFeature.allCases.map(\.rawValue)).count == AppFeature.allCases.count,
                "feature ids are unique")
         expect(AppFeature.allCases.map(\.rawValue) == [
@@ -12751,7 +12751,7 @@ struct MetricsTests {
             "keepAwake", "brightness", "extraBrightness", "bluetoothSleep",
             "quickLauncher", "quickToggles", "colorPicker", "screenOCR", "cleaningMode", "mediaTools",
             "cleaner", "uninstaller", "homebrew", "appUpdates", "screenshot", "cameraPreview",
-            "radialMenu", "scratchpad", "commandBar", "screenRecorder", "killProcess",
+            "radialMenu", "scratchpad", "commandBar", "screenRecorder", "killProcess", "notchMediaControls",
             "monitorCPU", "monitorGPU", "monitorMemory", "monitorNetwork", "monitorDisk", "monitorPower",
             "fanControl",
         ], "feature ids are stable (they persist inside availability keys)")
@@ -22471,6 +22471,70 @@ struct MetricsTests {
             expect(!CleanerExclusions.isExcluded(path: "/Users/x/Library/Caches/com.maker.editor", owner: "com.maker.editor"),
                    "removing a path and an owner takes them back out of the whitelist")
         }
+
+        // MARK: Notch media controls
+        expect(NotchMediaSupport.hasNotch(topSafeAreaInset: 32),
+               "a non-zero top safe-area inset reads as a notched display")
+        expect(!NotchMediaSupport.hasNotch(topSafeAreaInset: 0),
+               "a zero top safe-area inset (external display, pre-notch MacBook) reads as no notch")
+        expect(NotchMediaSupport.snapshot(info: [:], isPlaying: false,
+                                          appBundleIdentifier: nil, appPID: 0) == nil,
+               "an empty info dictionary with nothing playing and no app identity yields no snapshot")
+        if let idleAppOnly = NotchMediaSupport.snapshot(info: [:], isPlaying: false,
+                                                        appBundleIdentifier: "com.apple.Music", appPID: 0) {
+            expect(idleAppOnly.title == nil && idleAppOnly.isPlaying == false,
+                   "an app identity alone (paused, no title) still yields a session, just an untitled one")
+        } else {
+            expect(false, "a bundle identifier alone is enough app identity for a snapshot")
+        }
+        let notchNowPlayingInfo: [String: Any] = [
+            NotchMediaSupport.titleKey: "Song Title",
+            NotchMediaSupport.artistKey: "Artist Name",
+            NotchMediaSupport.albumKey: "Album Name",
+            NotchMediaSupport.elapsedTimeKey: NSNumber(value: 30.0),
+            NotchMediaSupport.durationKey: NSNumber(value: 180.0),
+            NotchMediaSupport.playbackRateKey: NSNumber(value: 1.0),
+        ]
+        if let playing = NotchMediaSupport.snapshot(info: notchNowPlayingInfo, isPlaying: true,
+                                                     appBundleIdentifier: "com.spotify.client", appPID: 42) {
+            expectEqual(playing.title ?? "", "Song Title", "notch snapshot title")
+            expectEqual(playing.artist ?? "", "Artist Name", "notch snapshot artist")
+            expectClose(playing.elapsed, 30, "notch snapshot elapsed")
+            expectClose(playing.duration ?? -1, 180, "notch snapshot duration")
+            expect(playing.isPlaying, "notch snapshot carries the playing flag it was given")
+        } else {
+            expect(false, "a populated now-playing dictionary with an app identity yields a snapshot")
+        }
+        // Control characters and newlines are stripped the same way the
+        // radial menu's now-playing sanitizer strips them, so a malformed
+        // title can never break the pill's layout or accessibility label.
+        if let sanitized = NotchMediaSupport.snapshot(
+            info: [NotchMediaSupport.titleKey: "Line one\nLine two\u{0007}"],
+            isPlaying: true, appBundleIdentifier: nil, appPID: 7) {
+            expectEqual(sanitized.title ?? "", "Line oneLine two", "notch snapshot strips control characters and newlines")
+        } else {
+            expect(false, "a title needing sanitization should still produce a snapshot")
+        }
+        // MARK: Notch media elapsed-time interpolation
+        let baseSnapshot = NotchMediaSnapshot(title: "T", artist: nil, album: nil, artworkData: nil,
+                                              appBundleIdentifier: nil, appPID: nil, isPlaying: true,
+                                              elapsed: 10, duration: 100,
+                                              timestamp: Date(timeIntervalSince1970: 1000),
+                                              playbackRate: 1)
+        expectClose(NotchMediaSupport.interpolatedElapsed(
+            baseSnapshot, at: Date(timeIntervalSince1970: 1005)), 15,
+            "playing elapsed time advances at the playback rate between polls")
+        expectClose(NotchMediaSupport.interpolatedElapsed(
+            baseSnapshot, at: Date(timeIntervalSince1970: 1200)), 100,
+            "interpolated elapsed time clamps to the track's duration")
+        let pausedSnapshot = NotchMediaSnapshot(title: "T", artist: nil, album: nil, artworkData: nil,
+                                                appBundleIdentifier: nil, appPID: nil, isPlaying: false,
+                                                elapsed: 42, duration: 100,
+                                                timestamp: Date(timeIntervalSince1970: 1000),
+                                                playbackRate: 0)
+        expectClose(NotchMediaSupport.interpolatedElapsed(
+            pausedSnapshot, at: Date(timeIntervalSince1970: 1050)), 42,
+            "a paused snapshot's elapsed time holds still regardless of how much wall time passes")
 
         if failures.isEmpty {
             print("TESTS OK (\(checks) checks)")

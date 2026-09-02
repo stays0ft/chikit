@@ -11,6 +11,7 @@ Vorssaint adds quit and close protections, expands screen text recognition, capt
 
 ### Added
 - The Cleaner's results list can now exclude any item — or, for a leftover, its whole owning app — from every future scan, and the excluded paths and apps are listed and removable from Settings. A manual rescan button is now available directly from the results view.
+- A new Notch Media Controls feature adds a Dynamic-Island-style now-playing widget: a slim pill appears at the notch while something is playing and expands on hover or click into title, artist, artwork, play/pause, next/previous and a scrubber. Macs without a notch get the same widget docked under the menu bar icon instead. Off by default in the Features hub; turning it off stops all now-playing observation and removes the widget immediately.
 - Settings now includes optional protections for Command-Q and Command-W with customizable hold duration, double press, extra modifier requirements and per-app scopes. Thanks to @RuanMD and @PathGao.
 - The capture magnifier now shows each screen pixel on a grid with the pointer's position and color, moves one pixel at a time with the arrow keys, copies the color with C without ending the capture, and can optionally open enabled by default from Settings. Thanks to @ruvelro.
 - Mouse settings now include an optional control to disable pointer acceleration for connected mice, restoring the previous system setting when it is turned off or the app quits. Thanks to @CrowKiller.
