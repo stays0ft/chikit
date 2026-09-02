@@ -203,6 +203,8 @@ Permissions get the same treatment. Every one is optional, the app explains each
 
 The shelf and almost every quick toggle need no permission at all. Finder cut and paste, the uninstaller, emptying the Trash and the Homebrew terminal handoff ask macOS for Automation access the first time they talk to Finder or Terminal.
 
+Notch media controls also needs no permission: it reads song/artist/artwork and sends play, pause and skip through the same private system channel Control Center itself uses, so macOS never prompts for it. Nothing about what is playing leaves your Mac.
+
 ## What you need
 
 - A Mac with Apple Silicon

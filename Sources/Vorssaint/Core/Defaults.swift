@@ -137,6 +137,8 @@ enum DefaultsKey {
     static let quitProtectionCloseScope = "quitProtectionCloseScope"
     static let quitProtectionCloseExceptions = "quitProtectionCloseExceptions"
     static let quitProtectionCloseShowFeedback = "quitProtectionCloseShowFeedback"
+    static let notchMediaControlsEnabled = "notchMediaControlsEnabled"
+    static let notchMediaControlsShowIdlePill = "notchMediaControlsShowIdlePill"
     static let shelfEnabled = "shelfEnabled"
     static let shelfShortcutEnabled = "shelfShortcutEnabled"
     static let shelfShortcut = "shelfShortcut"            // GlobalShortcut storage value
@@ -975,6 +977,8 @@ enum Defaults {
         DefaultsKey.textSnippetsEnabled: false,
         DefaultsKey.snippetLibraryEnabled: false,
         DefaultsKey.snippetLibraryShortcut: GlobalShortcut.snippetLibraryDefault.storageValue,
+        DefaultsKey.notchMediaControlsEnabled: false,
+        DefaultsKey.notchMediaControlsShowIdlePill: true,
         DefaultsKey.radialMenuEnabled: false,
         DefaultsKey.radialMenuShortcut: GlobalShortcut.radialMenuDefault.storageValue,
         DefaultsKey.radialMenuAtPointer: true,

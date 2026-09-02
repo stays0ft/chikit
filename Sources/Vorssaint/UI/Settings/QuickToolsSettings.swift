@@ -22,6 +22,8 @@ struct QuickToolsSettings: View {
     @AppStorage(DefaultsKey.scratchpadBackgroundOpacity) private var scratchpadBackgroundOpacity = 0.0
     @AppStorage(DefaultsKey.micMuteMenuBarIndicator) private var micMenuBarIndicator = false
     @AppStorage(DefaultsKey.cleaningModeKeepScreenVisible) private var cleaningModeKeepScreenVisible = false
+    @AppStorage(DefaultsKey.notchMediaControlsEnabled) private var notchMediaControlsEnabled = false
+    @AppStorage(DefaultsKey.notchMediaControlsShowIdlePill) private var notchMediaControlsShowIdlePill = true
 
     var body: some View {
         Form {
@@ -239,6 +241,27 @@ struct QuickToolsSettings: View {
                     Text(l10n.s.cleaningMenuItem)
                 }
                 .settingsSectionAnchor(.cleaningMode)
+            }
+
+            if AppFeature.notchMediaControls.isAvailable {
+                Section {
+                    Toggle(FeatureStrings.notchMedia(l10n.language).toggleLabel,
+                           isOn: $notchMediaControlsEnabled)
+                        .onChange(of: notchMediaControlsEnabled) { _, _ in
+                            NotchMediaService.shared.syncWithPreferences()
+                        }
+                    Text(FeatureStrings.notchMedia(l10n.language).panelCaption)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Toggle(FeatureStrings.notchMedia(l10n.language).idlePillToggleLabel,
+                           isOn: $notchMediaControlsShowIdlePill)
+                    Text(FeatureStrings.notchMedia(l10n.language).idlePillCaption)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text(FeatureStrings.notchMedia(l10n.language).pageTitle)
+                }
+                .settingsSectionAnchor(.notchMediaControls)
             }
         }
         .formStyle(.grouped)

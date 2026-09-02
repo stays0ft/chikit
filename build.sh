@@ -247,6 +247,8 @@ if (( TEST )); then
         Sources/Vorssaint/Services/FanControl/FanControlSupport.swift \
         Sources/Vorssaint/Services/Snippets/TextSnippetSupport.swift \
         Sources/Vorssaint/Services/RadialMenu/RadialMenuSupport.swift \
+        Sources/Vorssaint/Core/NotchMediaStrings.swift \
+        Sources/Vorssaint/Services/NotchMedia/NotchMediaSupport.swift \
         Sources/Vorssaint/Services/QuickTools/ScratchpadSupport.swift \
         Sources/Vorssaint/Services/KillProcess/KillProcessSupport.swift \
         Sources/Vorssaint/Services/Recorder/RecorderSupport.swift \
