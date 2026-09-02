@@ -22378,6 +22378,100 @@ struct MetricsTests {
                 && diskExclusionsListCode.contains("QuickTogglesSupport.isExcluded("),
                "the exclusions picker asks the shared exclusion test, UUID included, not a name-only one")
 
+        // MARK: Cleaner / Uninstaller — bundle identifier matching
+
+        do {
+            let identity = UninstallerSupport.identity(
+                primaryBundleID: "com.maker.editor",
+                bundleIDs: ["com.maker.editor"],
+                displayNames: ["Editor"])
+            expect(UninstallerSupport.leftoverMatch("com.maker.editor.plist", identity: identity) == .exact,
+                   "an exact bundle id match (with a stripped payload suffix) is exact confidence")
+            expect(UninstallerSupport.leftoverMatch("com.maker.editor.helper", identity: identity) == .related,
+                   "a sub-identifier of an owned bundle id is related, not exact")
+            expect(UninstallerSupport.leftoverMatch("com.other.vendor", identity: identity) == .none,
+                   "an unrelated reverse-DNS identifier never matches by display name fragments")
+            expect(UninstallerSupport.leftoverMatch("Editor Preferences", identity: identity) == .related,
+                   "a display name fragment long enough to be specific matches as related, never exact")
+            expect(UninstallerSupport.leftoverMatch("com.mymaker.editorpro", identity: identity) == .none,
+                   "a look-alike bundle id is never claimed by a shorter owned id's dot-prefix rule")
+        }
+
+        do {
+            let groupIdentity = UninstallerSupport.Identity(
+                bundleIDs: [], nameTokens: [], teamIDs: [],
+                groupIDs: ["group.com.maker.suite"])
+            expect(UninstallerSupport.leftoverMatch("group.com.maker.suite", identity: groupIdentity) == .exact,
+                   "a signed group container id is exact confidence even with no bundle id evidence")
+            expect(UninstallerSupport.leftoverMatch("group.com.other.suite", identity: groupIdentity) == .none,
+                   "an unsigned group id never matches just by looking similar")
+        }
+
+        expectEqual(CleanerSupport.bundleIDCandidate(fromEntryName: "com.maker.Editor.savedState") ?? "?",
+                    "com.maker.Editor", "bundleIDCandidate strips a known payload suffix")
+        expectEqual(CleanerSupport.bundleIDCandidate(fromEntryName: "group.com.maker.Editor") ?? "?",
+                    "com.maker.Editor", "bundleIDCandidate strips the group. shared-container wrapper")
+        expect(CleanerSupport.bundleIDCandidate(fromEntryName: "SomeVendor") == nil,
+               "bundleIDCandidate refuses a plain vendor folder name with no dot-separated shape")
+        expect(CleanerSupport.bundleIDCandidate(
+                fromEntryName: "com.4C2E9C1A-1B2C-4D5E-8F9A-0B1C2D3E4F5A.maker") == nil,
+               "bundleIDCandidate refuses a name whose remainder still carries a mid-name UUID component")
+
+        expect(CleanerSupport.isOwned(candidate: "com.maker.editor.helper", byInstalled: ["com.maker.editor"]),
+               "isOwned treats an embedded helper as owned by its parent bundle id")
+        expect(CleanerSupport.isOwned(candidate: "com.maker.editor", byInstalled: ["com.maker.editor.suite"]),
+               "isOwned also matches the other direction: an installed id nested under the candidate")
+        expect(!CleanerSupport.isOwned(candidate: "com.maker.editorpro", byInstalled: ["com.maker.editor"]),
+               "isOwned never matches on a bare string prefix without the dot boundary")
+        expect(CleanerSupport.sharesVendorNamespace(candidate: "com.maker.updater",
+                                                     withInstalled: ["com.maker.editor"]),
+               "sharesVendorNamespace keeps a sibling identifier alive under the same vendor namespace")
+        expect(!CleanerSupport.sharesVendorNamespace(candidate: "com.github.someproject",
+                                                      withInstalled: ["com.github.otherproject"]),
+               "sharesVendorNamespace excludes hosting namespaces like github, where the vendor is not the owner")
+        expect(!CleanerSupport.isProtectedBundleID("com.maker.editor"),
+               "an ordinary third-party id is not protected")
+        expect(CleanerSupport.isProtectedBundleID("com.apple.dock"),
+               "an Apple domain id is always protected")
+
+        // MARK: Cleaner — user exclusion whitelist
+
+        do {
+            let previousPaths = UserDefaults.standard.object(forKey: DefaultsKey.cleanerExcludedPaths)
+            let previousOwners = UserDefaults.standard.object(forKey: DefaultsKey.cleanerExcludedBundleIDs)
+            UserDefaults.standard.removeObject(forKey: DefaultsKey.cleanerExcludedPaths)
+            UserDefaults.standard.removeObject(forKey: DefaultsKey.cleanerExcludedBundleIDs)
+            defer {
+                if let previousPaths { UserDefaults.standard.set(previousPaths, forKey: DefaultsKey.cleanerExcludedPaths) }
+                else { UserDefaults.standard.removeObject(forKey: DefaultsKey.cleanerExcludedPaths) }
+                if let previousOwners { UserDefaults.standard.set(previousOwners, forKey: DefaultsKey.cleanerExcludedBundleIDs) }
+                else { UserDefaults.standard.removeObject(forKey: DefaultsKey.cleanerExcludedBundleIDs) }
+            }
+
+            expect(!CleanerExclusions.isExcluded(path: "/Users/x/Library/Caches/com.maker.editor", owner: nil),
+                   "nothing is excluded before the whitelist has any entries")
+
+            CleanerExclusions.excludePath("/Users/x/Library/Caches/com.maker.editor")
+            expect(CleanerExclusions.isExcluded(path: "/Users/x/Library/Caches/com.maker.editor", owner: nil),
+                   "an excluded exact path is reported excluded")
+            expect(CleanerExclusions.isExcluded(path: "/Users/x/Library/Caches/com.maker.editor/sub/file", owner: nil),
+                   "a path nested inside an excluded folder is excluded too")
+            expect(!CleanerExclusions.isExcluded(path: "/Users/x/Library/Caches/com.maker.editorpro", owner: nil),
+                   "a sibling path that merely shares a prefix string is not excluded")
+
+            CleanerExclusions.excludeOwner("com.maker.editor")
+            expect(CleanerExclusions.isExcluded(path: "/Users/x/Library/Application Support/com.maker.editor",
+                                                owner: "com.maker.editor"),
+                   "an excluded leftover owner is reported excluded regardless of its path")
+            expect(CleanerExclusions.isExcluded(path: "/anything", owner: "COM.MAKER.EDITOR"),
+                   "owner exclusion is case-insensitive")
+
+            CleanerExclusions.removePath("/Users/x/Library/Caches/com.maker.editor")
+            CleanerExclusions.removeOwner("com.maker.editor")
+            expect(!CleanerExclusions.isExcluded(path: "/Users/x/Library/Caches/com.maker.editor", owner: "com.maker.editor"),
+                   "removing a path and an owner takes them back out of the whitelist")
+        }
+
         if failures.isEmpty {
             print("TESTS OK (\(checks) checks)")
             exit(0)
