@@ -147,7 +147,7 @@ private struct PermissionGuideCard: View {
             HStack(spacing: 7) {
                 Image(systemName: "hand.raised.fill")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
                 Text(guide.title)
                     .font(.system(size: 13, weight: .semibold))
                 Text(permissionName)
@@ -225,7 +225,7 @@ private struct PermissionGuideCard: View {
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .frame(width: 16, height: 16)
-                .background(Circle().fill(Color.accentColor))
+                .background(Circle().fill(Color.chikitAccent))
             Text(text)
                 .font(.system(size: 12))
                 .fixedSize(horizontal: false, vertical: true)

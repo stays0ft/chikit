@@ -292,7 +292,7 @@ struct PanelSection<Content: View>: View {
         .foregroundStyle(isEditing ? Color.white : Color.secondary)
         .background(
             RoundedRectangle(cornerRadius: isEditing ? 8 : 6, style: .continuous)
-                .fill(isEditing ? Color.accentColor : Color.clear)
+                .fill(isEditing ? Color.chikitAccent : Color.clear)
         )
         .help(isEditing ? l10n.s.uninstallerDoneTitle : l10n.s.menuEdit)
     }
@@ -397,11 +397,11 @@ struct PanelInlineHideButton: View {
         } label: {
             Image(systemName: isVisible ? "eye.slash.fill" : "eye.fill")
                 .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(isVisible ? Color.secondary : Color.accentColor)
+                .foregroundStyle(isVisible ? Color.secondary : Color.chikitAccent)
                 .frame(width: 24, height: 22)
                 .background(
                     RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill((isVisible ? Color.primary : Color.accentColor).opacity(0.10))
+                        .fill((isVisible ? Color.primary : Color.chikitAccent).opacity(0.10))
                 )
         }
         .buttonStyle(.plain)

@@ -247,7 +247,7 @@ struct HomebrewOperationStatusView: View {
 
     private var iconColor: Color {
         switch status.result {
-        case .running: return .accentColor
+        case .running: return .chikitAccent
         case .succeeded: return .green
         case .failed, .needsTerminal: return .orange
         case .cancelled: return .secondary
@@ -285,7 +285,7 @@ private struct HomebrewIndeterminateProgressBar: View {
                 Capsule()
                     .fill(Color.secondary.opacity(0.18))
                 Capsule()
-                    .fill(Color.accentColor.opacity(0.72))
+                    .fill(Color.chikitAccent.opacity(0.72))
                     .frame(width: max(geometry.size.width * 0.34, 36))
                     .offset(x: offset * geometry.size.width)
             }

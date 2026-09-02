@@ -51,7 +51,7 @@ struct ShelfView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(isDropTargeted ? Color.accentColor : Color.white.opacity(0.12),
+                .strokeBorder(isDropTargeted ? Color.chikitAccent : Color.white.opacity(0.12),
                               lineWidth: isDropTargeted ? 2 : 1)
         )
         .overlay(alignment: .topLeading) {
@@ -130,19 +130,19 @@ struct ShelfView: View {
                 .frame(width: 30, height: 30)
                 .background(
                     Circle().fill(shelf.isPinned
-                                  ? Color.accentColor.opacity(pinButtonHovered ? 0.30 : 0.20)
+                                  ? Color.chikitAccent.opacity(pinButtonHovered ? 0.30 : 0.20)
                                   : Color.white.opacity(pinButtonHovered ? 0.18 : 0.11))
                 )
                 .overlay(
                     Circle().strokeBorder(shelf.isPinned
-                                          ? Color.accentColor.opacity(0.65)
+                                          ? Color.chikitAccent.opacity(0.65)
                                           : Color.white.opacity(pinButtonHovered ? 0.75 : 0.32),
                                           lineWidth: 1)
                 )
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(shelf.isPinned ? Color.accentColor : Color.secondary)
+        .foregroundStyle(shelf.isPinned ? Color.chikitAccent : Color.secondary)
         .onHover { pinButtonHovered = $0 }
         .help(shelf.isPinned ? l10n.s.shelfUnpin : l10n.s.shelfPin)
         .accessibilityLabel(shelf.isPinned ? l10n.s.shelfUnpin : l10n.s.shelfPin)

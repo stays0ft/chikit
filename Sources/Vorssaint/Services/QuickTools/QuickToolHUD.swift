@@ -52,7 +52,7 @@ enum QuickToolHUD {
             } else {
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
             }
             Text(message)
                 .font(.system(size: 12, weight: .semibold))
@@ -248,7 +248,7 @@ private struct QuickToolCountdownView: View {
                 .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
             Circle()
                 .trim(from: 0.04, to: 0.04 + progress * 0.92)
-                .stroke(Color.accentColor,
+                .stroke(Color.chikitAccent,
                         style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .padding(6)
@@ -285,7 +285,7 @@ private struct ScrollingCaptureHUDView: View {
         HStack(spacing: 10) {
             Image(systemName: "rectangle.stack.fill")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(Color.chikitAccent)
             VStack(alignment: .leading, spacing: 1) {
                 Text(model.message)
                     .font(.system(size: 12, weight: .semibold))

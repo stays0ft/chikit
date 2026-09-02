@@ -333,7 +333,7 @@ struct MenuPanelView: View {
                 }
                 .buttonStyle(.plain)
                 .focused($focusedSection, equals: id)
-                .foregroundStyle(isActive ? Color.accentColor : Color.secondary.opacity(0.86))
+                .foregroundStyle(isActive ? Color.chikitAccent : Color.secondary.opacity(0.86))
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .fill(isActive ? navigationActiveFill : Color.clear)
@@ -353,7 +353,7 @@ struct MenuPanelView: View {
     }
 
     private var navigationActiveFill: Color {
-        colorScheme == .light ? Color.accentColor.opacity(0.13) : Color.accentColor.opacity(0.20)
+        colorScheme == .light ? Color.chikitAccent.opacity(0.13) : Color.chikitAccent.opacity(0.20)
     }
 
     private func metricNavigationHeader(_ kind: MetricDetailKind) -> some View {
@@ -1215,7 +1215,7 @@ struct QuickControlsSection: View {
                 Spacer(minLength: 0)
                 Text("\(enabledCount)/\(categoryItems.count)")
                     .font(.system(size: 9.5, weight: .semibold, design: .rounded))
-                    .foregroundStyle(enabledCount > 0 ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(enabledCount > 0 ? Color.chikitAccent : Color.secondary)
                     .monospacedDigit()
             }
             .contentShape(Rectangle())
@@ -2029,7 +2029,7 @@ struct UtilityActionButton: View {
 
     private var iconColor: Color {
         if isHiddenInEditor { return .secondary }
-        return needsAttention ? .orange : .accentColor
+        return needsAttention ? .orange : .chikitAccent
     }
 
     private var captionColor: Color {
@@ -2142,7 +2142,7 @@ struct PanelToggleRow: View {
     private var iconColor: Color {
         if isHiddenInEditor { return .secondary }
         if needsAttention { return .orange }
-        return isOn ? .accentColor : .secondary
+        return isOn ? .chikitAccent : .secondary
     }
 
     private var captionColor: Color {
@@ -2317,7 +2317,7 @@ struct UpdateBanner: View {
         switch updates.state {
         case let .available(version):
             let isBeta = UpdateServiceSupport.SemanticVersion(raw: version)?.isPrerelease ?? false
-            let tintColor: Color = isBeta ? .orange : .accentColor
+            let tintColor: Color = isBeta ? .orange : .chikitAccent
 
             Button {
                 appDelegate()?.showUpdatePreview()
@@ -2571,9 +2571,9 @@ struct KeepAwakeCard: View {
     private func automationSystemBadge(_ icon: String) -> some View {
         Image(systemName: icon)
             .font(.system(size: 9, weight: .semibold))
-            .foregroundStyle(Color.accentColor)
+            .foregroundStyle(Color.chikitAccent)
             .frame(width: 17, height: 17)
-            .background(Circle().fill(Color.accentColor.opacity(0.12)))
+            .background(Circle().fill(Color.chikitAccent.opacity(0.12)))
     }
 
     private func compactOptionToggle(icon: String,

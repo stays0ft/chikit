@@ -37,14 +37,14 @@ struct WindowGestureModifierPicker: View {
                     Text(choice.symbol)
                         .font(.system(size: compact ? 12 : 14, weight: .semibold, design: .rounded))
                         .frame(width: compact ? 25 : 30, height: compact ? 22 : 25)
-                        .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                        .foregroundStyle(selected ? Color.chikitAccent : Color.secondary)
                         .background(
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(selected ? Color.accentColor.opacity(0.14) : Color.primary.opacity(0.045))
+                                .fill(selected ? Color.chikitAccent.opacity(0.14) : Color.primary.opacity(0.045))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .stroke(selected ? Color.accentColor.opacity(0.45) : Color.primary.opacity(0.1),
+                                .stroke(selected ? Color.chikitAccent.opacity(0.45) : Color.primary.opacity(0.1),
                                         lineWidth: 1)
                         )
                 }
@@ -121,7 +121,7 @@ struct WindowGestureHints: View {
                     ? "arrow.up.and.down.and.arrow.left.and.right"
                     : "arrow.up.left.and.arrow.down.right")
                 .font(.system(size: compact ? 10 : 11, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(Color.chikitAccent)
                 .frame(width: compact ? 15 : 17, height: compact ? 15 : 17)
                 .accessibilityHidden(true)
             Text(text)

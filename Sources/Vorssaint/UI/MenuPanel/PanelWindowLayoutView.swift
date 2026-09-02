@@ -71,7 +71,7 @@ struct PanelWindowLayoutView: View {
             } label: {
                 Image(systemName: editingActions ? "checkmark.circle.fill" : "slider.horizontal.3")
                     .font(.system(size: 14))
-                    .foregroundStyle(editingActions ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(editingActions ? Color.chikitAccent : Color.secondary)
                     .frame(width: 22, height: 22)
             }
             .buttonStyle(.plain)

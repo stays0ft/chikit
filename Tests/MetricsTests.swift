@@ -12838,8 +12838,11 @@ struct MetricsTests {
             of: additionalPermissionsAlignment,
             options: .regularExpression) != nil,
                "the additional onboarding permission rows share one leading edge")
-        expect(FeaturePreset.essential.features.flatMap(\.onboardingPermissions).isEmpty,
-               "the essential first-run choice asks for no broad permission")
+        expect(Set(FeaturePreset.essential.features.flatMap(\.onboardingPermissions))
+                == [.accessibility, .screenRecording],
+               "the essential first-run choice explains accessibility and screen "
+               + "recording, needed by window layout, auto quit, Finder rename "
+               + "and the screen recorder")
         expect(Set(FeaturePreset.windows.features.flatMap(\.onboardingPermissions))
                 == [.accessibility, .screenRecording],
                "the windows first-run choice explains exactly its two broad permissions")
@@ -13897,9 +13900,9 @@ struct MetricsTests {
         expect(FeaturePreset.allCases.allSatisfy { !$0.features.isEmpty },
                "every preset installs something")
         expect(FeaturePreset.essential.features.contains(.mixer)
-                && FeaturePreset.essential.features.contains(.keepAwake)
+                && FeaturePreset.essential.features.contains(.windowLayout)
                 && FeaturePreset.essential.features.contains(.monitorPower),
-               "the essential preset covers mixer, monitor and keep awake")
+               "the essential preset covers mixer, monitor and window layout")
         expect(FeaturePreset.windows.features.allSatisfy { $0.group == .windowsDock },
                "the windows preset stays inside the windows and Dock group")
         expect(FeaturePreset.battery.features.allSatisfy {
@@ -16911,7 +16914,7 @@ struct MetricsTests {
         let scratchpadHitTargetContracts = [
             "Image(systemName: \"plus\")\n                    .font(.system(size: 12, weight: .semibold))\n                    .frame(width: 22, height: 22)\n                    .contentShape(Rectangle())",
             "Image(systemName: \"ellipsis\")\n                    .font(.system(size: 12, weight: .semibold))\n                    .frame(width: 22, height: 22)\n                    .contentShape(Rectangle())",
-            ".fill(selected ? Color.accentColor.opacity(0.16) : Color.clear)\n                }\n                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))",
+            ".fill(selected ? Color.chikitAccent.opacity(0.16) : Color.clear)\n                }\n                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))",
             "Image(systemName: service.isPinned ? \"pin.fill\" : \"pin\")\n                    .font(.system(size: 12, weight: .semibold))\n                    .frame(width: 22, height: 22)\n                    .contentShape(Rectangle())",
             "Image(systemName: \"xmark.circle.fill\")\n                    .font(.system(size: 14))\n                    .foregroundStyle(.secondary)\n                    .frame(width: 22, height: 22)\n                    .contentShape(Rectangle())",
         ]

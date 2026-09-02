@@ -268,11 +268,11 @@ struct MediaWorkspaceView: View {
             .frame(maxWidth: .infinity, minHeight: compact ? 52 : 62, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isDropTargeted ? Color.accentColor.opacity(0.16) : PanelSurface.controlFill(for: colorScheme))
+                    .fill(isDropTargeted ? Color.chikitAccent.opacity(0.16) : PanelSurface.controlFill(for: colorScheme))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(isDropTargeted ? Color.accentColor.opacity(0.7) : PanelSurface.border(for: colorScheme),
+                    .strokeBorder(isDropTargeted ? Color.chikitAccent.opacity(0.7) : PanelSurface.border(for: colorScheme),
                                   lineWidth: isDropTargeted ? 1.2 : 0.8)
             )
             .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
@@ -894,14 +894,14 @@ struct MediaWorkspaceView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: compact ? 28 : 32)
-            .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.78))
+            .foregroundStyle(selected ? Color.chikitAccent : Color.primary.opacity(0.78))
             .background(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(selected ? Color.accentColor.opacity(0.16) : PanelSurface.controlFill(for: colorScheme))
+                    .fill(selected ? Color.chikitAccent.opacity(0.16) : PanelSurface.controlFill(for: colorScheme))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .strokeBorder(selected ? Color.accentColor.opacity(0.45) : PanelSurface.border(for: colorScheme),
+                    .strokeBorder(selected ? Color.chikitAccent.opacity(0.45) : PanelSurface.border(for: colorScheme),
                                   lineWidth: 0.8)
             )
         }

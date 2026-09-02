@@ -17,7 +17,7 @@ struct RadialMenuView: View {
     private var text: RadialMenuFeatureStrings { FeatureStrings.radialMenu(l10n.language) }
     private var items: [RadialMenuItem] { service.stack.last ?? [] }
     private var profileColor: Color {
-        service.activeProfile?.color.color(for: colorScheme) ?? .accentColor
+        service.activeProfile?.color.color(for: colorScheme) ?? .chikitAccent
     }
 
     var body: some View {

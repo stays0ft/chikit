@@ -200,7 +200,7 @@ struct PanelClipboardView: View {
             if entry.isPinned {
                 Label(text.pinned, systemImage: "pin.fill")
                     .font(.system(size: 9.5, weight: .bold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
             }
             entryPreview(entry)
             HStack(spacing: 6) {

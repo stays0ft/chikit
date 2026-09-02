@@ -324,7 +324,7 @@ struct SystemSection: View {
                          kind: .cpu, editing: editing, visible: $sysCPU)
                 if graphCPU, monitor.snapshot.cpuHistory.count >= 2 {
                     Sparkline(values: monitor.snapshot.cpuHistory,
-                              color: .accentColor,
+                              color: .chikitAccent,
                               maxValue: 1,
                               showsZeroBaseline: true)
                         .frame(height: 22)
@@ -690,7 +690,7 @@ private struct UsageBar: View {
 
     private var barColor: Color {
         switch fraction {
-        case ..<0.6: return .accentColor
+        case ..<0.6: return .chikitAccent
         case ..<0.85: return PanelMetricColor.yellow(for: colorScheme)
         default: return PanelMetricColor.red(for: colorScheme)
         }

@@ -77,7 +77,7 @@ struct FeatureHubSettings: View {
                     HStack(spacing: 10) {
                         Image(systemName: "arrow.clockwise.circle.fill")
                             .font(.system(size: 22))
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle(Color.chikitAccent)
                         Text(hub.restartNote)
                             .font(.callout)
                             .fixedSize(horizontal: false, vertical: true)
@@ -88,7 +88,7 @@ struct FeatureHubSettings: View {
                         .buttonStyle(.borderedProminent)
                     }
                     .padding(.vertical, 4)
-                    .listRowBackground(Color.accentColor.opacity(0.12))
+                    .listRowBackground(Color.chikitAccent.opacity(0.12))
                 }
             }
             if tab == .features {
@@ -262,7 +262,7 @@ private struct PresetCard: View {
             HStack(spacing: 6) {
                 Image(systemName: preset.symbolName)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
                 Text(name)
                     .font(.system(size: 12, weight: .semibold))
                     .lineLimit(1)
@@ -372,7 +372,7 @@ private struct FeatureHubRow: View {
         .padding(.vertical, 1)
         .overlay {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(Color.accentColor.opacity(isHighlighted ? 0.10 : 0))
+                .fill(Color.chikitAccent.opacity(isHighlighted ? 0.10 : 0))
                 .allowsHitTesting(false)
         }
     }
@@ -399,7 +399,7 @@ private struct FeatureHubRow: View {
                             .foregroundStyle(Color.white)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1)
-                            .background(Capsule().fill(Color.accentColor))
+                            .background(Capsule().fill(Color.chikitAccent))
                             .accessibilityHidden(true)
                     }
                     ForEach(feature.permissions, id: \.self) { permission in

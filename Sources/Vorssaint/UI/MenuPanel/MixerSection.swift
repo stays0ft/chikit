@@ -911,7 +911,7 @@ private struct EditableVolumePercent<Label: View>: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .strokeBorder(Color.accentColor.opacity(0.7), lineWidth: 1)
+                    .strokeBorder(Color.chikitAccent.opacity(0.7), lineWidth: 1)
             )
             .opacity(isEditing ? 1 : 0)
             .allowsHitTesting(isEditing)
