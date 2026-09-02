@@ -37,7 +37,7 @@ enum FeaturePreset: String, CaseIterable, Identifiable {
             // it here would silently force-install it on Macs whose fans
             // aren't controllable. It stays one click away in the hub, where
             // the gate applies normally.
-            return [.windowLayout, .cleaner, .uninstaller,
+            return [.windowLayout, .cleaner, .uninstaller, .notchMediaControls,
                     .autoQuit, .clipboardHistory, .finderRename,
                     .mixer, .soundOutputSwitcher, .screenRecorder,
                     .monitorCPU, .monitorGPU, .monitorMemory,
