@@ -30,7 +30,16 @@ enum FeaturePreset: String, CaseIterable, Identifiable {
     var features: Set<AppFeature> {
         switch self {
         case .essential:
-            return [.mixer, .keepAwake,
+            // Fan control is deliberately excluded: it is a hardware-gated
+            // beta (see `isHardwareSupported`), and this first-run seed
+            // writes availability directly, bypassing the `mayFlip` hardware
+            // check that every other install surface goes through. Putting
+            // it here would silently force-install it on Macs whose fans
+            // aren't controllable. It stays one click away in the hub, where
+            // the gate applies normally.
+            return [.windowLayout, .cleaner, .uninstaller,
+                    .autoQuit, .clipboardHistory, .finderRename,
+                    .mixer, .soundOutputSwitcher, .screenRecorder,
                     .monitorCPU, .monitorGPU, .monitorMemory,
                     .monitorNetwork, .monitorDisk, .monitorPower]
         case .windows:
@@ -47,7 +56,12 @@ enum FeaturePreset: String, CaseIterable, Identifiable {
     /// Presets whose features are on-demand need none.
     var enableKeys: [String] {
         switch self {
-        case .essential, .battery:
+        case .essential:
+            return [DefaultsKey.autoQuitEnabled,
+                    DefaultsKey.clipboardHistoryEnabled,
+                    DefaultsKey.finderRenameEnabled,
+                    DefaultsKey.soundOutputSwitcherEnabled]
+        case .battery:
             return []
         case .windows:
             return [DefaultsKey.switcherEnabled,

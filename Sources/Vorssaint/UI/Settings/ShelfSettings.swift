@@ -165,7 +165,7 @@ struct ShelfSettings: View {
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .frame(width: 18, height: 18)
-                .background(Circle().fill(Color.accentColor))
+                .background(Circle().fill(Color.chikitAccent))
             Text(text)
                 .font(.callout)
                 .fixedSize(horizontal: false, vertical: true)

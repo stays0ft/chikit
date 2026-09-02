@@ -89,7 +89,7 @@ struct UpdateHighlightsView: View {
                 HStack(spacing: 6) {
                     ForEach(pages.indices, id: \.self) { dot in
                         Circle()
-                            .fill(dot == clamped ? Color.accentColor : Color.primary.opacity(0.18))
+                            .fill(dot == clamped ? Color.chikitAccent : Color.primary.opacity(0.18))
                             .frame(width: 7, height: 7)
                     }
                 }
@@ -140,7 +140,7 @@ struct UpdateHighlightsView: View {
                 HStack(spacing: 7) {
                     Image(systemName: highlight.symbol)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.chikitAccent)
                         .accessibilityHidden(true)
                     Text(highlight.title)
                         .font(.title3.weight(.semibold))
@@ -178,7 +178,7 @@ private struct UpdateHighlightArtwork: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color.accentColor.opacity(0.18),
+                colors: [Color.chikitAccent.opacity(0.18),
                          Color.purple.opacity(0.08),
                          Color.primary.opacity(0.025)],
                 startPoint: .topLeading,

@@ -129,7 +129,7 @@ struct QuickLauncherView: View {
                         } label: {
                             Image(systemName: launcher.isEditing ? "checkmark.circle.fill" : "slider.horizontal.3")
                                 .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(launcher.isEditing ? Color.accentColor : Color.secondary)
+                                .foregroundStyle(launcher.isEditing ? Color.chikitAccent : Color.secondary)
                                 .frame(width: 26, height: 26)
                         }
                         .buttonStyle(.plain)
@@ -237,7 +237,7 @@ struct QuickLauncherView: View {
                         if hasQuickOptions(item) {
                             Image(systemName: "gearshape.circle.fill")
                                 .font(.system(size: 14))
-                                .foregroundStyle(.white, optionsItem == item ? Color.accentColor : Color.secondary)
+                                .foregroundStyle(.white, optionsItem == item ? Color.chikitAccent : Color.secondary)
                                 .frame(width: 46, height: 46, alignment: .topLeading)
                                 .offset(x: -7, y: -7)
                                 .help(l10n.s.menuSettings)
@@ -256,7 +256,7 @@ struct QuickLauncherView: View {
                         if let index, index < 9 {
                             Image(systemName: "\(index + 1).circle.fill")
                                 .font(.system(size: 13))
-                                .foregroundStyle(.white, isSelected ? Color.accentColor : Color.secondary.opacity(0.8))
+                                .foregroundStyle(.white, isSelected ? Color.chikitAccent : Color.secondary.opacity(0.8))
                                 .frame(width: 46, height: 46, alignment: .topLeading)
                                 .offset(x: -6, y: -6)
                                 .allowsHitTesting(false)
@@ -275,13 +275,13 @@ struct QuickLauncherView: View {
             .padding(.vertical, 9)
             .background(
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .fill(isSelected ? Color.accentColor.opacity(0.14)
+                    .fill(isSelected ? Color.chikitAccent.opacity(0.14)
                           : isHovered ? Color.primary.opacity(0.07)
                           : Color.primary.opacity(0.035))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.55) : Color.clear,
+                    .strokeBorder(isSelected ? Color.chikitAccent.opacity(0.55) : Color.clear,
                                   lineWidth: 1.2)
             )
             .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
@@ -314,7 +314,7 @@ struct QuickLauncherView: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(
-                                Capsule(style: .continuous).fill(Color.accentColor.opacity(0.13))
+                                Capsule(style: .continuous).fill(Color.chikitAccent.opacity(0.13))
                             )
                     }
                     .buttonStyle(.plain)
@@ -500,12 +500,12 @@ struct QuickLauncherView: View {
 
     private func iconColor(_ item: QuickLauncherItem) -> Color {
         if item == .micMute, micMute.isMuted { return .red }
-        if isActive(item) { return .accentColor }
+        if isActive(item) { return .chikitAccent }
         return .primary.opacity(0.85)
     }
 
     private func iconBackground(_ item: QuickLauncherItem, isSelected: Bool, isHovered: Bool) -> Color {
-        if isActive(item) { return Color.accentColor.opacity(0.18) }
+        if isActive(item) { return Color.chikitAccent.opacity(0.18) }
         if isSelected || isHovered { return Color.primary.opacity(0.1) }
         return Color.primary.opacity(0.07)
     }

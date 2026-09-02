@@ -91,7 +91,7 @@ struct ClipboardQuickPanelView: View {
             } label: {
                 Label(text.previewLabel,
                       systemImage: history.quickPreviewPresented ? "sidebar.right" : "eye")
-                    .foregroundStyle(history.quickPreviewPresented ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(history.quickPreviewPresented ? Color.chikitAccent : Color.secondary)
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
@@ -335,8 +335,8 @@ private struct QuickEntryRow: View, Equatable {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .strokeBorder(isBatchSelected ? Color.accentColor.opacity(0.38)
-                              : isSelected ? Color.accentColor.opacity(0.24) : Color.clear,
+                .strokeBorder(isBatchSelected ? Color.chikitAccent.opacity(0.38)
+                              : isSelected ? Color.chikitAccent.opacity(0.24) : Color.clear,
                               lineWidth: 1)
         )
         .contentShape(Rectangle())
@@ -526,11 +526,11 @@ private struct QuickEntryRow: View, Equatable {
                                isHovered: Bool) -> some View {
         if isBatchSelected {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(Color.chikitAccent)
                 .frame(width: 25, height: 25)
         } else if isHovered {
             Image(systemName: "circle")
-                .foregroundStyle(Color.accentColor.opacity(0.7))
+                .foregroundStyle(Color.chikitAccent.opacity(0.7))
                 .frame(width: 25, height: 25)
         } else if entry.kind == .files,
                   entry.filePaths.count == 1,
@@ -538,7 +538,7 @@ private struct QuickEntryRow: View, Equatable {
                   ClipboardImageStore.isImageFile(atPath: path) {
             Image(systemName: entry.isPinned ? "pin.fill" : "photo")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(entry.isPinned ? Color.accentColor : Color.secondary)
+                .foregroundStyle(entry.isPinned ? Color.chikitAccent : Color.secondary)
                 .frame(width: 25, height: 25)
         } else if let icon = fileIcon(for: entry) {
             Image(nsImage: icon)
@@ -548,7 +548,7 @@ private struct QuickEntryRow: View, Equatable {
         } else {
             Image(systemName: entry.isPinned ? "pin.fill" : kindSymbol(entry.kind))
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(entry.isPinned ? Color.accentColor : Color.secondary)
+                .foregroundStyle(entry.isPinned ? Color.chikitAccent : Color.secondary)
                 .frame(width: 25, height: 25)
         }
     }
@@ -571,8 +571,8 @@ private struct QuickEntryRow: View, Equatable {
     private func rowBackground(isSelected: Bool,
                                isBatchSelected: Bool,
                                isHovered: Bool) -> Color {
-        if isBatchSelected { return Color.accentColor.opacity(isHovered ? 0.17 : 0.13) }
-        if isSelected { return Color.accentColor.opacity(isHovered ? 0.13 : 0.09) }
+        if isBatchSelected { return Color.chikitAccent.opacity(isHovered ? 0.17 : 0.13) }
+        if isSelected { return Color.chikitAccent.opacity(isHovered ? 0.13 : 0.09) }
         if isHovered { return Color.primary.opacity(0.055) }
         return .clear
     }

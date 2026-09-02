@@ -254,7 +254,7 @@ struct MetricDetailView: View {
         if down.count >= 2 || up.count >= 2 {
             let peak = max(down.max() ?? 0, up.max() ?? 0, 1)
             ZStack {
-                Sparkline(values: down, color: .accentColor, maxValue: peak, showsZeroBaseline: true)
+                Sparkline(values: down, color: .chikitAccent, maxValue: peak, showsZeroBaseline: true)
                 Sparkline(values: up,
                           color: PanelMetricColor.green(for: colorScheme),
                           maxValue: peak,
@@ -525,7 +525,7 @@ struct MetricDetailView: View {
     private var summaryColor: Color {
         switch kind {
         case .cpu, .network:
-            return .accentColor
+            return .chikitAccent
         case .gpu:
             return PanelMetricColor.cyan(for: colorScheme)
         case .memory:

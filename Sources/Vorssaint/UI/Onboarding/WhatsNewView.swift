@@ -282,7 +282,7 @@ struct UpdateSupportIntroView: View {
         HStack(spacing: 10) {
             Image(systemName: systemImage)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(Color.chikitAccent)
                 .frame(width: 18)
             Text(text)
                 .font(.system(size: 13, weight: .medium))
@@ -373,7 +373,7 @@ struct UpdateSupportIntroView: View {
                 ForEach(SupportUpdateIntroStep.allCases, id: \.self) { candidate in
                     Circle()
                         .fill(candidate == step
-                              ? Color.accentColor
+                              ? Color.chikitAccent
                               : Color.secondary.opacity(0.24))
                         .frame(width: 6, height: 6)
                 }
@@ -523,7 +523,7 @@ struct ReleaseNotesContent: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("v\(release.version)")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(isLatest ? Color.accentColor : .primary)
+                    .foregroundStyle(isLatest ? Color.chikitAccent : .primary)
                 if let date = release.date {
                     Text(date)
                         .font(.caption)
@@ -545,7 +545,7 @@ struct ReleaseNotesContent: View {
         HStack(alignment: .top, spacing: 9) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(Color.chikitAccent)
                 .frame(width: 18, alignment: .center)
             Text(l10n.s.obWhatsNewFallback)
                 .font(.system(size: 12.5))
@@ -580,7 +580,7 @@ struct ReleaseNotesContent: View {
             HStack(alignment: .top, spacing: 9) {
                 Image(systemName: iconName(for: sectionTitle))
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
                     .frame(width: 18, alignment: .center)
                 Text(text)
                     .font(.system(size: 12.5))

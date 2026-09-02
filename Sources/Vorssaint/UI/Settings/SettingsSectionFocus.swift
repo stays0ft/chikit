@@ -23,7 +23,7 @@ private struct SettingsSectionAnchorModifier: ViewModifier {
             .id(anchor)
             .overlay {
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color.accentColor.opacity(focusedAnchor == anchor ? 0.10 : 0))
+                    .fill(Color.chikitAccent.opacity(focusedAnchor == anchor ? 0.10 : 0))
                     .allowsHitTesting(false)
             }
     }

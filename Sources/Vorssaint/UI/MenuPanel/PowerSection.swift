@@ -108,7 +108,7 @@ struct PowerSection: View {
             }
             case .adapter:
             if pwrAdapter, power.externalConnected, let adapter = power.adapterWatts {
-                row(icon: "powerplug.fill", color: .accentColor,
+                row(icon: "powerplug.fill", color: .chikitAccent,
                     label: l10n.s.powerAdapter, value: MetricFormat.watts(adapter),
                     caption: adapterCaption(power),
                     visible: $pwrAdapter, editing: editing)

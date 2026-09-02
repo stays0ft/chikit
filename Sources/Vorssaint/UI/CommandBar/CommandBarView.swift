@@ -175,20 +175,20 @@ struct CommandBarView: View {
                let entry = service.entry(withID: entryID) {
                 Text(entry.title)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
                     .lineLimit(1)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.accentColor.opacity(0.14)))
+                    .background(Capsule().fill(Color.chikitAccent.opacity(0.14)))
             }
             if case .argument(let entryID) = service.mode,
                let entry = service.entry(withID: entryID) {
                 Text(entry.title)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.accentColor.opacity(0.14)))
+                    .background(Capsule().fill(Color.chikitAccent.opacity(0.14)))
             }
             TextField(fieldPlaceholder, text: $service.query)
                 .textFieldStyle(.plain)
@@ -268,7 +268,7 @@ struct CommandBarView: View {
                                 .fill(index == service.actionIndex
                                       ? (action.isDestructive
                                          ? Color.red.opacity(0.12)
-                                         : Color.accentColor.opacity(0.14))
+                                         : Color.chikitAccent.opacity(0.14))
                                       : .clear)
                         )
                     }
@@ -317,10 +317,10 @@ struct CommandBarView: View {
                     if let existing = service.rowShortcut(for: entry) {
                         Text(existing.displayString)
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle(Color.chikitAccent)
                             .padding(.horizontal, 7)
                             .padding(.vertical, 3)
-                            .background(Capsule().fill(Color.accentColor.opacity(0.14)))
+                            .background(Capsule().fill(Color.chikitAccent.opacity(0.14)))
                     }
                 }
                 .padding(.horizontal, 17)
@@ -459,13 +459,13 @@ struct CommandBarView: View {
             // Tinted, never filled: white on a pale accent (yellow, orange in
             // light appearance) leaves the label invisible, and every other
             // selected surface in the panel is already accent at low opacity.
-            .foregroundStyle(isActive ? Color.accentColor : Color.secondary)
+            .foregroundStyle(isActive ? Color.chikitAccent : Color.secondary)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
             .background(Capsule().fill(isActive
-                                       ? Color.accentColor.opacity(0.18)
+                                       ? Color.chikitAccent.opacity(0.18)
                                        : Color.primary.opacity(0.06)))
-            .overlay(Capsule().strokeBorder(Color.accentColor.opacity(isActive ? 0.45 : 0),
+            .overlay(Capsule().strokeBorder(Color.chikitAccent.opacity(isActive ? 0.45 : 0),
                                             lineWidth: 1))
         }
         .buttonStyle(.plain)
@@ -501,17 +501,17 @@ struct CommandBarView: View {
                     // Holding Command turns the list into nine numbered rows.
                     Text("⌘\(index + 1)")
                         .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.chikitAccent)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2.5)
                         .background(
                             RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .fill(Color.accentColor.opacity(0.12))
+                                .fill(Color.chikitAccent.opacity(0.12))
                         )
                 } else if let value = entry.answerValue {
                     Text(value)
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.chikitAccent)
                         .monospacedDigit()
                 } else if let shortcut = service.rowShortcut(for: entry)?.displayString
                             ?? entry.shortcut?.displayString ?? entry.menuShortcut {
@@ -538,7 +538,7 @@ struct CommandBarView: View {
             .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isSelected ? Color.accentColor.opacity(0.14) : .clear)
+                    .fill(isSelected ? Color.chikitAccent.opacity(0.14) : .clear)
             )
         }
         .buttonStyle(.plain)
@@ -601,7 +601,7 @@ struct CommandBarView: View {
         for (index, character) in title.enumerated() {
             var piece = AttributedString(String(character))
             if offsets.contains(index) {
-                piece.foregroundColor = Color.accentColor
+                piece.foregroundColor = Color.chikitAccent
                 piece.font = .system(size: 13, weight: .bold)
             } else {
                 piece.foregroundColor = .primary
@@ -644,7 +644,7 @@ struct CommandBarView: View {
             // plate behind it reads as a second frame; only glyphs get one.
             if entry.usesPlateIcon {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(entry.isActive ? Color.accentColor.opacity(0.16) : Color.primary.opacity(0.06))
+                    .fill(entry.isActive ? Color.chikitAccent.opacity(0.16) : Color.primary.opacity(0.06))
                     .frame(width: 30, height: 30)
                     .overlay(iconContent(entry))
             } else {
@@ -668,7 +668,7 @@ struct CommandBarView: View {
         case .symbol(let name):
             Image(systemName: name)
                 .font(.system(size: 13.5, weight: .semibold))
-                .foregroundStyle(entry.isActive ? Color.accentColor : Color.primary.opacity(0.85))
+                .foregroundStyle(entry.isActive ? Color.chikitAccent : Color.primary.opacity(0.85))
         case .appIcon(let path):
             Image(nsImage: CommandBarIconCache.icon(forPath: path))
                 .resizable()
@@ -710,10 +710,10 @@ struct CommandBarView: View {
             } label: {
                 Text(text.noResultsAction)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.accentColor.opacity(0.12)))
+                    .background(Capsule().fill(Color.chikitAccent.opacity(0.12)))
             }
             .buttonStyle(.plain)
         }

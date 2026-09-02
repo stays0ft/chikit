@@ -143,7 +143,7 @@ private struct QRResultView: View {
             HStack(spacing: 7) {
                 Image(systemName: "qrcode")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
                 Text(strings.qrResultTitle)
                     .font(.system(size: 13, weight: .semibold))
             }

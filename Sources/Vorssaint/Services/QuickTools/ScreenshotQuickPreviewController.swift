@@ -538,7 +538,7 @@ private struct ScreenshotQuickPreviewView: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .tint(.accentColor)
+        .tint(.chikitAccent)
         .screenshotSafeHelp(L10n.shared.s.qrResultTitle)
         .accessibilityLabel(L10n.shared.s.qrResultTitle)
     }

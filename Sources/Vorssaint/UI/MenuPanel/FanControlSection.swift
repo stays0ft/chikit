@@ -175,7 +175,7 @@ struct FanControlCardContent: View {
                         .foregroundStyle(Color.white)
                         .padding(.horizontal, 4)
                         .padding(.vertical, 1)
-                        .background(Capsule().fill(Color.accentColor))
+                        .background(Capsule().fill(Color.chikitAccent))
                 }
                 Text(statusText)
                     .font(.system(size: 10).monospacedDigit())

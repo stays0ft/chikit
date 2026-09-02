@@ -83,7 +83,7 @@ struct ClipboardEntryPreviewSidebar: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Color.accentColor.opacity(0.45), lineWidth: 1)
+                    .strokeBorder(Color.chikitAccent.opacity(0.45), lineWidth: 1)
             )
             .padding(12)
             .focused($editorFocused)
@@ -254,7 +254,7 @@ struct ClipboardEntryPreviewSidebar: View {
             if entry.isPinned {
                 Image(systemName: "pin.fill")
                     .font(.system(size: 9.5))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.chikitAccent)
             }
             Text(entry.copiedAt, style: .time)
                 .font(.system(size: 9.5))

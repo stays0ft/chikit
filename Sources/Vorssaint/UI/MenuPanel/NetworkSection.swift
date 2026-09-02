@@ -177,7 +177,7 @@ struct NetworkSection: View {
                     rateColumn(icon: "arrow.down",
                                label: l10n.s.networkDownload,
                                value: monitor.snapshot.netDownBytesPerSec,
-                               color: .accentColor)
+                               color: .chikitAccent)
                     Divider().frame(height: 28)
                     rateColumn(icon: "arrow.up",
                                label: l10n.s.networkUpload,
@@ -216,7 +216,7 @@ struct NetworkSection: View {
         let up = monitor.snapshot.netUpHistory
         let peak = max(down.max() ?? 0, up.max() ?? 0, 1)
         return ZStack {
-            Sparkline(values: down, color: .accentColor, maxValue: peak, showsZeroBaseline: true)
+            Sparkline(values: down, color: .chikitAccent, maxValue: peak, showsZeroBaseline: true)
             Sparkline(values: up,
                       color: PanelMetricColor.green(for: colorScheme),
                       maxValue: peak,

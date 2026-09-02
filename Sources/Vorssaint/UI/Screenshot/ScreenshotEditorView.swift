@@ -537,7 +537,7 @@ struct ScreenshotEditorView: View {
                             in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(Color.accentColor.opacity(0.7), lineWidth: 1)
+                        .strokeBorder(Color.chikitAccent.opacity(0.7), lineWidth: 1)
                 )
                 .offset(x: (annotation.rect.minX + pad) * zoom - 6,
                         y: (annotation.rect.minY + pad) * zoom - 3)
@@ -583,9 +583,9 @@ struct ScreenshotEditorView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 9, style: .continuous)
                             .fill(toolOptionsShown
-                                    ? Color.accentColor.opacity(0.22) : .clear)
+                                    ? Color.chikitAccent.opacity(0.22) : .clear)
                     )
-                    .foregroundStyle(toolOptionsShown ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(toolOptionsShown ? Color.chikitAccent : Color.secondary)
                     .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             }
             .buttonStyle(.borderless)
@@ -625,17 +625,17 @@ struct ScreenshotEditorView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(isActive
-                                ? Color.accentColor.opacity(0.22)
+                                ? Color.chikitAccent.opacity(0.22)
                                 : isHovered ? Color.primary.opacity(0.08) : .clear)
                 )
-                .foregroundStyle(isActive ? Color.accentColor : Color.primary.opacity(0.85))
+                .foregroundStyle(isActive ? Color.chikitAccent : Color.primary.opacity(0.85))
                 .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                 .scaleEffect(isHovered && !isActive ? 1.06 : 1)
                 .overlay(alignment: .topTrailing) {
                     if let shortcutNumber {
                         Text("\(shortcutNumber)")
                             .font(.system(size: 8, weight: .bold, design: .rounded))
-                            .foregroundStyle(isActive ? Color.accentColor : Color.secondary)
+                            .foregroundStyle(isActive ? Color.chikitAccent : Color.secondary)
                             .padding(2)
                             .opacity(isHovered || isActive ? 0.9 : 0)
                     }
@@ -664,7 +664,7 @@ struct ScreenshotEditorView: View {
                 .frame(width: 24, height: 24)
         }
         .buttonStyle(.borderless)
-        .tint(.accentColor)
+        .tint(.chikitAccent)
         .screenshotSafeHelp(l10n.s.qrResultTitle)
         .accessibilityLabel(l10n.s.qrResultTitle)
     }
@@ -1006,12 +1006,12 @@ struct ScreenshotEditorView: View {
             model.stroke = stroke
         } label: {
             Capsule()
-                .fill(selected ? Color.accentColor : Color.primary.opacity(0.6))
+                .fill(selected ? Color.chikitAccent : Color.primary.opacity(0.6))
                 .frame(width: 15, height: height)
                 .frame(width: 25, height: 24)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(selected ? Color.accentColor.opacity(0.18) : .clear)
+                        .fill(selected ? Color.chikitAccent.opacity(0.18) : .clear)
                 )
         }
         .buttonStyle(.borderless)
@@ -1029,10 +1029,10 @@ struct ScreenshotEditorView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(model.annotationShadowsEnabled
-                                ? Color.accentColor.opacity(0.20) : .clear)
+                                ? Color.chikitAccent.opacity(0.20) : .clear)
                 )
                 .foregroundStyle(model.annotationShadowsEnabled
-                                    ? Color.accentColor : Color.primary.opacity(0.65))
+                                    ? Color.chikitAccent : Color.primary.opacity(0.65))
                 .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
         .buttonStyle(.borderless)
@@ -1147,7 +1147,7 @@ struct ScreenshotEditorView: View {
         Button(action: action) {
             label()
                 .frame(width: 30, height: 20)
-                .background(active ? Color.accentColor : .clear,
+                .background(active ? Color.chikitAccent : .clear,
                             in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .foregroundStyle(active ? Color.white : Color.primary.opacity(0.85))
                 .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))

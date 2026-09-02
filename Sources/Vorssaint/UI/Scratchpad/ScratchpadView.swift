@@ -168,7 +168,7 @@ struct ScratchpadView: View {
                 .foregroundStyle(selected ? Color.primary : Color.secondary)
                 .background {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(selected ? Color.accentColor.opacity(0.16) : Color.clear)
+                        .fill(selected ? Color.chikitAccent.opacity(0.16) : Color.clear)
                 }
                 .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
@@ -247,7 +247,7 @@ struct ScratchpadView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .foregroundStyle(service.isPinned ? Color.accentColor : Color.secondary)
+            .foregroundStyle(service.isPinned ? Color.chikitAccent : Color.secondary)
             .help(service.isPinned ? text.closeOnClickOutside : text.keepOpen)
             .accessibilityLabel(service.isPinned ? text.closeOnClickOutside : text.keepOpen)
             Button {
@@ -305,7 +305,7 @@ struct ScratchpadView: View {
         HStack(spacing: 12) {
             footerButton(service.isPreviewing ? "pencil" : "eye",
                          service.isPreviewing ? text.editText : text.previewFormatting,
-                         tint: service.isPreviewing ? .accentColor : nil) {
+                         tint: service.isPreviewing ? .chikitAccent : nil) {
                 service.togglePreview()
             }
             footerButton(copied ? "checkmark" : "doc.on.doc",

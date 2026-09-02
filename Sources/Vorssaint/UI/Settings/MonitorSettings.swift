@@ -120,7 +120,7 @@ struct MonitorSettings: View {
                             .foregroundStyle(Color.white)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1)
-                            .background(Capsule().fill(Color.accentColor))
+                            .background(Capsule().fill(Color.chikitAccent))
                     }
                 }
                 .settingsSectionAnchor(.fanControl)
@@ -345,7 +345,7 @@ private struct MetricRowOptionToggle: View {
             } label: {
                 ZStack(alignment: isOn ? .trailing : .leading) {
                     Capsule()
-                        .fill(isOn ? Color.accentColor : Color.secondary.opacity(0.28))
+                        .fill(isOn ? Color.chikitAccent : Color.secondary.opacity(0.28))
                         .frame(width: 28, height: 16)
                     Circle()
                         .fill(Color.white)
@@ -412,7 +412,7 @@ private struct MenuBarMetricVisibilityToggle: View {
         } label: {
             Image(systemName: shown ? "eye.fill" : "eye.slash.fill")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(shown ? Color.accentColor : Color.secondary)
+                .foregroundStyle(shown ? Color.chikitAccent : Color.secondary)
                 .frame(width: 30, height: 24)
                 .contentShape(Rectangle())
         }
@@ -553,7 +553,7 @@ private struct SectionVisibilityEye: View {
         } label: {
             Image(systemName: shown ? "eye.fill" : "eye.slash.fill")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(shown ? Color.accentColor : Color.secondary)
+                .foregroundStyle(shown ? Color.chikitAccent : Color.secondary)
                 .frame(width: 30, height: 24)
                 .contentShape(Rectangle())
         }
