@@ -7,18 +7,18 @@ import CoreGraphics
 /// Protected IDs are intersected with the actual own IDs from the same
 /// shareable-content snapshot, so stale window numbers cannot affect another app.
 enum ScreenshotCapturePolicy {
-    static func excludedWindowIDs(hideVorssaintWindows: Bool,
+    static func excludedWindowIDs(hideChikitWindows: Bool,
                                   ownWindowIDs: Set<CGWindowID>,
                                   protectedWindowIDs: Set<CGWindowID>) -> Set<CGWindowID> {
-        hideVorssaintWindows ? ownWindowIDs : ownWindowIDs.intersection(protectedWindowIDs)
+        hideChikitWindows ? ownWindowIDs : ownWindowIDs.intersection(protectedWindowIDs)
     }
 
     static func canPickWindow(_ windowID: CGWindowID,
                               isOwnWindow: Bool,
-                              hideVorssaintWindows: Bool,
+                              hideChikitWindows: Bool,
                               protectedWindowIDs: Set<CGWindowID>) -> Bool {
         !isOwnWindow
-            || (!hideVorssaintWindows && !protectedWindowIDs.contains(windowID))
+            || (!hideChikitWindows && !protectedWindowIDs.contains(windowID))
     }
 
     /// One on-screen window as the capture decision needs it.

@@ -13,7 +13,7 @@ import ServiceManagement
 /// bundle id; and the only thing deleted is the app's own bundle, which is moved
 /// to the Trash (reversible). Nothing leaves the machine.
 enum SelfUninstall {
-    private static var bundleID: String { Bundle.main.bundleIdentifier ?? "com.vorssaint.utils" }
+    private static var bundleID: String { Bundle.main.bundleIdentifier ?? "com.chikit.utils" }
 
     /// Resets every TCC permission the app holds, drops the login item and the
     /// optional closed-lid sudoers rule, and leaves the app in place. Calls back
@@ -36,7 +36,7 @@ enum SelfUninstall {
     }
 
     /// Clears permissions, removes preferences and saved state, sends the app
-    /// bundle to the Trash and quits. Used by "Uninstall Vorssaint completely".
+    /// bundle to the Trash and quits. Used by "Uninstall Chikit completely".
     static func uninstallCompletely(onFailure: @escaping () -> Void) {
         DispatchQueue.main.async {
             guard suspendInputInterceptors() else {
@@ -213,7 +213,7 @@ enum SelfUninstall {
         /bin/rm -f "$0"
         """
         let scriptURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vorssaint-uninstall-\(pid)-\(UUID().uuidString).sh")
+            .appendingPathComponent("chikit-uninstall-\(pid)-\(UUID().uuidString).sh")
         do {
             try script.write(to: scriptURL, atomically: true, encoding: .utf8)
             // Its own session: the script's first act is to wait for this app

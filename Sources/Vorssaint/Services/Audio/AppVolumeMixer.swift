@@ -142,7 +142,7 @@ final class AppVolumeMixer: ObservableObject {
     /// pass the mixer no longer wants is dropped rather than publishing state
     /// that is already out of date.
     private var refresh = MixerRefreshCoordinator()
-    private let buildQueue = DispatchQueue(label: "com.vorssaint.utils.mixer", qos: .userInitiated)
+    private let buildQueue = DispatchQueue(label: "com.chikit.utils.mixer", qos: .userInitiated)
     /// Every CoreAudio property read runs here, and every HAL notification is
     /// delivered here. Reads serialize behind the audio daemon's device state,
     /// so while a device is being reconfigured (headphones pairing, an
@@ -153,7 +153,7 @@ final class AppVolumeMixer: ObservableObject {
     /// Deliberately not `buildQueue`: creating a tap and its aggregate device
     /// takes far longer than reading a property, and the panel must never wait
     /// behind one to learn which devices exist.
-    private let halQueue = DispatchQueue(label: "com.vorssaint.utils.mixer.hal", qos: .userInitiated)
+    private let halQueue = DispatchQueue(label: "com.chikit.utils.mixer.hal", qos: .userInitiated)
 
     private init() {}
 
@@ -1549,7 +1549,7 @@ final class AppVolumeMixer: ObservableObject {
             let name = read(deviceID, kAudioObjectPropertyName, &nameRef)
                 ? nameRef as String
                 : uid
-            guard name != "Vorssaint Mixer" else { continue }
+            guard name != "Chikit Mixer" else { continue }
             let dataSourceName = outputDataSourceName(for: deviceID)
 
             devices.append(MixerOutputDevice(id: uid,
@@ -1859,7 +1859,7 @@ private final class TapGainEngine: GainEngine {
         }
 
         let aggregate: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "Vorssaint Mixer",
+            kAudioAggregateDeviceNameKey: "Chikit Mixer",
             kAudioAggregateDeviceUIDKey: UUID().uuidString,
             kAudioAggregateDeviceIsPrivateKey: true,
             kAudioAggregateDeviceMainSubDeviceKey: outputDeviceUID,
@@ -1952,7 +1952,7 @@ private final class TapGainEngine: GainEngine {
 
     /// Where the new rate is read, away from whatever thread the answer
     /// arrived on. Serial, so two changes in a row cannot land out of order.
-    private static let rateQueue = DispatchQueue(label: "com.vorssaint.utils.mixer.rate",
+    private static let rateQueue = DispatchQueue(label: "com.chikit.utils.mixer.rate",
                                                  qos: .userInitiated)
     /// How many teardowns may sit in the HAL at once. Operations past the
     /// bound wait in the queue holding no thread, so however often a wedged
@@ -1966,7 +1966,7 @@ private final class TapGainEngine: GainEngine {
     /// above so the parked ones cannot take the thread pool with them.
     private static let teardownQueue: OperationQueue = {
         let queue = OperationQueue()
-        queue.name = "com.vorssaint.utils.mixer.teardown"
+        queue.name = "com.chikit.utils.mixer.teardown"
         queue.qualityOfService = .utility
         queue.maxConcurrentOperationCount = maximumConcurrentTeardowns
         return queue

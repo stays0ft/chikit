@@ -70,7 +70,7 @@ enum ScreenshotScrollingCapture {
 
     static func capture(region: RecorderSupport.Region,
                         includePointer: Bool,
-                        hideVorssaintWindows: Bool,
+                        hideChikitWindows: Bool,
                         protectedWindowIDs: Set<CGWindowID>,
                         finishSignal: FinishSignal,
                         onProgress: @escaping @MainActor (Int) -> Void) async -> Result {
@@ -79,7 +79,7 @@ enum ScreenshotScrollingCapture {
         let result = await captureWhileScrolling(
             region: region,
             includePointer: includePointer,
-            hideVorssaintWindows: hideVorssaintWindows,
+            hideChikitWindows: hideChikitWindows,
             protectedWindowIDs: protectedWindowIDs,
             finishSignal: finishSignal,
             activity: activity,
@@ -91,7 +91,7 @@ enum ScreenshotScrollingCapture {
     private static func captureWhileScrolling(
         region: RecorderSupport.Region,
         includePointer: Bool,
-        hideVorssaintWindows: Bool,
+        hideChikitWindows: Bool,
         protectedWindowIDs: Set<CGWindowID>,
         finishSignal: FinishSignal,
         activity: ScrollActivity,
@@ -101,7 +101,7 @@ enum ScreenshotScrollingCapture {
             let startingGeneration = activity.snapshot.generation
             guard let first = await capturedRegion(region,
                                                    includePointer: includePointer,
-                                                   hideVorssaintWindows: hideVorssaintWindows,
+                                                   hideChikitWindows: hideChikitWindows,
                                                    protectedWindowIDs: protectedWindowIDs)
             else { return .failed }
             try Task.checkCancellation()
@@ -170,7 +170,7 @@ enum ScreenshotScrollingCapture {
                 guard let current = await capturedRegion(
                     region,
                     includePointer: includePointer,
-                    hideVorssaintWindows: hideVorssaintWindows,
+                    hideChikitWindows: hideChikitWindows,
                     protectedWindowIDs: protectedWindowIDs),
                       let currentSample = sample(current)
                 else { return .failed }
@@ -364,13 +364,13 @@ enum ScreenshotScrollingCapture {
 
     private static func capturedRegion(_ region: RecorderSupport.Region,
                                        includePointer: Bool,
-                                       hideVorssaintWindows: Bool,
+                                       hideChikitWindows: Bool,
                                        protectedWindowIDs: Set<CGWindowID>) async -> CGImage? {
         await ScreenshotCaptureEngine.captureDisplayRegion(
             displayID: region.displayID,
             pixelRect: region.pixelRect,
             includePointer: includePointer,
-            hideVorssaintWindows: hideVorssaintWindows,
+            hideChikitWindows: hideChikitWindows,
             protectedWindowIDs: protectedWindowIDs)
     }
 

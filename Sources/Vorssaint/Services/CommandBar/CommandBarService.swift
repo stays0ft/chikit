@@ -1769,7 +1769,7 @@ final class CommandBarService: ObservableObject {
     private func beginCapturingShortcut(_ entry: CommandBarEntry) {
         ShortcutCapture.begin()
         // The tap sits ahead of the app's own menu. Without it, Command Q
-        // never reaches the local monitor. It quits Vorssaint instead of
+        // never reaches the local monitor. It quits Chikit instead of
         // landing on the card (issue #1193). When Accessibility cannot
         // create the tap, the monitor below still records as before.
         ShortcutRecordingTap.begin { [weak self] keyCode, modifiers in
@@ -2433,7 +2433,7 @@ final class CommandBarService: ObservableObject {
                                     styleMask: [.borderless, .nonactivatingPanel],
                                     backing: .buffered,
                                     defer: false)
-        panel.title = "Vorssaint"
+        panel.title = "Chikit"
         panel.isReleasedWhenClosed = false
         panel.isMovableByWindowBackground = false
         panel.hidesOnDeactivate = false
@@ -2539,7 +2539,7 @@ final class CommandBarService: ObservableObject {
                 switch Int(event.keyCode) {
                 case kVK_ANSI_Q, kVK_ANSI_W, kVK_ANSI_M, kVK_ANSI_H:
                     // The app's menu owns these combinations and the panel is
-                    // key, so they would quit, close or hide Vorssaint while
+                    // key, so they would quit, close or hide Chikit while
                     // the person believes they are acting on the app the bar
                     // is floating over.
                     return nil

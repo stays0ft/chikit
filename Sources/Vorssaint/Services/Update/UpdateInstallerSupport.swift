@@ -113,7 +113,7 @@ enum UpdateInstallerSupport {
                     elif /usr/sbin/spctl -a -t exec "$STAGE" >/dev/null 2>&1; then
                         GATEKEEPER_OK=1
                     fi
-                    VERIFY_REQ='identifier "com.vorssaint.utils" and anchor apple generic and certificate leaf[subject.OU] = "3D485NHW29"'
+                    VERIFY_REQ='identifier "com.chikit.utils" and anchor apple generic and certificate leaf[subject.OU] = "3D485NHW29"'
                     note fail-verify
                     if /usr/bin/codesign -v --deep --strict -R="$VERIFY_REQ" "$STAGE" 2>/dev/null \
                         && [ "$GATEKEEPER_OK" = 1 ]; then
@@ -181,7 +181,7 @@ enum UpdateInstallerSupport {
             .map(shellSingleQuoted)
             .joined(separator: " ")
         return DetachedProcess.detachedShellCommand(
-            quotedArgv: "/bin/sh -c \(script) vorssaint-installer \(args)")
+            quotedArgv: "/bin/sh -c \(script) chikit-installer \(args)")
     }
 
     /// Whether the next install attempt should go straight through the admin

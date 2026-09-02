@@ -11,7 +11,7 @@ final class FocusFollowsMouseService {
     /// No cap on this one: on the system-wide element a timeout is the default
     /// for every question this process asks, whoever asks it (#938).
     private let systemElement = AXUIElementCreateSystemWide()
-    private let queryQueue = DispatchQueue(label: "com.vorssaint.focus-follows-mouse")
+    private let queryQueue = DispatchQueue(label: "com.chikit.focus-follows-mouse")
     private var timer: Timer?
     private var mouseMonitor: Any?
     private var observers: [NSObjectProtocol] = []

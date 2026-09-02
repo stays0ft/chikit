@@ -1,11 +1,11 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/logo-dark.svg">
-    <img src="docs/assets/readme/logo.svg" width="220" alt="Vorssaint logo">
+    <img src="docs/assets/readme/logo.svg" width="220" alt="Chikit logo">
   </picture>
 </p>
 
-<h1 align="center">Vorssaint</h1>
+<h1 align="center">Chikit</h1>
 
 <p align="center">
   One menu bar icon doing the job of a dozen paid Mac apps.<br>
