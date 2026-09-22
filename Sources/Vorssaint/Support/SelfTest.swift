@@ -83,26 +83,11 @@ enum SelfTest {
         }
         UserDefaults.standard.removeObject(forKey: "selftest")
 
-        for style in KeepAwakeActiveIcon.allCases {
-            guard let image = BlackHoleGlyph.activeImage(style: style, tint: .orange) else {
-                failures.append("Keep Awake icon \(style.rawValue)")
-                continue
-            }
-            if image.size != BlackHoleGlyph.pointSize {
-                failures.append("Keep Awake icon size \(style.rawValue)")
-            }
-            // image.size stays correct even when the symbol inside it is scaled
-            // too large, so an overflow only shows as ink clipped by the canvas.
-            if inkTouchesEdge(of: image) {
-                failures.append("Keep Awake icon \(style.rawValue) is clipped by its canvas")
-            }
-        }
-
         // Tools/MakeIcon.swift writes the glyph PNGs at BlackHoleGlyph.pointSize.
         // Changing the canvas in one and not the other would squash the glyph.
         if Bundle.main.url(forResource: "MenuBarIcon", withExtension: "png") == nil {
             warnings.append("menu bar glyph asset not bundled")
-        } else if let rep = BlackHoleGlyph.image(active: false)?
+        } else if let rep = BlackHoleGlyph.image()?
             .representations.min(by: { $0.pixelsWide < $1.pixelsWide }) {
             if rep.pixelsWide != Int(BlackHoleGlyph.pointSize.width)
                 || rep.pixelsHigh != Int(BlackHoleGlyph.pointSize.height) {

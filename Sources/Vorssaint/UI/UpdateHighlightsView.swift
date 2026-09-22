@@ -12,9 +12,6 @@ struct UpdateHighlightsView: View {
     let onFinish: () -> Void
 
     private var s: Strings { l10n.s }
-    private var screenshot: ScreenshotFeatureStrings {
-        FeatureStrings.screenshot(l10n.language)
-    }
     private var clipboard: ClipboardFeatureStrings {
         FeatureStrings.clipboard(l10n.language)
     }
@@ -38,16 +35,6 @@ struct UpdateHighlightsView: View {
 
     private var highlights: [Highlight] {
         var pages: [Highlight] = []
-        if AppFeature.screenshot.isAvailable {
-            pages.append(Highlight(
-                id: "capture-palette",
-                imageName: "highlights-capture",
-                symbol: "camera.viewfinder",
-                title: screenshot.screenCaptureTitle,
-                caption: s.highlightsCaptionCapturePalette,
-                actionLabel: s.highlightsConfigure,
-                action: { openSettings(AppFeature.screenshot.settingsDestination) }))
-        }
         if AppFeature.clipboardHistory.isAvailable {
             pages.append(Highlight(
                 id: "clipboard-palette",

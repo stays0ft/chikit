@@ -22,15 +22,9 @@ enum ShortcutCapture {
     static func begin() {
         guard !isCapturing else { return }
         isCapturing = true
-        // A flag inside the routing, not a teardown: rebuilding the tap per
-        // recording would churn the system keyboard path (issue #275).
-        AppSwitcher.shared.setCapturingShortcut(true)
-        HotkeyManager.shared.setEnabled(false)
-        ShelfService.shared.suspendShortcut()
         ClipboardHistoryService.shared.suspendShortcut()
         SoundOutputSwitcher.shared.suspendShortcut()
         WindowLayoutService.shared.suspendShortcuts()
-        QuickToolHotkey.unregisterAll()
     }
 
     /// Gives every key back. Safe to call when nothing was suspended, and safe
@@ -39,7 +33,6 @@ enum ShortcutCapture {
     static func end() {
         guard isCapturing else { return }
         isCapturing = false
-        AppSwitcher.shared.setCapturingShortcut(false)
         FeatureRuntime.shared.sync(GlobalShortcutRole.featuresToSilenceWhileRecording)
     }
 }

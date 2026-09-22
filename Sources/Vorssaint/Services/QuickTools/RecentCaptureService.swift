@@ -9,21 +9,14 @@ import SwiftUI
 
 struct RecentCaptureEntry: Codable, Equatable, Identifiable {
     enum Kind: String, Codable {
-        case screenshot
         case recording
     }
 
     let id: UUID
     let kind: Kind
     let createdAt: Date
-    let screenshotName: String?
     let recordingPath: String?
     let thumbnailName: String?
-    let scale: Double?
-    let anchorX: Double?
-    let anchorY: Double?
-    let anchorWidth: Double?
-    let anchorHeight: Double?
 
     var recordingURL: URL? {
         guard let recordingPath else { return nil }
@@ -31,9 +24,8 @@ struct RecentCaptureEntry: Codable, Equatable, Identifiable {
     }
 }
 
-/// A bounded, on-demand list of captures. Screenshots live in this cache so
-/// copy-only captures can return after their preview closes. Recordings keep
-/// only their file path and a small thumbnail, never a second video copy.
+/// A bounded, on-demand list of recent screen recordings, each keeping only
+/// its file path and a small thumbnail, never a second video copy.
 final class RecentCaptureService: ObservableObject {
     static let shared = RecentCaptureService()
 
@@ -210,49 +202,6 @@ final class RecentCaptureService: ObservableObject {
         }
     }
 
-    func recordScreenshot(_ capture: ScreenshotSelectionController.Capture) {
-        let id = UUID()
-        let screenshotName = "\(id.uuidString).png"
-        let thumbnailName = "\(id.uuidString)-thumbnail.png"
-        let entry = RecentCaptureEntry(
-            id: id,
-            kind: .screenshot,
-            createdAt: Date(),
-            screenshotName: screenshotName,
-            recordingPath: nil,
-            thumbnailName: thumbnailName,
-            scale: Double(capture.scale),
-            anchorX: Double(capture.anchorRect.origin.x),
-            anchorY: Double(capture.anchorRect.origin.y),
-            anchorWidth: Double(capture.anchorRect.width),
-            anchorHeight: Double(capture.anchorRect.height))
-        let image = capture.image
-        let scale = capture.scale
-
-        queue.async { [weak self] in
-            guard let self, let root = self.root else { return }
-            self.loadIfNeeded()
-            do {
-                try self.prepareRoot(root)
-                guard let full = ScreenshotRenderer.pngData(from: image, scale: scale),
-                      let smallImage = Self.thumbnail(from: image),
-                      let small = ScreenshotRenderer.pngData(from: smallImage, scale: 1)
-                else { return }
-                try self.write(full, to: root.appendingPathComponent(screenshotName))
-                do {
-                    try self.write(small, to: root.appendingPathComponent(thumbnailName))
-                } catch {
-                    try? self.manager.removeItem(at: root.appendingPathComponent(screenshotName))
-                    try? self.manager.removeItem(at: root.appendingPathComponent(thumbnailName))
-                    throw error
-                }
-                self.prepend(entry)
-            } catch {
-                return
-            }
-        }
-    }
-
     func recordRecording(at url: URL) {
         guard Self.isRegularFile(url) else { return }
         let id = UUID()
@@ -296,14 +245,8 @@ final class RecentCaptureService: ObservableObject {
                 id: id,
                 kind: .recording,
                 createdAt: createdAt,
-                screenshotName: nil,
                 recordingPath: url.standardizedFileURL.path,
-                thumbnailName: storedThumbnail,
-                scale: nil,
-                anchorX: nil,
-                anchorY: nil,
-                anchorWidth: nil,
-                anchorHeight: nil)
+                thumbnailName: storedThumbnail)
             self.prepend(entry)
         }
     }
@@ -348,62 +291,15 @@ final class RecentCaptureService: ObservableObject {
 
     func open(_ entry: RecentCaptureEntry) {
         hideHistoryWindow()
-        switch entry.kind {
-        case .screenshot:
-            restoreScreenshot(entry)
-        case .recording:
-            guard let url = entry.recordingURL, Self.isRegularFile(url) else {
-                remove(entry)
-                NSSound.beep()
-                return
-            }
-            appDelegate()?.closePopover()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                NSWorkspace.shared.open(url)
-            }
+        guard let url = entry.recordingURL, Self.isRegularFile(url) else {
+            remove(entry)
+            NSSound.beep()
+            return
         }
-    }
-
-    private func restoreScreenshot(_ entry: RecentCaptureEntry) {
-        queue.async { [weak self] in
-            guard let self, let capture = self.loadScreenshot(entry) else {
-                DispatchQueue.main.async { [weak self] in
-                    self?.remove(entry)
-                    NSSound.beep()
-                }
-                return
-            }
-            DispatchQueue.main.async {
-                appDelegate()?.closePopover()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                    ScreenshotService.shared.restorePreview(capture)
-                }
-            }
+        appDelegate()?.closePopover()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            NSWorkspace.shared.open(url)
         }
-    }
-
-    private func loadScreenshot(_ entry: RecentCaptureEntry)
-        -> ScreenshotSelectionController.Capture? {
-        guard entry.kind == .screenshot,
-              let name = entry.screenshotName,
-              Self.isSafeName(name),
-              let root,
-              let scale = entry.scale,
-              scale.isFinite, scale > 0,
-              let source = CGImageSourceCreateWithURL(
-                root.appendingPathComponent(name) as CFURL,
-                [kCGImageSourceShouldCache: false] as CFDictionary),
-              let image = CGImageSourceCreateImageAtIndex(
-                source, 0,
-                [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
-        else { return nil }
-        let anchor = CGRect(
-            x: entry.anchorX ?? 0,
-            y: entry.anchorY ?? 0,
-            width: entry.anchorWidth ?? 0,
-            height: entry.anchorHeight ?? 0)
-        return ScreenshotSelectionController.Capture(
-            image: image, scale: CGFloat(scale), anchorRect: anchor)
     }
 
     private func loadIfNeeded() {
@@ -455,29 +351,12 @@ final class RecentCaptureService: ObservableObject {
     }
 
     private func entryExists(_ entry: RecentCaptureEntry) -> Bool {
-        switch entry.kind {
-        case .screenshot:
-            guard let name = entry.screenshotName, Self.isSafeName(name), let root else { return false }
-            return Self.isRegularFile(root.appendingPathComponent(name))
-        case .recording:
-            guard let url = entry.recordingURL else { return false }
-            return Self.isRegularFile(url)
-        }
+        guard let url = entry.recordingURL else { return false }
+        return Self.isRegularFile(url)
     }
 
     private func cappedIDs(for entries: [RecentCaptureEntry]) -> Set<UUID> {
-        var screenshotBytes: [UUID: Int64] = [:]
-        if let root {
-            for entry in entries where entry.kind == .screenshot {
-                guard let name = entry.screenshotName, Self.isSafeName(name),
-                      let size = try? root.appendingPathComponent(name).resourceValues(
-                        forKeys: [.fileSizeKey]).fileSize
-                else { continue }
-                screenshotBytes[entry.id] = Int64(size)
-            }
-        }
-        return Set(ScreenshotSupport.cappedRecentCaptureIDs(
-            entries.map(\.id), screenshotBytes: screenshotBytes))
+        Set(ScreenshotSupport.cappedRecentCaptureIDs(entries.map(\.id), screenshotBytes: [:]))
     }
 
     private func persist() {
@@ -520,11 +399,6 @@ final class RecentCaptureService: ObservableObject {
 
     private func removeOwnedFiles(for entry: RecentCaptureEntry) {
         guard let root else { return }
-        if let name = entry.screenshotName,
-           name == "\(entry.id.uuidString).png" {
-            let file = root.appendingPathComponent(name)
-            if Self.isRegularFile(file) { try? manager.removeItem(at: file) }
-        }
         if let name = entry.thumbnailName,
            name == "\(entry.id.uuidString)-thumbnail.png" {
             thumbnailCache.removeObject(forKey: name as NSString)
@@ -534,9 +408,7 @@ final class RecentCaptureService: ObservableObject {
     }
 
     private func removeOrphanedCacheFiles(in root: URL) {
-        let referenced = Set(storedEntries.flatMap { entry in
-            [entry.screenshotName, entry.thumbnailName].compactMap { $0 }
-        })
+        let referenced = Set(storedEntries.compactMap(\.thumbnailName))
         guard let files = try? manager.contentsOfDirectory(
             at: root,
             includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey],
@@ -561,26 +433,6 @@ final class RecentCaptureService: ObservableObject {
         guard let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
         else { return false }
         return values.isRegularFile == true && values.isSymbolicLink != true
-    }
-
-    private static func thumbnail(from image: CGImage) -> CGImage? {
-        let maximum = CGFloat(360)
-        let longest = CGFloat(max(image.width, image.height))
-        let factor = min(1, maximum / max(1, longest))
-        let width = max(1, Int((CGFloat(image.width) * factor).rounded()))
-        let height = max(1, Int((CGFloat(image.height) * factor).rounded()))
-        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-              let context = CGContext(data: nil,
-                                      width: width,
-                                      height: height,
-                                      bitsPerComponent: 8,
-                                      bytesPerRow: 0,
-                                      space: colorSpace,
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        context.interpolationQuality = .high
-        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
-        return context.makeImage()
     }
 
     private static func recordingThumbnail(at url: URL) async -> CGImage? {

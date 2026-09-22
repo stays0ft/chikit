@@ -116,14 +116,6 @@ struct GlobalShortcut: Equatable, Hashable {
         return !modifiers.hasPrimaryModifier
     }
 
-    static let keepAwakeDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_K),
-                                                 modifiers: [.control, .option, .command])
-    static let shelfDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_D),
-                                             modifiers: [.control, .option, .command])
-    static let switcherDefault = GlobalShortcut(keyCode: Int64(kVK_Tab),
-                                                modifiers: [.command])
-    static let switcherWindowDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_Grave),
-                                                      modifiers: [.command])
     static let clipboardDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_V),
                                                  modifiers: [.control, .option, .command])
     static let soundOutputSwitcherDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_S),
@@ -164,52 +156,8 @@ struct GlobalShortcut: Equatable, Hashable {
                                                                modifiers: [.control, .option, .command])
     static let windowDirectionalDefault = GlobalShortcut(keyCode: Int64(kVK_Space),
                                                          modifiers: [.control, .option])
-    // Quick tools. Paste plain follows the universal "Paste and Match Style"
-    // combination; the others use the free ⌃⌥⌘ letters.
-    static let pastePlainDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_V),
-                                                  modifiers: [.shift, .option, .command])
     static let finderRenameDefault = GlobalShortcut(keyCode: Int64(kVK_F2), modifiers: [])
-    static let colorPickerDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_C),
-                                                   modifiers: [.control, .option, .command])
-    static let screenOCRDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_T),
-                                                 modifiers: [.control, .option, .command])
-    static let micMuteDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_M),
-                                               modifiers: [.control, .option, .command])
-    // W for webcam, on the same free control-option-command layer.
-    static let cameraPreviewDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_W),
-                                                     modifiers: [.control, .option, .command])
-    // V for Chikit: the quick launcher's own combination.
-    static let quickLauncherDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_V),
-                                                     modifiers: [.control, .command])
-    // Default screenshot shortcut on the available control-option-command layer.
-    static let screenshotDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_4),
-                                                  modifiers: [.control, .option, .command])
-    // Full screen sits beside the selector's 4 and the recorder's 5.
-    static let screenshotFullScreenDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_3),
-                                                            modifiers: [.control, .option, .command])
-    // E opens the latest capture in the editor, beside the capture shortcut.
-    static let screenshotLastCaptureDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_E),
-                                                             modifiers: [.control, .option, .command])
-    // P opens a copied image in the editor, beside the other screenshot tools.
-    static let screenshotClipboardDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_P),
-                                                           modifiers: [.control, .option, .command])
-    // Space for the wheel, on the same free control-option-command layer.
-    static let radialMenuDefault = GlobalShortcut(keyCode: Int64(kVK_Space),
-                                                  modifiers: [.control, .option, .command])
-    // N for notes, on the same free control-option-command layer.
-    static let scratchpadDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_N),
-                                                  modifiers: [.control, .option, .command])
-    // L for library (S already belongs to the sound output switcher), on the
-    // same free control-option-command layer.
-    static let snippetLibraryDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_L),
-                                                      modifiers: [.control, .option, .command])
-    // Option-Space, the combination mature launchers settled on: one thumb
-    // and one finger, mirroring the system search's Command-Space without
-    // fighting it for the key. Registered as a hotkey it never types the
-    // narrow space some layouts put on that combination.
-    static let commandBarDefault = GlobalShortcut(keyCode: Int64(kVK_Space),
-                                                  modifiers: [.option])
-    // Next to the screenshot's 4, on the same free control-option-command
+    // Next to the screenshot tool's old 4, on the free control-option-command
     // layer, matching how the system numbers its own capture keys.
     static let screenRecorderDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_5),
                                                       modifiers: [.control, .option, .command])
@@ -642,81 +590,27 @@ enum ShortcutRecordingCaption {
 }
 
 enum GlobalShortcutRole: CaseIterable, Identifiable {
-    case keepAwake
-    case shelf
-    case switcher
-    case switcherWindow
     case clipboard
     case soundOutputSwitcher
-    case pastePlain
     case finderRename
-    case colorPicker
-    case screenOCR
-    case micMute
-    case quickLauncher
-    case screenshot
-    case screenshotFullScreen
-    case screenshotLastCapture
-    case screenshotClipboard
-    case cameraPreview
-    case radialMenu
-    case scratchpad
-    case snippetLibrary
-    case commandBar
     case screenRecorder
 
     var id: String { storageKey }
 
     var storageKey: String {
         switch self {
-        case .keepAwake: return DefaultsKey.keepAwakeShortcut
-        case .shelf: return DefaultsKey.shelfShortcut
-        case .switcher: return DefaultsKey.switcherShortcut
-        case .switcherWindow: return DefaultsKey.switcherWindowShortcut
         case .clipboard: return DefaultsKey.clipboardHistoryShortcut
         case .soundOutputSwitcher: return DefaultsKey.soundOutputSwitcherShortcut
-        case .pastePlain: return DefaultsKey.pastePlainShortcut
         case .finderRename: return DefaultsKey.finderRenameShortcut
-        case .colorPicker: return DefaultsKey.colorPickerShortcut
-        case .screenOCR: return DefaultsKey.screenOCRShortcut
-        case .micMute: return DefaultsKey.micMuteShortcut
-        case .quickLauncher: return DefaultsKey.quickLauncherShortcut
-        case .screenshot: return DefaultsKey.screenshotShortcut
-        case .screenshotFullScreen: return DefaultsKey.screenshotFullScreenShortcut
-        case .screenshotLastCapture: return DefaultsKey.screenshotLastCaptureShortcut
-        case .screenshotClipboard: return DefaultsKey.screenshotClipboardShortcut
-        case .cameraPreview: return DefaultsKey.cameraPreviewShortcut
-        case .radialMenu: return DefaultsKey.radialMenuShortcut
-        case .scratchpad: return DefaultsKey.scratchpadShortcut
-        case .snippetLibrary: return DefaultsKey.snippetLibraryShortcut
-        case .commandBar: return DefaultsKey.commandBarShortcut
         case .screenRecorder: return DefaultsKey.recorderShortcut
         }
     }
 
     var defaultShortcut: GlobalShortcut {
         switch self {
-        case .keepAwake: return .keepAwakeDefault
-        case .shelf: return .shelfDefault
-        case .switcher: return .switcherDefault
-        case .switcherWindow: return .switcherWindowDefault
         case .clipboard: return .clipboardDefault
         case .soundOutputSwitcher: return .soundOutputSwitcherDefault
-        case .pastePlain: return .pastePlainDefault
         case .finderRename: return .finderRenameDefault
-        case .colorPicker: return .colorPickerDefault
-        case .screenOCR: return .screenOCRDefault
-        case .micMute: return .micMuteDefault
-        case .quickLauncher: return .quickLauncherDefault
-        case .screenshot: return .screenshotDefault
-        case .screenshotFullScreen: return .screenshotFullScreenDefault
-        case .screenshotLastCapture: return .screenshotLastCaptureDefault
-        case .screenshotClipboard: return .screenshotClipboardDefault
-        case .cameraPreview: return .cameraPreviewDefault
-        case .radialMenu: return .radialMenuDefault
-        case .scratchpad: return .scratchpadDefault
-        case .snippetLibrary: return .snippetLibraryDefault
-        case .commandBar: return .commandBarDefault
         case .screenRecorder: return .screenRecorderDefault
         }
     }
@@ -727,31 +621,9 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
 
     func title(_ strings: Strings) -> String {
         switch self {
-        case .keepAwake: return strings.keepAwakeTitle
-        case .shelf: return strings.shelfName
-        case .switcher: return strings.switcherSection
-        case .switcherWindow: return strings.switcherShortcutHintWindows
         case .clipboard: return FeatureStrings.clipboard(L10n.shared.language).title
         case .soundOutputSwitcher: return strings.soundOutputSwitcherTitle
-        case .pastePlain: return strings.pastePlainName
         case .finderRename: return FeatureStrings.finderRename(L10n.shared.language).hubTitle
-        case .colorPicker: return strings.colorPickerName
-        case .screenOCR: return strings.ocrName
-        case .micMute: return strings.micMuteName
-        case .quickLauncher: return strings.launcherName
-        case .screenshot:
-            return FeatureStrings.screenshot(L10n.shared.language).pageTitle
-        case .screenshotFullScreen:
-            return FeatureStrings.screenshot(L10n.shared.language).fullScreenShortcutTitle
-        case .screenshotLastCapture:
-            return FeatureStrings.screenshot(L10n.shared.language).editLastCapture
-        case .screenshotClipboard:
-            return FeatureStrings.screenshot(L10n.shared.language).editClipboardImage
-        case .cameraPreview: return FeatureStrings.cameraPreview(L10n.shared.language).pageTitle
-        case .radialMenu: return FeatureStrings.radialMenu(L10n.shared.language).pageTitle
-        case .scratchpad: return FeatureStrings.scratchpad(L10n.shared.language).pageTitle
-        case .snippetLibrary: return FeatureStrings.snippets(L10n.shared.language).libraryTitle
-        case .commandBar: return FeatureStrings.commandBar(L10n.shared.language).pageTitle
         case .screenRecorder: return FeatureStrings.recorder(L10n.shared.language).pageTitle
         }
     }
@@ -775,27 +647,10 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
     /// shortcut toggle.
     var requiredEnableKeys: [String] {
         switch self {
-        case .keepAwake: return [DefaultsKey.hotkeyEnabled]
-        case .shelf: return [DefaultsKey.shelfEnabled, DefaultsKey.shelfShortcutEnabled]
-        case .switcher, .switcherWindow: return [DefaultsKey.switcherEnabled]
         case .clipboard: return [DefaultsKey.clipboardHistoryEnabled,
                                  DefaultsKey.clipboardHistoryShortcutEnabled]
         case .soundOutputSwitcher: return [DefaultsKey.soundOutputSwitcherEnabled]
-        case .pastePlain: return [DefaultsKey.pastePlainEnabled]
         case .finderRename: return [DefaultsKey.finderRenameEnabled]
-        case .colorPicker: return [DefaultsKey.colorPickerShortcutEnabled]
-        case .screenOCR: return [DefaultsKey.screenOCRShortcutEnabled]
-        case .micMute: return [DefaultsKey.micMuteShortcutEnabled]
-        case .quickLauncher: return [DefaultsKey.quickLauncherShortcutEnabled]
-        case .screenshot: return [DefaultsKey.screenshotShortcutEnabled]
-        case .screenshotFullScreen: return [DefaultsKey.screenshotFullScreenShortcutEnabled]
-        case .screenshotLastCapture: return [DefaultsKey.screenshotLastCaptureShortcutEnabled]
-        case .screenshotClipboard: return [DefaultsKey.screenshotClipboardShortcutEnabled]
-        case .cameraPreview: return [DefaultsKey.cameraPreviewShortcutEnabled]
-        case .radialMenu: return [DefaultsKey.radialMenuEnabled]
-        case .scratchpad: return [DefaultsKey.scratchpadShortcutEnabled]
-        case .snippetLibrary: return [DefaultsKey.snippetLibraryEnabled]
-        case .commandBar: return [DefaultsKey.commandBarShortcutEnabled]
         case .screenRecorder: return [DefaultsKey.recorderShortcutEnabled]
         }
     }
@@ -805,24 +660,9 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
     /// already dead through the service's own availability guard).
     var feature: AppFeature {
         switch self {
-        case .keepAwake: return .keepAwake
-        case .shelf: return .shelf
-        case .switcher, .switcherWindow: return .switcher
         case .clipboard: return .clipboardHistory
         case .soundOutputSwitcher: return .soundOutputSwitcher
-        case .pastePlain: return .pastePlain
         case .finderRename: return .finderRename
-        case .colorPicker: return .colorPicker
-        case .screenOCR: return .screenOCR
-        case .micMute: return .micMute
-        case .quickLauncher: return .quickLauncher
-        case .screenshot, .screenshotFullScreen, .screenshotLastCapture, .screenshotClipboard:
-            return .screenshot
-        case .cameraPreview: return .cameraPreview
-        case .radialMenu: return .radialMenu
-        case .scratchpad: return .scratchpad
-        case .snippetLibrary: return .textSnippets
-        case .commandBar: return .commandBar
         case .screenRecorder: return .screenRecorder
         }
     }
@@ -867,30 +707,6 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
     static func availableRoles(isAvailable: (AppFeature) -> Bool = { $0.isAvailable })
         -> [GlobalShortcutRole] {
         allCases.filter { $0.isAvailable(using: isAvailable) }
-    }
-
-    /// The features whose shortcuts share one Screen capture group on the
-    /// central shortcuts page.
-    static let captureFeatures: [AppFeature] =
-        [.screenshot, .screenRecorder, .screenOCR, .colorPicker]
-
-    /// Chooser tools first, in chooser order, then the screenshot extras.
-    static let captureDisplayOrder: [GlobalShortcutRole] = [
-        .screenshot, .screenRecorder, .screenOCR, .colorPicker,
-        .screenshotFullScreen, .screenshotLastCapture, .screenshotClipboard,
-    ]
-
-    /// The given roles narrowed to the capture group, in display order. The
-    /// order list only sorts, so an unlisted role lands at the end instead of
-    /// vanishing.
-    static func captureRoles(in roles: [GlobalShortcutRole]) -> [GlobalShortcutRole] {
-        roles.filter { captureFeatures.contains($0.feature) }
-            .enumerated()
-            .sorted { lhs, rhs in
-                (captureDisplayOrder.firstIndex(of: lhs.element) ?? .max, lhs.offset)
-                    < (captureDisplayOrder.firstIndex(of: rhs.element) ?? .max, rhs.offset)
-            }
-            .map(\.element)
     }
 }
 

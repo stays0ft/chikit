@@ -125,7 +125,7 @@ struct DiskExclusionsList: View {
         var results: [String] = []
         for url in urls {
             guard let values = try? url.resourceValues(forKeys: keys) else { continue }
-            let isOfferable = QuickTogglesSupport.shouldOfferEject(
+            let isOfferable = DiskProtectionService.shouldOfferEject(
                 isInternal: values.volumeIsInternal ?? false,
                 isRemovable: values.volumeIsRemovable ?? false,
                 isEjectable: values.volumeIsEjectable ?? false,
@@ -138,7 +138,7 @@ struct DiskExclusionsList: View {
             // The same exclusion test the eject paths use: an entry the user
             // typed as a volume UUID or a mount path excludes the drive just as
             // much as its name, so the picker must not offer it again.
-            let alreadyExcluded = QuickTogglesSupport.isExcluded(
+            let alreadyExcluded = DiskProtectionService.isExcluded(
                 volumeName: trimmed,
                 volumeUUID: values.volumeUUIDString,
                 mountPath: url.path,

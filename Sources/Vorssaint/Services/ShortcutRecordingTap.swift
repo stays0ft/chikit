@@ -28,11 +28,6 @@ enum ShortcutRecordingTap {
     /// release keep being swallowed until the release arrives.
     private static var drainingKeyCode: Int64?
     private static var drainWatchdog: DispatchWorkItem?
-    /// This tap is created after the super key's and therefore sits ahead of
-    /// it, so the trigger key arrives here bare. Reading it the same way the
-    /// super key does lets a field record the combination the way it will be
-    /// pressed later, instead of asking for the chosen modifiers by hand.
-    private static var superState = SuperKeySupport.State()
 
     /// Starts swallowing key events and delivering each fresh press to the
     /// handler. Returns false when the tap cannot exist (no Accessibility),
@@ -43,7 +38,6 @@ enum ShortcutRecordingTap {
         drainWatchdog = nil
         drainingKeyCode = nil
         heldKeyCode = nil
-        superState.reset()
         // A tap the system disabled behind our back reads as dead; rebuild.
         if let tap, !CGEvent.tapIsEnabled(tap: tap) {
             tearDown()
@@ -102,7 +96,6 @@ enum ShortcutRecordingTap {
         drainingKeyCode = nil
         heldKeyCode = nil
         handler = nil
-        superState.reset()
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
             CFMachPortInvalidate(tap)
@@ -122,35 +115,12 @@ enum ShortcutRecordingTap {
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
         if let handler {
-            // Holding the super key while recording means the modifiers it
-            // stands for, and the key holding them is never the shortcut.
-            var heldModifiers: GlobalShortcutModifiers = []
-            if SuperKeyService.isEngaged {
-                let superEvent: SuperKeySupport.Event
-                if keyCode == SuperKeySupport.triggerKeyCode {
-                    let timestamp = UInt64(event.timestamp)
-                    superEvent = type == .keyDown
-                        ? .triggerDown(
-                            isRepeat: isRepeat,
-                            hasPrimaryModifiers: !GlobalShortcutModifiers(cgFlags: event.flags).isEmpty,
-                            timestamp: timestamp
-                        )
-                        : .triggerUp(timestamp: timestamp)
-                } else {
-                    superEvent = .otherKey
-                }
-                switch superState.decide(superEvent) {
-                case .swallow, .soloTap(repeated: _), .soloHold(repeated: _): return nil
-                case .addModifiers: heldModifiers = SuperKeyService.shared.modifiers
-                case .pass, .interceptAndRemap: break
-                }
-            }
             if type == .keyDown {
                 heldKeyCode = keyCode
                 // Autorepeats of a held key are swallowed but never re-fed:
                 // the field wants the press, not a stream of it.
                 if !isRepeat {
-                    handler(keyCode, GlobalShortcutModifiers(cgFlags: event.flags).union(heldModifiers))
+                    handler(keyCode, GlobalShortcutModifiers(cgFlags: event.flags))
                 }
             } else if keyCode == heldKeyCode {
                 heldKeyCode = nil

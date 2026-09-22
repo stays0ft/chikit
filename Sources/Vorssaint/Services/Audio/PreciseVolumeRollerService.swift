@@ -54,7 +54,7 @@ final class PreciseVolumeRollerService: ObservableObject {
         }
         guard tap == nil else { return }
 
-        let systemDefined = CGEventType(rawValue: CleaningSystemKeyEvent.systemDefinedEventTypeRawValue)!
+        let systemDefined = CGEventType(rawValue: 14)!
         let callback: CGEventTapCallBack = { _, type, event, userInfo in
             guard let userInfo else { return Unmanaged.passUnretained(event) }
             let service = Unmanaged<PreciseVolumeRollerService>
@@ -90,7 +90,7 @@ final class PreciseVolumeRollerService: ObservableObject {
             }
             return Unmanaged.passUnretained(event)
         }
-        guard type.rawValue == CleaningSystemKeyEvent.systemDefinedEventTypeRawValue,
+        guard type.rawValue == 14,
               let nsEvent = NSEvent(cgEvent: event),
               nsEvent.subtype.rawValue == 8,
               let volumePress = Self.volumePress(fromData1: nsEvent.data1) else {

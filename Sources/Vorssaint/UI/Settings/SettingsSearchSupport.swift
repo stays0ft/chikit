@@ -78,9 +78,7 @@ enum SettingsSearchSupport {
         AppFeature.allCases.map { feature in
             SettingsSearchItem(id: .feature(feature),
                                destination: feature.settingsDestination,
-                               title: feature == .clipboardHistory
-                                   ? FeatureStrings.commandBar(language).sourceClipboard
-                                   : title(feature),
+                               title: title(feature),
                                icon: feature.symbolName,
                                feature: feature)
         }
@@ -287,31 +285,6 @@ enum SettingsSearchSupport {
             fold($0.title) == fold(suggestion.title)
         }) else { return }
         builder.suggestions.append(suggestion)
-    }
-
-    /// Every former screen-tool page remains discoverable after those settings
-    /// move behind the single Screen capture destination.
-    static func screenCaptureKeywords(_ strings: Strings,
-                                       language: AppLanguage) -> [String] {
-        screenCaptureFeatureKeywords(strings, language: language).flatMap(\.titles)
-    }
-
-    static func screenCaptureFeatureKeywords(_ strings: Strings,
-                                              language: AppLanguage)
-        -> [(feature: AppFeature, titles: [String])] {
-        let screenshot = FeatureStrings.screenshot(language)
-        let recorder = FeatureStrings.recorder(language)
-        return [
-            (.screenshot, [screenshot.pageTitle, screenshot.freezeToggle,
-                           screenshot.loupeStartsOnToggle,
-                           screenshot.fullScreenShortcutTitle, screenshot.previewPositionLabel,
-                           screenshot.pinButton, screenshot.toolPixelate, screenshot.toolArrow]),
-            (.screenRecorder, [recorder.pageTitle, recorder.startButton,
-                               recorder.systemAudioToggle, recorder.microphoneToggle,
-                               recorder.qualityLabel, recorder.frameRateLabel]),
-            (.screenOCR, [strings.ocrName, strings.ocrRemoveLineBreaksToggle, strings.ocrQRToggle]),
-            (.colorPicker, [strings.colorPickerName, strings.colorPickerFormatLabel]),
-        ]
     }
 
     /// Keeps only the sections that still have items for the query, so an

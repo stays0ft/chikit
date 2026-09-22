@@ -16,6 +16,18 @@ import SwiftUI
 /// area is for and only one session is ever on screen.
 final class ScreenshotSelectionController {
 
+    /// Plain #RRGGBB for the loupe's color-copy convenience. The dedicated
+    /// color picker's richer formats (rgb/hsl/swiftui) left with that feature;
+    /// this stays as a simple, always-available fallback while a region is
+    /// being selected.
+    fileprivate static func hexString(for color: NSColor) -> String? {
+        guard let srgb = color.usingColorSpace(.sRGB) else { return nil }
+        let r = Int((srgb.redComponent * 255).rounded())
+        let g = Int((srgb.greenComponent * 255).rounded())
+        let b = Int((srgb.blueComponent * 255).rounded())
+        return String(format: "#%02X%02X%02X", r, g, b)
+    }
+
     struct Capture {
         let image: CGImage
         /// Pixels per point of the source display, for 1x export math.
@@ -84,9 +96,7 @@ final class ScreenshotSelectionController {
             }
         }
     }
-    fileprivate var offersScrollingCapture: Bool {
-        supportsScrollingCapture && activeTool == .screenshot && activeMode == .image
-    }
+    fileprivate var offersScrollingCapture: Bool { false }
     fileprivate var acceptsWindowClick: Bool {
         activeMode != .color && !requiresDraggedRegion && !scrollingCaptureEnabled
     }
@@ -149,8 +159,6 @@ final class ScreenshotSelectionController {
     private var activeMode: Mode {
         switch activeTool {
         case .recording: return .geometry
-        case .color: return .color
-        case .screenshot, .text: return .image
         case .none: return baseMode
         }
     }
@@ -945,8 +953,11 @@ private final class ScreenshotOverlayView: NSView {
             imageSize: CGSize(width: loupeImage.width, height: loupeImage.height))
         let sample = loupePixelColor(in: loupeImage, at: pixelPoint)
         guard let color = sample.color,
-              let value = ColorSamplerService.shared.copyQuietly(color)
+              let value = ScreenshotSelectionController.hexString(for: color)
         else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(value, forType: .string)
         copiedValue = value
         copiedValueReset?.cancel()
         let reset = DispatchWorkItem { [weak self] in
@@ -1347,7 +1358,7 @@ private final class ScreenshotOverlayView: NSView {
         if let color = sample.color,
            let srgb = color.usingColorSpace(.sRGB) {
             swatch = srgb
-            value = ColorSamplerService.shared.formattedValue(color) ?? ""
+            value = ScreenshotSelectionController.hexString(for: color) ?? ""
         }
         let text: String
         if let copiedValue {
@@ -1563,18 +1574,12 @@ private struct UnifiedCaptureGuideContent: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
-            CaptureKeyHint(key: "1–4", icon: "keyboard")
-            if options.selectedTool != .color {
-                CaptureKeyHint(key: "↩", icon: "rectangle.inset.filled")
-                if offersScrollingCapture, options.selectedTool == .screenshot {
-                    CaptureKeyHint(key: scrollingCaptureEnabled ? "S on" : "S",
-                                   icon: "rectangle.stack")
-                }
-                CaptureKeyHint(key: loupeEnabled ? "Z on" : "Z",
-                               icon: "plus.magnifyingglass")
-                if loupeEnabled {
-                    CaptureKeyHint(key: "C", icon: "doc.on.doc")
-                }
+            CaptureKeyHint(key: "2", icon: "keyboard")
+            CaptureKeyHint(key: "↩", icon: "rectangle.inset.filled")
+            CaptureKeyHint(key: loupeEnabled ? "Z on" : "Z",
+                           icon: "plus.magnifyingglass")
+            if loupeEnabled {
+                CaptureKeyHint(key: "C", icon: "doc.on.doc")
             }
         }
         .padding(.horizontal, 10)
@@ -1673,20 +1678,9 @@ private struct UnifiedCaptureGuideContent: View {
 
     private var subtitle: String {
         switch options.selectedTool {
-        case .screenshot:
-            let base = strings.hintDrag + "  ·  " + strings.hintClick
-            guard offersScrollingCapture else { return base }
-            return base + "  ·  "
-                + (scrollingCaptureEnabled
-                   ? strings.scrollingCaptureHintOn
-                   : strings.scrollingCaptureHintOff)
         case .recording:
             return FeatureStrings.recorder(l10n.language).selectionPurpose
                 + "  ·  " + strings.hintDrag + "  ·  " + strings.hintClick
-        case .text:
-            return l10n.s.ocrCaption
-        case .color:
-            return l10n.s.colorPickerCaption
         }
     }
 }

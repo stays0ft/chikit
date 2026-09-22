@@ -7,8 +7,8 @@ import Foundation
 /// The Settings pages. Lives here (without SwiftUI) so the visibility rules
 /// below and the unit tests can reason about pages without pulling UI in.
 enum SettingsPage: Hashable {
-    case general, features, energy, monitor
-    case mouse, switcher, keyDebounce, superKey, cutPaste, autoQuit, quitProtection, cleaner, uninstaller, urlCleaner, homebrew, appUpdates, media, clipboard, windowLayout, shelf, quickTools, textSnippets, screenshot, radialMenu, commandBar, killProcess
+    case general, features, monitor
+    case autoQuit, cleaner, uninstaller, clipboard, windowLayout, finderRename, screenRecorder, notchMedia
     case shortcuts, advanced, about, releaseNotes, support
 }
 
@@ -17,57 +17,22 @@ enum SettingsPage: Hashable {
 /// be added but should not be renamed.
 enum SettingsSectionAnchor: String, CaseIterable, Hashable {
     case panelConfiguration
-    case musicBlocking
-    case keepAwake
-    case brightness
-    case extraBrightness
-    case bluetoothSleep
-    case scrollDirection
-    case focusFollowsMouse
-    case smoothScroll
-    case mouseAcceleration
-    case mouseNavigation
-    case mouseButtonShortcuts
-    case middleClick
-    case mouseClickDebounce
-    case switcher
-    case dock
-    case dockClick
-    case finderCutPaste
     case finderRename
     case clipboardHistory
-    case pastePlain
-    case quickLauncher
-    case quickToggles
-    case screenshot
     case screenRecorder
-    case colorPicker
-    case screenOCR
-    case micMute
-    case cameraPreview
-    case scratchpad
-    case cleaningMode
     case soundOutputSwitcher
     case fanControl
     case notchMediaControls
 
     var page: SettingsPage {
         switch self {
-        case .panelConfiguration, .musicBlocking: return .general
-        case .keepAwake, .brightness, .extraBrightness, .bluetoothSleep: return .energy
-        case .scrollDirection, .focusFollowsMouse, .smoothScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts,
-             .middleClick, .mouseClickDebounce:
-            return .mouse
-        case .switcher, .dock, .dockClick: return .switcher
-        case .finderCutPaste, .finderRename: return .cutPaste
-        case .clipboardHistory, .pastePlain: return .clipboard
-        case .quickLauncher, .quickToggles, .micMute, .cameraPreview, .scratchpad, .cleaningMode,
-             .notchMediaControls:
-            return .quickTools
-        case .screenshot, .screenRecorder, .colorPicker, .screenOCR:
-            return .screenshot
+        case .panelConfiguration: return .general
+        case .finderRename: return .finderRename
+        case .clipboardHistory: return .clipboard
+        case .screenRecorder: return .screenRecorder
         case .soundOutputSwitcher: return .shortcuts
         case .fanControl: return .monitor
+        case .notchMediaControls: return .notchMedia
         }
     }
 }
@@ -161,93 +126,25 @@ extension AppFeature {
     /// Settings destination before the project compiles.
     var settingsDestination: FeatureSettingsDestination {
         switch self {
-        case .switcher: return FeatureSettingsDestination(.switcher, sectionAnchor: .switcher)
-        case .dockPreview: return FeatureSettingsDestination(.switcher, sectionAnchor: .dock)
-        case .dockClick: return FeatureSettingsDestination(.switcher, sectionAnchor: .dockClick)
-        case .windowMaximizer:
-            return FeatureSettingsDestination(.general, sectionAnchor: .panelConfiguration)
         case .windowLayout: return FeatureSettingsDestination(.windowLayout)
         case .autoQuit: return FeatureSettingsDestination(.autoQuit)
-        case .quitWindowProtection: return FeatureSettingsDestination(.quitProtection)
-
-        case .scrollInverter:
-            return FeatureSettingsDestination(.mouse, sectionAnchor: .scrollDirection)
-        case .focusFollowsMouse:
-            return FeatureSettingsDestination(.mouse, sectionAnchor: .focusFollowsMouse)
-        case .smoothScroll:
-            return FeatureSettingsDestination(.mouse, sectionAnchor: .smoothScroll)
-        case .mouseAcceleration:
-            return FeatureSettingsDestination(.mouse, sectionAnchor: .mouseAcceleration)
-        case .mouseNavigation:
-            return FeatureSettingsDestination(.mouse, sectionAnchor: .mouseNavigation)
-        case .mouseButtonShortcuts:
-            return FeatureSettingsDestination(.mouse, sectionAnchor: .mouseButtonShortcuts)
-        case .middleClick:
-            return FeatureSettingsDestination(.mouse, sectionAnchor: .middleClick)
-        case .mouseClickDebounce:
-            return FeatureSettingsDestination(.mouse, sectionAnchor: .mouseClickDebounce)
-        case .keyboardDebounce: return FeatureSettingsDestination(.keyDebounce)
-        case .textSnippets: return FeatureSettingsDestination(.textSnippets)
-        case .superKey: return FeatureSettingsDestination(.superKey)
 
         case .clipboardHistory:
             return FeatureSettingsDestination(.clipboard, sectionAnchor: .clipboardHistory)
-        case .pastePlain:
-            return FeatureSettingsDestination(.clipboard, sectionAnchor: .pastePlain)
-        case .finderCutPaste:
-            return FeatureSettingsDestination(.cutPaste, sectionAnchor: .finderCutPaste)
         case .finderRename:
-            return FeatureSettingsDestination(.cutPaste, sectionAnchor: .finderRename)
-        case .shelf: return FeatureSettingsDestination(.shelf)
-        case .urlCleaner: return FeatureSettingsDestination(.urlCleaner)
-        case .diskImageInstaller: return FeatureSettingsDestination(.features)
+            return FeatureSettingsDestination(.finderRename, sectionAnchor: .finderRename)
 
         case .mixer:
             return FeatureSettingsDestination(.general, sectionAnchor: .panelConfiguration)
         case .soundOutputSwitcher:
             return FeatureSettingsDestination(.shortcuts, sectionAnchor: .soundOutputSwitcher)
-        case .micMute:
-            return FeatureSettingsDestination(.quickTools, sectionAnchor: .micMute)
-        case .musicBlock:
-            return FeatureSettingsDestination(.general, sectionAnchor: .musicBlocking)
 
-        case .keepAwake:
-            return FeatureSettingsDestination(.energy, sectionAnchor: .keepAwake)
-        case .brightness:
-            return FeatureSettingsDestination(.energy, sectionAnchor: .brightness)
-        case .extraBrightness:
-            return FeatureSettingsDestination(.energy, sectionAnchor: .extraBrightness)
-        case .bluetoothSleep:
-            return FeatureSettingsDestination(.energy, sectionAnchor: .bluetoothSleep)
-
-        case .quickLauncher:
-            return FeatureSettingsDestination(.quickTools, sectionAnchor: .quickLauncher)
-        case .quickToggles:
-            return FeatureSettingsDestination(.quickTools, sectionAnchor: .quickToggles)
-        case .colorPicker:
-            return FeatureSettingsDestination(.screenshot, sectionAnchor: .colorPicker)
-        case .screenOCR:
-            return FeatureSettingsDestination(.screenshot, sectionAnchor: .screenOCR)
-        case .cleaningMode:
-            return FeatureSettingsDestination(.quickTools, sectionAnchor: .cleaningMode)
-        case .mediaTools: return FeatureSettingsDestination(.media)
         case .cleaner: return FeatureSettingsDestination(.cleaner)
         case .uninstaller: return FeatureSettingsDestination(.uninstaller)
-        case .killProcess: return FeatureSettingsDestination(.killProcess)
-        case .homebrew: return FeatureSettingsDestination(.homebrew)
-        case .appUpdates: return FeatureSettingsDestination(.appUpdates)
-        case .screenshot:
-            return FeatureSettingsDestination(.screenshot, sectionAnchor: .screenshot)
-        case .cameraPreview:
-            return FeatureSettingsDestination(.quickTools, sectionAnchor: .cameraPreview)
-        case .radialMenu: return FeatureSettingsDestination(.radialMenu)
-        case .scratchpad:
-            return FeatureSettingsDestination(.quickTools, sectionAnchor: .scratchpad)
-        case .notchMediaControls:
-            return FeatureSettingsDestination(.quickTools, sectionAnchor: .notchMediaControls)
-        case .commandBar: return FeatureSettingsDestination(.commandBar)
         case .screenRecorder:
-            return FeatureSettingsDestination(.screenshot, sectionAnchor: .screenRecorder)
+            return FeatureSettingsDestination(.screenRecorder, sectionAnchor: .screenRecorder)
+        case .notchMediaControls:
+            return FeatureSettingsDestination(.notchMedia, sectionAnchor: .notchMediaControls)
 
         case .monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower:
             return FeatureSettingsDestination(.monitor)
@@ -269,32 +166,15 @@ enum FeatureVisibilitySupport {
     /// always shows (General, Shortcuts, About and friends).
     static func features(for page: SettingsPage) -> [AppFeature] {
         switch page {
-        case .energy: return [.keepAwake, .brightness, .extraBrightness, .bluetoothSleep]
         case .monitor: return monitorFeatures
-        case .mouse: return [.scrollInverter, .focusFollowsMouse, .smoothScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts,
-                             .middleClick, .mouseClickDebounce]
-        case .switcher: return [.switcher, .dockPreview, .dockClick]
         case .windowLayout: return [.windowLayout]
         case .autoQuit: return [.autoQuit]
-        case .quitProtection: return [.quitWindowProtection]
-        case .clipboard: return [.clipboardHistory, .pastePlain, .finderCutPaste]
-        case .cutPaste: return [.finderCutPaste, .finderRename]
-        case .shelf: return [.shelf]
-        case .media: return [.mediaTools]
-        case .quickTools: return [.quickLauncher, .quickToggles, .micMute,
-                                  .cameraPreview, .scratchpad, .cleaningMode, .notchMediaControls]
-        case .urlCleaner: return [.urlCleaner]
+        case .clipboard: return [.clipboardHistory]
+        case .finderRename: return [.finderRename]
         case .cleaner: return [.cleaner]
-        case .homebrew: return [.homebrew]
-        case .appUpdates: return [.appUpdates]
         case .uninstaller: return [.uninstaller]
-        case .killProcess: return [.killProcess]
-        case .keyDebounce: return [.keyboardDebounce]
-        case .superKey: return [.superKey]
-        case .textSnippets: return [.textSnippets]
-        case .screenshot: return [.screenshot, .screenRecorder, .screenOCR, .colorPicker]
-        case .radialMenu: return [.radialMenu]
-        case .commandBar: return [.commandBar]
+        case .screenRecorder: return [.screenRecorder]
+        case .notchMedia: return [.notchMediaControls]
         case .general, .features, .shortcuts, .advanced, .about, .releaseNotes, .support:
             return []
         }

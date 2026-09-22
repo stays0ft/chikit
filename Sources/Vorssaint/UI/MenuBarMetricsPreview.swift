@@ -304,7 +304,7 @@ struct MenuBarMetricsPreview: View {
 
     private var glyph: some View {
         Group {
-            if let image = BlackHoleGlyph.image(active: true) {
+            if let image = BlackHoleGlyph.image() {
                 Image(nsImage: image).renderingMode(.template)
             } else {
                 Image(systemName: "circle.fill")

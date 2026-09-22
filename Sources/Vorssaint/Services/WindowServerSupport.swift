@@ -21,6 +21,21 @@ struct WindowServerWindowCandidate {
     let frame: CGRect
 }
 
+/// One on-screen window, reduced to what a pointer/geometry decision needs.
+struct WindowServerWindow: Equatable {
+    let frame: CGRect
+    let layer: Int
+    let alpha: Double
+    let processID: Int32
+
+    init(frame: CGRect, layer: Int, alpha: Double = 1, processID: Int32) {
+        self.frame = frame
+        self.layer = layer
+        self.alpha = alpha
+        self.processID = processID
+    }
+}
+
 /// The window server's on-screen list and the scans run over it. Asking for
 /// the list and reading a rectangle out of an entry were written out again at
 /// every caller, so a mistake in one copy was invisible from the others.
@@ -38,8 +53,25 @@ enum WindowServerSupport {
     }
 
     /// The same list, reduced to what a pointer lookup needs.
-    static func onScreenWindows() -> [MouseAppExceptionSupport.Window] {
-        MouseAppExceptionSupport.windows(from: onScreenWindowInfo())
+    static func onScreenWindows() -> [WindowServerWindow] {
+        windows(from: onScreenWindowInfo())
+    }
+
+    static func windows(from descriptions: [[String: Any]]) -> [WindowServerWindow] {
+        descriptions.compactMap { info in
+            guard let raw = info[kCGWindowBounds as String] as? [String: Any],
+                  let x = (raw["X"] as? NSNumber)?.doubleValue,
+                  let y = (raw["Y"] as? NSNumber)?.doubleValue,
+                  let width = (raw["Width"] as? NSNumber)?.doubleValue,
+                  let height = (raw["Height"] as? NSNumber)?.doubleValue,
+                  let layer = (info[kCGWindowLayer as String] as? NSNumber)?.intValue,
+                  let pid = (info[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value
+            else { return nil }
+            return WindowServerWindow(frame: CGRect(x: x, y: y, width: width, height: height),
+                                      layer: layer,
+                                      alpha: (info[kCGWindowAlpha as String] as? NSNumber)?.doubleValue ?? 1,
+                                      processID: pid)
+        }
     }
 
     static func bounds(from window: [String: Any]) -> CGRect? {

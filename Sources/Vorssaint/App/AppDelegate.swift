@@ -69,12 +69,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         // never turns the item off.
         LaunchAtLogin.repairAtStartup()
 
-        // Switch back on any display a previous run left off. A run that ends
-        // without putting one back leaves a screen dark with no app around to
-        // offer it back, so the repair happens before anything else can care
-        // about which displays are attached.
-        BrightnessService.shared.restoreDisplaysLeftOff()
-
         // An accessory (LSUIElement) app gets no default main menu, so the standard
         // keyboard shortcuts (Cmd+H/M/W/Q and the Edit shortcuts Cmd+C/V/X/A) have
         // no menu items to fire and do nothing in the Settings window. Install one.
@@ -87,24 +81,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             self?.toggleMainPopover()
         }
         statusController.onRightClick = { [weak self] in
-            if AppFeature.keepAwake.isAvailable
-                && UserDefaults.standard.bool(forKey: DefaultsKey.keepAwakeRightClickToggle) {
-                KeepAwakeManager.shared.toggle()
-            } else {
-                self?.showContextMenu()
-            }
+            self?.showContextMenu()
         }
         statusController.onMetricClick = { [weak self] metric, button in
             self?.captureStatusClick()
             self?.showMetricPanel(for: metric, anchoredTo: button)
-        }
-        // The shelf drop zone chip anchors itself under the menu bar icon.
-        ShelfService.shared.statusItemFrameProvider = { [weak self] in
-            guard let item = self?.statusController.statusItem, item.isVisible,
-                  let window = self?.statusController.button?.window else { return nil }
-            let frame = window.frame
-            guard StatusItemAnchorSupport.isTrustworthyStatusFrame(frame) else { return nil }
-            return frame
         }
         // Same fallback anchor for the notch media widget on displays with
         // no notch to hang from.
@@ -117,14 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         }
 
         setUpPopover()
-        bindManagers()
 
-        HotkeyManager.shared.onActivate = { KeepAwakeManager.shared.toggle() }
-        HotkeyManager.shared.syncWithPreferences()
-
-        KeepAwakeManager.shared.recoverIfNeeded {
-            KeepAwakeManager.shared.activateOnLaunchIfNeeded()
-        }
         FanControlService.recoverIfNeeded()
         // One binding per feature: only available features are touched, so a
         // feature switched off in the hub never even instantiates here.
@@ -142,13 +116,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { _ in
-                FeatureRuntime.shared.sync([
-                    .scrollInverter, .focusFollowsMouse, .smoothScroll, .mouseNavigation, .switcher,
-                    .dockPreview, .finderCutPaste, .finderRename, .autoQuit, .dockClick,
-                    .middleClick, .windowMaximizer, .keyboardDebounce, .windowLayout,
-                    .textSnippets, .brightness, .radialMenu, .mouseButtonShortcuts,
-                    .mouseClickDebounce, .superKey, .quitWindowProtection, .mixer,
-                ])
+                FeatureRuntime.shared.sync([.finderRename, .autoQuit, .windowLayout, .mixer])
             }
             .store(in: &cancellables)
 
@@ -156,7 +124,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { _ in
-                FeatureRuntime.shared.sync([.dockPreview, .screenRecorder])
+                FeatureRuntime.shared.sync([.screenRecorder])
             }
             .store(in: &cancellables)
 
@@ -234,32 +202,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         isTerminating = true
         // Quitting properly means the start worked, whenever it happened.
         endStartupWatch()
-        if AppFeature.brightness.isAvailable {
-            BrightnessService.shared.restoreDisplaysBeforeTermination()
-        }
-        ExtraBrightnessService.shared.stop()
         ProcessUsageService.shared.stopNetworkMonitoring(force: true)
-        URLCleanerService.shared.stop()
-        FocusFollowsMouseService.shared.stop()
-        WindowMaximizer.shared.stop()
         WindowLayoutService.shared.suspend()
-        KeyboardDebounceService.shared.suspend()
-        MouseClickDebounceService.shared.suspend()
-        TextSnippetService.shared.suspend()
-        // Takes the Super key mapping back out before the process goes away.
-        SuperKeyService.shared.suspend()
-        // Dock's app and window switcher hotkeys persist after quit.
-        AppSwitcher.shared.suspend()
-        MouseButtonShortcutService.shared.suspend()
-        MiddleClickService.shared.suspend()
-        ScrollInverter.shared.suspend()
-        SmoothScrollService.shared.suspend()
-        if AppFeature.mouseAcceleration.isAvailable
-            || MouseAccelerationRecovery.hasPendingEntries() {
-            MouseAccelerationService.shared.stop()
-        }
-        MouseNavigationService.shared.suspend()
-        DockPreviewService.shared.stop()
         SoundOutputSwitcher.shared.stop()
         PreciseVolumeRollerService.shared.stop()
         AppVolumeMixer.shared.stopAll()
@@ -267,14 +211,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         // Puts the system input back if a microphone was chosen here: the
         // app's audio settings must not outlive the app.
         AudioInputDeviceManager.shared.stop()
-        // Flushes any scratchpad edit still inside the save debounce.
-        ScratchpadService.shared.suspend()
         // The clipboard history persists through an async pipeline; the last
         // mutation (often a Clear) must land before the process dies.
         if AppFeature.clipboardHistory.isAvailable {
             ClipboardHistoryService.shared.flushBeforeTermination()
         }
-        KeepAwakeManager.shared.deactivate(reason: .quit)
     }
 
     /// The lifeline when the menu bar icon goes missing. Opening the app again
@@ -344,20 +285,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
-
-    private func bindManagers() {
-        KeepAwakeManager.shared.onSessionEnded = { reason in
-            let strings = L10n.shared.s
-            switch reason {
-            case .timer:
-                Notifier.post(title: strings.notifySessionEndedTitle, body: strings.notifySessionEndedBody)
-            case .battery:
-                Notifier.post(title: strings.notifyBatteryTitle, body: strings.notifyBatteryBody)
-            default:
-                break
-            }
-        }
-    }
 
     // MARK: - Main panel
 
@@ -824,7 +751,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
                 self.popoverIsSwitchingAnchor = false
                 MenuPanelFocus.shared.setSwitchingMetricAnchor(false)
                 if !self.popover.isShown {
-                    self.statusController.setMicBadgeHeld(false)
                 }
                 return
             }
@@ -851,7 +777,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         // The panel measures itself against this while the popover lays out, so
         // it has to be known before the content is asked for its size.
         PanelInteractionState.shared.anchorScreen = statusScreen(for: button)
-        statusController.setMicBadgeHeld(true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         if let window = popover.contentViewController?.view.window {
             configurePopoverWindow(window)
@@ -864,7 +789,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
                 window.alphaValue = 1
             }
         } else {
-            statusController.setMicBadgeHeld(false)
         }
         if activate {
             NSApp.activate(ignoringOtherApps: true)
@@ -873,7 +797,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         // — otherwise popoverDidClose never fires and both would leak, holding a
         // display object and a window observer for the rest of the session.
         guard popover.isShown else {
-            statusController.setMicBadgeHeld(false)
             endPopoverDriftCorrection()
             return
         }
@@ -988,21 +911,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         // (Menu bar icon recovery happens on a deliberate reopen, not here: this
         // fires on every activation, so rebuilding here would cause churn/flicker.)
         UpdateService.shared.checkIfStale()
-        restoreAfterAppUpdateHandoff()
-    }
-
-    /// Some updates finish in another app. With no Dock icon there is no way
-    /// back to the window that sent the person there, so returning brings it
-    /// forward again, on the same page, while the list reads the truth again.
-    private func restoreAfterAppUpdateHandoff() {
-        guard AppFeature.appUpdates.isAvailable else { return }
-        let service = AppUpdatesService.shared
-        service.applicationBecameActive()
-        // Only a window still on screen is brought back. A Settings window the
-        // person closed themselves stays closed.
-        guard service.consumeUpdateHandoffReturn(),
-              settingsWindow?.isVisible == true else { return }
-        openSettingsWindow()
     }
 
     func closePopover(animated: Bool = true, after delay: TimeInterval = 0,
@@ -1091,7 +999,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
 
     func popoverDidClose(_ notification: Notification) {
         if !popoverIsSwitchingAnchor && !popover.isShown {
-            statusController.setMicBadgeHeld(false)
         }
         if !popoverIsSwitchingAnchor {
             SystemMonitor.shared.setMenuPanelNeeds(.none)
@@ -1129,45 +1036,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     }
 
     private func presentContextMenu() {
-        let manager = KeepAwakeManager.shared
         let strings = L10n.shared.s
         let menu = NSMenu()
-
-        if AppFeature.keepAwake.isAvailable {
-            let toggleItem = NSMenuItem(title: manager.isActive ? strings.menuDisableAwake : strings.menuEnableAwake,
-                                        action: #selector(menuToggleAwake),
-                                        keyEquivalent: "")
-            toggleItem.target = self
-            menu.addItem(toggleItem)
-        }
-
-        if AppFeature.keepAwake.isAvailable, !manager.isActive {
-            let durationsItem = NSMenuItem(title: strings.menuActivateFor, action: nil, keyEquivalent: "")
-            let submenu = NSMenu()
-            let options: [(String, Int)] = [(strings.minutes15, 15), (strings.minutes30, 30),
-                                            (strings.hour1, 60), (strings.hours2, 120),
-                                            (strings.hours4, 240), (strings.hours8, 480),
-                                            (strings.indefinitely, 0)]
-            for (label, minutes) in options {
-                let item = NSMenuItem(title: label, action: #selector(menuActivateDuration(_:)), keyEquivalent: "")
-                item.target = self
-                item.tag = minutes
-                submenu.addItem(item)
-            }
-            durationsItem.submenu = submenu
-            menu.addItem(durationsItem)
-        }
-
-        if AppFeature.cleaningMode.isAvailable {
-            let cleaningItem = NSMenuItem(title: strings.cleaningMenuItem,
-                                          action: #selector(menuCleaningMode), keyEquivalent: "")
-            cleaningItem.target = self
-            menu.addItem(cleaningItem)
-        }
-
-        if menu.items.isEmpty == false {
-            menu.addItem(.separator())
-        }
 
         let settingsItem = NSMenuItem(title: strings.menuSettings, action: #selector(menuOpenSettings), keyEquivalent: ",")
         settingsItem.target = self
@@ -1182,13 +1052,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
                                            action: #selector(menuOpenUninstaller), keyEquivalent: "")
             uninstallItem.target = self
             menu.addItem(uninstallItem)
-        }
-
-        if AppFeature.shelf.isAvailable, UserDefaults.standard.bool(forKey: DefaultsKey.shelfEnabled) {
-            let shelfItem = NSMenuItem(title: strings.shelfMenuItem,
-                                       action: #selector(menuOpenShelf), keyEquivalent: "")
-            shelfItem.target = self
-            menu.addItem(shelfItem)
         }
 
         let updatesItem = NSMenuItem(title: strings.menuCheckUpdates, action: #selector(menuCheckUpdates), keyEquivalent: "")
@@ -1208,18 +1071,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         }
     }
 
-    @objc private func menuToggleAwake() {
-        KeepAwakeManager.shared.toggle()
-    }
-
-    @objc private func menuCleaningMode() {
-        CleaningModeManager.shared.activate()
-    }
-
-    @objc private func menuActivateDuration(_ sender: NSMenuItem) {
-        KeepAwakeManager.shared.activate(minutes: sender.tag)
-    }
-
     @objc private func menuOpenSettings() {
         openSettingsWindow()
     }
@@ -1227,10 +1078,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     @objc private func menuOpenUninstaller() {
         SettingsRouter.shared.page = .uninstaller
         openSettingsWindow()
-    }
-
-    @objc private func menuOpenShelf() {
-        ShelfService.shared.expandDocked()
     }
 
     @objc private func menuCheckUpdates() {

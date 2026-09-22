@@ -187,7 +187,6 @@ final class ScreenRecorderService: ObservableObject {
     private var session: RecorderSession?
     private var indicator: RecorderIndicator?
     private var editors: [RecorderEditorController] = []
-    private var mediaOwnedEditorIDs: Set<ObjectIdentifier> = []
     private var elapsedTimer: Timer?
     private var startedAt: CFTimeInterval = 0
     private var countdown: DispatchWorkItem?
@@ -223,10 +222,7 @@ final class ScreenRecorderService: ObservableObject {
     /// what was already recorded would be worse than the delay.
     private func teardownSurfaces() {
         invalidatePendingStart()
-        let recorderOwnedEditors = editors.filter {
-            !mediaOwnedEditorIDs.contains(ObjectIdentifier($0))
-        }
-        for editor in recorderOwnedEditors {
+        for editor in editors {
             editor.close()
         }
         if session != nil {
@@ -243,7 +239,6 @@ final class ScreenRecorderService: ObservableObject {
         WindowActivationPolicy.retain()
         let editor = RecorderEditorController(take: take)
         editors.append(editor)
-        if owner == .mediaTools { mediaOwnedEditorIDs.insert(ObjectIdentifier(editor)) }
         editor.show()
         return true
     }
@@ -251,14 +246,7 @@ final class ScreenRecorderService: ObservableObject {
     func editorDidClose(_ editor: RecorderEditorController) {
         guard editors.contains(where: { $0 === editor }) else { return }
         editors.removeAll { $0 === editor }
-        mediaOwnedEditorIDs.remove(ObjectIdentifier(editor))
         WindowActivationPolicy.release()
-    }
-
-    func closeEditors(ownedBy owner: AppFeature) {
-        guard owner == .mediaTools else { return }
-        let targets = editors.filter { mediaOwnedEditorIDs.contains(ObjectIdentifier($0)) }
-        for editor in targets { editor.close() }
     }
 
     // MARK: - Entry
@@ -439,8 +427,7 @@ final class ScreenRecorderService: ObservableObject {
             try? await Task.sleep(nanoseconds: 120_000_000)
             guard self.session === session,
                   self.pendingStartIsAuthorized(generation) else { return }
-            var chrome = Set(ScreenshotService.shared.protectedWindowIDsForCapture.map(Int.init))
-            chrome.formUnion(indicator.excludedWindowNumbers)
+            var chrome = Set(indicator.excludedWindowNumbers)
             if let number = QuickToolHUD.currentWindowNumber { chrome.insert(number) }
             let failure = await session.start(frameRate: frameRate,
                                               capturesSystemAudio: capturesSystemAudio,

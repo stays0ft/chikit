@@ -80,7 +80,7 @@ struct ShortcutRecorderButton: NSViewRepresentable {
 }
 
 final class RecorderButton: NSButton {
-    var shortcut = GlobalShortcut.keepAwakeDefault
+    var shortcut = GlobalShortcut.clipboardDefault
     var waitingTitle = ""
     var emptyTitle: String?
     var clearAction: (() -> Void)?
@@ -259,7 +259,6 @@ final class RecorderButton: NSButton {
 
 struct ShortcutPreferenceRow: View {
     @ObservedObject private var l10n = L10n.shared
-    @ObservedObject private var superKey = SuperKeyService.shared
 
     private let role: GlobalShortcutRole
     private let isEnabled: Bool
@@ -363,12 +362,7 @@ struct ShortcutPreferenceRow: View {
         GlobalShortcut(storageValue: rawValue) ?? role.defaultShortcut
     }
 
-    private var superKeyAlternative: String? {
-        guard showsSuperKeyAlternative else { return nil }
-        return shortcut.superKeyAlternative(
-            sourceLabel: FeatureStrings.superKey(l10n.language).sourceLabel(superKey.source),
-            superKeyModifiers: superKeyModifiers)
-    }
+    private var superKeyAlternative: String? { nil }
 
     private func save(_ shortcut: GlobalShortcut) {
         if let conflict = GlobalShortcutRole.conflict(for: shortcut,

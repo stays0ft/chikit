@@ -142,44 +142,20 @@ final class FeatureRuntime: ObservableObject {
         }
     }
 
-    /// One bump for Settings, and the Command Bar drops rows of features that
-    /// just left the hub so a pin cannot linger as a bare id.
+    /// One bump for Settings and every other observer of the runtime.
     private func finishAvailabilityChange() {
         revision += 1
-        CommandBarService.shared.noteHubChange()
     }
 
     /// What each feature must re-evaluate when its availability (or a
     /// permission it depends on) changes. Most on-demand tools have no binding;
     /// Media only binds so uninstalling it can cancel work already in flight.
     private static let bindings: [AppFeature: () -> Void] = [
-        .switcher: {
-            WindowUseTracker.shared.syncWithFeatures()
-            AppSwitcher.shared.syncWithPreferences()
-        },
-        .dockPreview: { DockPreviewService.shared.syncWithPreferences() },
-        .dockClick: { DockClickService.shared.syncWithPreferences() },
-        .windowMaximizer: { WindowMaximizer.shared.syncWithPreferences() },
         .windowLayout: {
             WindowUseTracker.shared.syncWithFeatures()
             WindowLayoutService.shared.syncWithPreferences()
         },
         .autoQuit: { AutoQuitService.shared.syncWithPreferences() },
-        .scrollInverter: { ScrollInverter.shared.syncWithPreferences() },
-        .focusFollowsMouse: { FocusFollowsMouseService.shared.syncWithPreferences() },
-        .smoothScroll: { SmoothScrollService.shared.syncWithPreferences() },
-        .mouseAcceleration: { MouseAccelerationService.shared.syncWithPreferences() },
-        .mouseNavigation: { MouseNavigationService.shared.syncWithPreferences() },
-        .mouseButtonShortcuts: { MouseButtonShortcutService.shared.syncWithPreferences() },
-        .middleClick: { MiddleClickService.shared.syncWithPreferences() },
-        .mouseClickDebounce: { MouseClickDebounceService.shared.syncWithPreferences() },
-        .keyboardDebounce: { KeyboardDebounceService.shared.syncWithPreferences() },
-        .quitWindowProtection: { QuitProtectionService.shared.syncWithPreferences() },
-        .superKey: { SuperKeyService.shared.syncWithPreferences() },
-        .textSnippets: {
-            TextSnippetService.shared.syncWithPreferences()
-            SnippetLibraryService.shared.syncWithPreferences()
-        },
         .clipboardHistory: {
             ClipboardHistoryService.shared.syncWithPreferences()
             // Auto clear rides the clipboard feature's availability but not its
@@ -187,53 +163,18 @@ final class FeatureRuntime: ObservableObject {
             // off does not.
             ClipboardAutoClearService.shared.syncWithPreferences()
         },
-        .mediaTools: {
-            guard !AppFeature.mediaTools.isAvailable else { return }
-            MediaService.shared.cancel()
-            ScreenRecorderService.shared.closeEditors(ownedBy: .mediaTools)
-        },
-        .pastePlain: { PastePlainService.shared.syncWithPreferences() },
-        .finderCutPaste: { FinderCutPaste.shared.syncWithPreferences() },
         .finderRename: { FinderRenameService.shared.syncWithPreferences() },
-        .shelf: { ShelfService.shared.syncWithPreferences() },
-        .urlCleaner: { URLCleanerService.shared.syncWithPreferences() },
-        .diskImageInstaller: { DiskImageInstallerService.shared.syncWithPreferences() },
         .mixer: {
             PreciseVolumeRollerService.shared.syncWithPreferences()
             AppVolumeMixer.shared.syncWithPreferences()
             AudioInputDeviceManager.shared.syncWithPreferences()
         },
         .soundOutputSwitcher: { SoundOutputSwitcher.shared.syncWithPreferences() },
-        .micMute: { MicMuteService.shared.syncWithPreferences() },
-        .musicBlock: { MusicLaunchBlocker.shared.syncWithPreferences() },
-        .keepAwake: {
-            KeepAwakeManager.shared.syncWithFeatures()
-            HotkeyManager.shared.syncWithPreferences()
-        },
-        .brightness: { BrightnessService.shared.syncWithPreferences() },
-        .extraBrightness: { ExtraBrightnessService.shared.syncWithPreferences() },
-        .bluetoothSleep: { BluetoothSleepService.shared.syncWithPreferences() },
-        .quickLauncher: { QuickLauncherService.shared.syncWithPreferences() },
-        .colorPicker: {
-            ScreenCaptureService.shared.syncWithPreferences()
-        },
-        .screenOCR: {
-            ScreenCaptureService.shared.syncWithPreferences()
-            ScreenTextService.shared.syncWithPreferences()
-        },
-        .screenshot: {
-            ScreenCaptureService.shared.syncWithPreferences()
-            ScreenshotService.shared.syncWithPreferences()
-        },
         .screenRecorder: {
             ScreenCaptureService.shared.syncWithPreferences()
             ScreenRecorderService.shared.syncWithPreferences()
         },
-        .cameraPreview: { CameraPreviewService.shared.syncWithPreferences() },
-        .radialMenu: { RadialMenuService.shared.syncWithPreferences() },
         .notchMediaControls: { NotchMediaService.shared.syncWithPreferences() },
-        .scratchpad: { ScratchpadService.shared.syncWithPreferences() },
-        .commandBar: { CommandBarService.shared.syncWithPreferences() },
         .cleaner: {
             CleanerScheduler.shared.syncWithPreferences()
             WhatsAppDownloadScheduler.shared.syncWithPreferences()
@@ -243,7 +184,6 @@ final class FeatureRuntime: ObservableObject {
                 WhatsAppDownloadOrganizer.shared.stop()
             }
         },
-        .appUpdates: { AppUpdatesService.shared.syncWithPreferences() },
         .monitorCPU: { FeatureRuntime.syncMonitor() },
         .monitorGPU: { FeatureRuntime.syncMonitor() },
         .monitorMemory: { FeatureRuntime.syncMonitor() },

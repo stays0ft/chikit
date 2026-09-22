@@ -25,9 +25,9 @@ final class ScreenCaptureSelectionOptions: ObservableObject {
     }
 }
 
-/// One entry point for screenshot, recording, screen text and color. It owns
-/// each tool's own capture shortcut and one shared selection surface; the
-/// established feature services still own what happens after selection.
+/// One entry point for the recorder's screen-region selection. It owns the
+/// tool's own capture shortcut and the shared selection surface; the recorder
+/// service still owns what happens after selection.
 final class ScreenCaptureService: ObservableObject {
     static let shared = ScreenCaptureService()
 
@@ -49,9 +49,6 @@ final class ScreenCaptureService: ObservableObject {
     }()
     private var selection: ScreenshotSelectionController?
     private var options: ScreenCaptureSelectionOptions?
-    private var countdown: DispatchWorkItem?
-    private var countdownTools: [ScreenCaptureTool]?
-    private var countdownRemaining = 0
 
     var protectedWindowIDs: Set<CGWindowID> {
         selection?.protectedWindowIDs ?? []
@@ -71,7 +68,7 @@ final class ScreenCaptureService: ObservableObject {
             cancelSelection()
             return
         }
-        if let activeTools = options?.availableTools ?? countdownTools,
+        if let activeTools = options?.availableTools,
            ScreenshotSupport.captureAvailabilityChanged(activeTools: activeTools,
                                                         availableTools: availableTools) {
             cancelSelection()
@@ -108,25 +105,14 @@ final class ScreenCaptureService: ObservableObject {
            ScreenRecorderService.shared.stopOrCancelActiveCapture() {
             return
         }
-        if countdown != nil {
-            cancelSelection()
-            return
-        }
         guard selection == nil, !ScreenshotSelectionController.isSessionOnScreen else { return }
 
         let tools = ScreenCaptureTool.available()
         guard !tools.isEmpty else { return }
-        let selected = preferred.flatMap { tools.contains($0) ? $0 : nil }
-            ?? (tools.contains(.screenshot) ? .screenshot : tools[0])
+        let selected = preferred.flatMap { tools.contains($0) ? $0 : nil } ?? tools[0]
 
         guard Permissions.shared.screenRecording else {
-            // Color sampling itself needs no capture permission, so its
-            // direct action keeps the native path when capture access is off.
-            if selected == .color {
-                ColorSamplerService.shared.pickNative()
-            } else {
-                Permissions.shared.requestScreenRecording()
-            }
+            Permissions.shared.requestScreenRecording()
             return
         }
         if selected == .recording,
@@ -134,34 +120,7 @@ final class ScreenCaptureService: ObservableObject {
             return
         }
 
-        let delay = selected == .screenshot
-            ? ScreenshotSupport.sanitizedDelay(
-                UserDefaults.standard.integer(forKey: DefaultsKey.screenshotDelay))
-            : 0
-        guard delay > 0 else {
-            beginSelection(tools: tools, selected: selected)
-            return
-        }
-        countdownRemaining = delay
-        countdownTools = tools
-        tickCountdown(tools: tools, selected: selected)
-    }
-
-    private func tickCountdown(tools: [ScreenCaptureTool], selected: ScreenCaptureTool) {
-        guard countdownRemaining > 0 else {
-            countdown = nil
-            countdownTools = nil
-            beginSelection(tools: tools, selected: selected)
-            return
-        }
-        QuickToolHUD.showCountdown(countdownRemaining)
-        let work = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            self.countdownRemaining -= 1
-            self.tickCountdown(tools: tools, selected: selected)
-        }
-        countdown = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: work)
+        beginSelection(tools: tools, selected: selected)
     }
 
     private func beginSelection(tools: [ScreenCaptureTool], selected: ScreenCaptureTool) {
@@ -187,14 +146,8 @@ final class ScreenCaptureService: ObservableObject {
             includePointer: policy.includePointer,
             showLastRegion: defaults.bool(forKey: DefaultsKey.screenshotShowLastRegion),
             hideChikitWindows: policy.hideChikitWindows,
-            protectedWindowIDs: {
-                AppFeature.screenshot.isAvailable
-                    ? ScreenshotService.shared.protectedWindowIDsForCapture
-                    : []
-            },
             purpose: FeatureStrings.screenshot(L10n.shared.language).screenCaptureTitle,
             mode: policy.usesGeometry ? .geometry : .image,
-            supportsScrollingCapture: options.availableTools.contains(.screenshot),
             screenCaptureOptions: options)
         selection = controller
         controller.begin { [weak self, weak controller, weak options] outcome in
@@ -212,56 +165,23 @@ final class ScreenCaptureService: ObservableObject {
                        recorderAudio: RecorderSelectionAudioOptions) {
         guard ScreenshotSupport.captureRouteIsAuthorized(selected: selected) else { return }
         switch outcome {
-        case .captured(let capture):
-            switch selected {
-            case .screenshot:
-                ScreenshotService.shared.receiveUnifiedCapture(capture)
-            case .text:
-                ScreenTextService.shared.receiveUnifiedCapture(capture)
-            case .recording, .color:
-                showFailure(for: selected)
-            }
         case .region(let region):
-            guard selected == .recording else {
-                showFailure(for: selected)
-                return
-            }
-            ScreenRecorderService.shared.record(region,
-                                                audioOptions: recorderAudio)
-        case .scrollingRegion(let region):
-            guard selected == .screenshot else {
-                showFailure(for: selected)
-                return
-            }
-            ScreenshotService.shared.receiveUnifiedScrollingRegion(region)
-        case .color(let color):
-            guard selected == .color else {
-                showFailure(for: selected)
-                return
-            }
-            ColorSamplerService.shared.receiveUnifiedColor(color)
+            ScreenRecorderService.shared.record(region, audioOptions: recorderAudio)
+        case .captured, .scrollingRegion, .color:
+            showFailure()
         case .cancelled:
             break
         case .failed:
-            showFailure(for: selected)
+            showFailure()
         }
     }
 
-    private func showFailure(for tool: ScreenCaptureTool) {
-        if tool == .recording {
-            let strings = FeatureStrings.recorder(L10n.shared.language)
-            QuickToolHUD.show(icon: "record.circle", message: strings.recordFailed)
-        } else {
-            let strings = FeatureStrings.screenshot(L10n.shared.language)
-            QuickToolHUD.show(icon: "camera.viewfinder", message: strings.captureFailed)
-        }
+    private func showFailure() {
+        let strings = FeatureStrings.recorder(L10n.shared.language)
+        QuickToolHUD.show(icon: "record.circle", message: strings.recordFailed)
     }
 
     private func cancelSelection() {
-        countdown?.cancel()
-        countdown = nil
-        countdownTools = nil
-        countdownRemaining = 0
         selection?.cancel()
         selection = nil
         options = nil

@@ -8,7 +8,7 @@ import Foundation
 /// rest, but nothing is deleted — every feature keeps its settings and comes
 /// back with one click, exactly like any hub install.
 enum FeaturePreset: String, CaseIterable, Identifiable {
-    case essential, windows, battery
+    case essential, battery
 
     var id: String { rawValue }
 
@@ -42,8 +42,6 @@ enum FeaturePreset: String, CaseIterable, Identifiable {
                     .mixer, .soundOutputSwitcher, .screenRecorder,
                     .monitorCPU, .monitorGPU, .monitorMemory,
                     .monitorNetwork, .monitorDisk, .monitorPower]
-        case .windows:
-            return [.switcher, .windowLayout, .dockPreview, .dockClick, .windowMaximizer]
         case .battery:
             // The lean monitor: battery, memory pressure and the processor,
             // with nothing that listens to input events.
@@ -63,18 +61,12 @@ enum FeaturePreset: String, CaseIterable, Identifiable {
                     DefaultsKey.soundOutputSwitcherEnabled]
         case .battery:
             return []
-        case .windows:
-            return [DefaultsKey.switcherEnabled,
-                    DefaultsKey.dockPreviewEnabled,
-                    DefaultsKey.dockClickMinimize,
-                    DefaultsKey.windowMaximizeEnabled]
         }
     }
 
     var symbolName: String {
         switch self {
         case .essential: return "star.fill"
-        case .windows: return "macwindow.on.rectangle"
         case .battery: return "battery.75percent"
         }
     }
@@ -88,8 +80,6 @@ enum FeatureEnergyProfile: String {
     /// Nothing at rest: on-demand tools, shortcut-driven actions and
     /// system-notification listeners.
     case idle
-    /// A mouse event tap (scrolls, clicks or pointer moves).
-    case mouse
     /// A pointer gesture that works with either a trackpad or mouse.
     case pointer
     /// A keyboard event tap.
@@ -103,42 +93,23 @@ enum FeatureEnergyProfile: String {
 extension AppFeature {
     var energyProfile: FeatureEnergyProfile {
         switch self {
-        case .scrollInverter, .focusFollowsMouse, .smoothScroll, .windowMaximizer, .middleClick,
-             .mouseNavigation, .mouseButtonShortcuts, .mouseClickDebounce,
-             .dockPreview, .dockClick, .shelf:
-            return .mouse
-        case .switcher, .keyboardDebounce, .finderCutPaste, .finderRename, .superKey, .quitWindowProtection:
+        case .finderRename:
             return .keyboard
-        case .textSnippets, .autoQuit:
+        case .autoQuit:
             return .inputs
         case .windowLayout:
             return UserDefaults.standard.bool(forKey: DefaultsKey.windowGestureEnabled)
                 || UserDefaults.standard.bool(forKey: DefaultsKey.windowEdgeSnapEnabled)
                 ? .pointer : .idle
-        case .radialMenu:
-            // With a side button configured the trigger is a mouse tap;
-            // shortcut-only costs nothing at rest.
-            return RadialMenuMouseTrigger.sanitized(
-                UserDefaults.standard.string(forKey: DefaultsKey.radialMenuMouseButton)) == .off
-                ? .idle : .mouse
-        case .clipboardHistory, .urlCleaner, .extraBrightness,
+        case .clipboardHistory,
              .monitorCPU, .monitorGPU, .monitorMemory,
              .monitorNetwork, .monitorDisk, .monitorPower, .notchMediaControls:
             return .periodic
         case .mixer:
             return UserDefaults.standard.bool(forKey: DefaultsKey.preciseVolumeRollerEnabled)
                 ? .keyboard : .idle
-        case .mouseAcceleration, .pastePlain, .soundOutputSwitcher, .micMute,
-             .musicBlock, .bluetoothSleep, .keepAwake, .brightness, .quickLauncher, .quickToggles, .colorPicker,
-             .screenOCR, .cleaningMode, .mediaTools, .cleaner, .uninstaller, .homebrew, .screenshot,
-             .cameraPreview, .scratchpad, .commandBar, .screenRecorder, .fanControl,
-             .diskImageInstaller, .killProcess:
+        case .soundOutputSwitcher, .cleaner, .uninstaller, .screenRecorder, .fanControl:
             return .idle
-        case .appUpdates:
-            // The list is on demand; only a background schedule keeps a timer.
-            return AppUpdatesSupport.CheckFrequency.sanitized(
-                UserDefaults.standard.string(forKey: DefaultsKey.appUpdatesCheckFrequency)) == .off
-                ? .idle : .periodic
         }
     }
 }

@@ -19,7 +19,6 @@ struct WindowLayoutSettings: View {
     // Same preference the Switcher page exposes next to Dock Preview; it is
     // mirrored here because it is a window-juggling behavior people look for
     // on this page too.
-    @AppStorage(DefaultsKey.dockClickCycleWindows) private var dockClickCycleWindows = false
 
     private var text: WindowLayoutFeatureStrings {
         FeatureStrings.windowLayout(l10n.language)
@@ -122,16 +121,6 @@ struct WindowLayoutSettings: View {
                             .foregroundStyle(.orange)
                     }
                 }
-            }
-
-            Section {
-                Toggle(l10n.s.dockClickCycleWindows, isOn: $dockClickCycleWindows)
-                    .onChange(of: dockClickCycleWindows) { _, _ in
-                        DockClickService.shared.syncWithPreferences()
-                    }
-                Text(l10n.s.dockClickCycleWindowsCaption)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             Section(text.halves) {

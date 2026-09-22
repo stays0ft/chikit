@@ -8,17 +8,11 @@ import Foundation
 /// when the chooser opens, so an uninstalled feature never leaves a dead mode
 /// behind.
 enum ScreenCaptureTool: String, CaseIterable {
-    case screenshot
     case recording
-    case text
-    case color
 
     var shortcutKey: String {
         switch self {
-        case .screenshot: return "1"
         case .recording: return "2"
-        case .text: return "3"
-        case .color: return "4"
         }
     }
 
@@ -29,17 +23,12 @@ enum ScreenCaptureTool: String, CaseIterable {
 
     var feature: AppFeature {
         switch self {
-        case .screenshot: return .screenshot
         case .recording: return .screenRecorder
-        case .text: return .screenOCR
-        case .color: return .colorPicker
         }
     }
 
     /// A tool's own global shortcut, which opens the chooser already on that
-    /// mode. The screenshot tool's entry keeps the storage keys of the old
-    /// general capture shortcut, so an existing combination keeps working
-    /// unchanged under its new per-tool name.
+    /// mode.
     ///
     /// Every case must have a hotkey registered for it. `ScreenCaptureService`
     /// builds exactly one per case from this list, so a tool cannot gain a
@@ -52,36 +41,21 @@ enum ScreenCaptureTool: String, CaseIterable {
 
     var dedicatedShortcut: DedicatedShortcut {
         switch self {
-        case .screenshot:
-            return DedicatedShortcut(role: .screenshot,
-                                     enabledKey: DefaultsKey.screenshotShortcutEnabled)
         case .recording:
             return DedicatedShortcut(role: .screenRecorder,
                                      enabledKey: DefaultsKey.recorderShortcutEnabled)
-        case .text:
-            return DedicatedShortcut(role: .screenOCR,
-                                     enabledKey: DefaultsKey.screenOCRShortcutEnabled)
-        case .color:
-            return DedicatedShortcut(role: .colorPicker,
-                                     enabledKey: DefaultsKey.colorPickerShortcutEnabled)
         }
     }
 
     var systemImageName: String {
         switch self {
-        case .screenshot: return "camera.viewfinder"
         case .recording: return "record.circle"
-        case .text: return "text.viewfinder"
-        case .color: return "eyedropper"
         }
     }
 
     func settingsTitle(_ strings: Strings, language: AppLanguage) -> String {
         switch self {
-        case .screenshot: return FeatureStrings.screenshot(language).pageTitle
         case .recording: return FeatureStrings.recorder(language).pageTitle
-        case .text: return strings.ocrName
-        case .color: return strings.colorPickerName
         }
     }
 
@@ -119,8 +93,8 @@ enum ScreenshotSupport {
                                      screenshotHideChikitWindows: Bool)
         -> UnifiedCapturePolicy {
         UnifiedCapturePolicy(
-            freeze: tool == .screenshot ? screenshotFreeze : true,
-            includePointer: tool == .screenshot && screenshotIncludePointer,
+            freeze: true,
+            includePointer: false,
             hideChikitWindows: tool != .recording && screenshotHideChikitWindows,
             usesGeometry: tool == .recording)
     }
@@ -1846,22 +1820,5 @@ enum ScreenshotSupport {
         guard let data = try? JSONEncoder().encode(Array(presets.suffix(backdropPresetLimit)))
         else { return "[]" }
         return String(data: data, encoding: .utf8) ?? "[]"
-    }
-}
-
-/// The action to run automatically right after a capture, chosen in
-/// Settings. `.none` leaves the quick-preview HUD waiting for the user, as
-/// before this setting existed.
-enum ScreenshotDefaultAction: String, CaseIterable {
-    case none = ""
-    case save
-    case saveAndCopy
-    case copy
-    case edit
-
-    /// The persisted choice; an unknown raw value reads as `.none`.
-    static var current: ScreenshotDefaultAction {
-        let raw = UserDefaults.standard.string(forKey: DefaultsKey.screenshotDefaultAction) ?? ""
-        return ScreenshotDefaultAction(rawValue: raw) ?? .none
     }
 }

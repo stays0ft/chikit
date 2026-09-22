@@ -152,9 +152,9 @@ struct AppBundleList<Accessory: View>: View {
             // never on which of the two the sheet was pointed at. A list that
             // takes only apps drops a path rather than storing an entry its
             // own matcher would ignore.
-            guard let identity = MouseAppExceptionSupport.pickedIdentity(for: url),
+            guard let identity = InstalledApps.pickedIdentity(for: url),
                   acceptsExecutables
-                      || !MouseAppExceptionSupport.isExecutablePathIdentity(identity) else { return }
+                      || !InstalledApps.isExecutablePathIdentity(identity) else { return }
             onAdd(identity)
         } loadApps: {
             InstalledApps.installedBundleApplications(excluding: listed,

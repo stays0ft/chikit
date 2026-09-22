@@ -20,7 +20,6 @@ final class StatusItemController {
     /// Last combination applied by updateIconAppearance, so refresh ticks
     /// don't re-render an unchanged icon every 2 seconds.
     private var lastIconStateKey = ""
-    private var heldMicBadgeActive: Bool?
     /// A settings reply already waiting for the next turn of the run loop.
     private var settingsSyncScheduled = false
     /// How many readings in a row each metric has failed to render, so an
@@ -46,14 +45,6 @@ final class StatusItemController {
         let focusMetric: MenuBarMetric
         let title: String
     }
-
-    /// Cached so the countdown tooltip doesn't allocate a DateFormatter (expensive)
-    /// on every refresh while a keep-awake session is active.
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter
-    }()
 
     var button: NSStatusBarButton? { statusItem.button }
 
@@ -93,7 +84,7 @@ final class StatusItemController {
         statusItem.behavior = []
         statusItem.isVisible = true
         if let button = statusItem.button {
-            button.image = BlackHoleGlyph.image(active: false)
+            button.image = BlackHoleGlyph.image()
             button.font = MenuBarRenderer.statusFont(stacked: false)
             button.alignment = .left
             button.cell?.lineBreakMode = .byClipping
@@ -119,27 +110,9 @@ final class StatusItemController {
     }
 
     private func bind() {
-        KeepAwakeManager.shared.$isActive
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.updateIconAppearance()
-                self?.refresh()
-            }
-            .store(in: &cancellables)
-
         UpdateService.shared.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateIconAppearance() }
-            .store(in: &cancellables)
-
-        MicMuteService.shared.$isMuted
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.updateIconAppearance() }
-            .store(in: &cancellables)
-
-        KeepAwakeManager.shared.$endDate
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.refresh() }
             .store(in: &cancellables)
 
         L10n.shared.$language
@@ -199,56 +172,11 @@ final class StatusItemController {
         SystemMonitor.shared.setMenuBarActive(MenuBarMetric.anyEnabled(in: defaults))
     }
 
-    private func syncTitleTimer(keepAwakeActive: Bool,
-                                showsCountdown: Bool,
-                                endDate: Date?) {
-        let shouldRun = MenuBarSpacingSupport.needsTitleRefreshTimer(
-            keepAwakeActive: keepAwakeActive,
-            showsCountdown: showsCountdown,
-            hasEndDate: endDate != nil)
-        guard shouldRun else {
-            titleTimer?.invalidate()
-            titleTimer = nil
-            return
-        }
-        guard titleTimer == nil else { return }
-        let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
-            self?.refresh()
-        }
-        timer.tolerance = 5
-        RunLoop.main.add(timer, forMode: .common)
-        titleTimer = timer
-    }
-
-    private var currentMicBadgeActive: Bool {
-        MicMuteService.shared.isMuted
-            && UserDefaults.standard.bool(forKey: DefaultsKey.micMuteMenuBarIndicator)
-    }
-
-    private var renderedMicBadgeActive: Bool {
-        heldMicBadgeActive ?? currentMicBadgeActive
-    }
-
-    /// Keeps the variable-width mic badge unchanged while any status item is
-    /// anchoring an open panel. The current state is rendered after it closes.
-    func setMicBadgeHeld(_ held: Bool) {
-        if held {
-            guard heldMicBadgeActive == nil else { return }
-            heldMicBadgeActive = currentMicBadgeActive
-            return
-        }
-        guard heldMicBadgeActive != nil else { return }
-        heldMicBadgeActive = nil
-        updateIconAppearance()
-    }
-
-    /// Reflects keep-awake state and an available update in the icon. Updates
-    /// keep the blue attention glyph; an active session uses the chosen icon.
-    /// With the mute indicator option on, a red slashed mic joins the glyph
-    /// while the microphone is muted, whatever the underlying state. The
-    /// glyph can also hide entirely while metrics render in the title (user
-    /// option); the decision reads the button's actual title, so it must run
-    /// AFTER refresh() writes it — refresh() calls this at its end.
+    /// Reflects an available update in the icon with the blue attention
+    /// glyph. The glyph can also hide entirely while metrics render in the
+    /// title (user option); the decision reads the button's actual title, so
+    /// it must run AFTER refresh() writes it — refresh() calls this at its
+    /// end.
     private func updateIconAppearance() {
         guard let button = statusItem?.button else { return }
         let defaults = UserDefaults.standard
@@ -258,10 +186,9 @@ final class StatusItemController {
         } else {
             updateAvailable = false
         }
-        let micBadgeActive = renderedMicBadgeActive
         let optionEnabled = defaults.bool(forKey: DefaultsKey.menuBarHideIconWithMetrics)
         let separateMetrics = defaults.bool(forKey: DefaultsKey.menuBarSeparateMetrics)
-        let signal = updateAvailable || micBadgeActive
+        let signal = updateAvailable
         let hidden = MenuBarSpacingSupport.shouldHideStatusIcon(
             optionEnabled: optionEnabled,
             separateMetrics: separateMetrics,
@@ -277,15 +204,12 @@ final class StatusItemController {
             metricItemsShown: renderedMetricItemCount,
             renderedTitleLength: button.attributedTitle.length,
             mustShowForSignal: signal)
-        let keepAwakeActive = KeepAwakeManager.shared.isActive
 
         // refresh() runs on every monitor tick and lands here; re-rendering
         // the same image every 2 seconds would be wasted composition, so the
         // image is only touched when some ingredient actually changed.
-        let stateKey = [String(hidden), String(mainItemHidden), String(updateAvailable),
-                        String(keepAwakeActive), KeepAwakeIconTint.current.rawValue,
-                        KeepAwakeActiveIcon.current.rawValue,
-                        String(micBadgeActive)].joined(separator: "|")
+        let stateKey = [String(hidden), String(mainItemHidden),
+                        String(updateAvailable)].joined(separator: "|")
         guard stateKey != lastIconStateKey else { return }
         lastIconStateKey = stateKey
 
@@ -297,16 +221,10 @@ final class StatusItemController {
             button.image = Self.emptyStatusImage
             return
         }
-        let stateImage: NSImage?
         if updateAvailable {
-            stateImage = BlackHoleGlyph.attentionImage()
+            button.image = BlackHoleGlyph.attentionImage()
         } else {
-            stateImage = BlackHoleGlyph.image(active: keepAwakeActive)
-        }
-        if micBadgeActive {
-            button.image = BlackHoleGlyph.micMutedImage(over: stateImage) ?? stateImage
-        } else {
-            button.image = stateImage
+            button.image = BlackHoleGlyph.image()
         }
     }
 
@@ -337,35 +255,17 @@ final class StatusItemController {
 
     private func performRefresh() {
         guard let button = statusItem?.button else { return }
-        let manager = KeepAwakeManager.shared
         let strings = L10n.shared.s
         let defaults = UserDefaults.standard
         let snapshot = SystemMonitor.shared.snapshot
         let metrics = MenuBarMetric.enabled(in: defaults)
         let separateMetrics = defaults.bool(forKey: DefaultsKey.menuBarSeparateMetrics)
 
-        syncTitleTimer(keepAwakeActive: manager.isActive,
-                       showsCountdown: defaults.bool(forKey: DefaultsKey.showCountdown),
-                       endDate: manager.endDate)
-
-        // Compose the title from the keep-awake countdown (when shown) followed by
-        // the pinned live metrics. Built attributed so the memory pressure dot can
-        // carry its green/yellow/red color; all other runs stay adaptive.
+        // Compose the title from the pinned live metrics. Built attributed so
+        // the memory pressure dot can carry its green/yellow/red color; all
+        // other runs stay adaptive.
         let title = NSMutableAttributedString()
-        var includesCountdown = false
-        if manager.isActive, defaults.bool(forKey: DefaultsKey.showCountdown) {
-            let countdown: String
-            if let end = manager.endDate {
-                let remaining = max(0, Int(end.timeIntervalSinceNow))
-                let hours = remaining / 3600
-                let minutes = (remaining % 3600) / 60
-                countdown = hours > 0 ? String(format: "%d:%02d", hours, minutes) : "\(max(minutes, 1)) min"
-            } else {
-                countdown = "∞"
-            }
-            title.append(NSAttributedString(string: countdown))
-            includesCountdown = true
-        }
+        let includesCountdown = false
         if separateMetrics {
             refreshMetricStatusItems(metrics: metrics, snapshot: snapshot, strings: strings)
         } else {
@@ -410,13 +310,12 @@ final class StatusItemController {
             } else {
                 updateAvailable = false
             }
-            let micBadgeActive = renderedMicBadgeActive
             let glyphHidden = MenuBarSpacingSupport.shouldHideStatusIcon(
                 optionEnabled: defaults.bool(forKey: DefaultsKey.menuBarHideIconWithMetrics),
                 separateMetrics: separateMetrics,
                 metricsEnabled: !metrics.isEmpty,
                 renderedTitleLength: 1,
-                mustShowForSignal: updateAvailable || micBadgeActive)
+                mustShowForSignal: updateAvailable)
             let full = NSMutableAttributedString(string: glyphHidden ? "" : " ")
             full.append(title)
             let stacked = full.string.contains("\n")
@@ -444,19 +343,7 @@ final class StatusItemController {
             }
         }
 
-        let toolTip: String
-        if manager.isActive {
-            if manager.sessionTrigger == .automation {
-                toolTip = FeatureStrings.keepAwakeAutomation(L10n.shared.language)
-                    .activeStatus(for: manager.activeAutomationConditions)
-            } else if let end = manager.endDate {
-                toolTip = "\(strings.statusActiveUntil) \(Self.timeFormatter.string(from: end))"
-            } else {
-                toolTip = strings.statusActiveIndefinite
-            }
-        } else {
-            toolTip = strings.statusIdleTooltip
-        }
+        let toolTip = strings.statusIdleTooltip
         if button.toolTip != toolTip {
             button.toolTip = toolTip
         }
@@ -647,12 +534,6 @@ enum BlackHoleGlyph {
     /// the bundled PNGs at this size; `--selftest` checks the two still agree.
     static let pointSize = NSSize(width: 26, height: 20)
 
-    /// Requested ink height for the active states' system symbols. A compact
-    /// symbol has to stand taller than the wide mark to read as the same size,
-    /// matching the menu bar's other compact icons at ~15 pt. Antialiasing
-    /// costs about a point of what is asked for here.
-    private static let symbolHeight: CGFloat = 16
-
     /// Both scale representations go into one NSImage — loading the 1x file
     /// alone would render blurry on Retina menu bars.
     private static let base: NSImage? = {
@@ -670,93 +551,8 @@ enum BlackHoleGlyph {
         return image
     }()
 
-    static func image(active: Bool) -> NSImage? {
-        let tint = KeepAwakeIconTint.current
-        guard active else { return base ?? fallback(active: false) }
-        return activeImage(style: .current, tint: tint)
-    }
-
-    static func activeImage(style: KeepAwakeActiveIcon,
-                            tint: KeepAwakeIconTint = .orange) -> NSImage? {
-        let source: NSImage?
-        if let symbolName = style.systemSymbolName {
-            source = fixedSizeSymbol(named: symbolName, drop: style.menuBarDrop)
-        } else {
-            source = base
-        }
-        guard let source else { return fallback(active: tint != .none) }
-        guard let color = color(for: tint) else {
-            source.isTemplate = true
-            return source
-        }
-        return tintedImage(source, color: color) ?? fallback(active: true)
-    }
-
-    /// System symbols have different natural widths. Center them inside the
-    /// same canvas as the app glyph so activation never shifts nearby items.
-    ///
-    /// Sized by the symbol's ink rather than its bounding box: SF Symbols pad
-    /// their box by different amounts, so fitting the box leaves each style a
-    /// different, smaller size than asked for.
-    private static func fixedSizeSymbol(named name: String, drop: CGFloat = 0) -> NSImage? {
-        guard let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
-            .withSymbolConfiguration(.init(pointSize: 15, weight: .semibold)),
-              symbol.size.width > 0,
-              symbol.size.height > 0,
-              let ink = inkBounds(of: symbol),
-              ink.width > 0, ink.height > 0 else { return nil }
-        let scale = min(symbolHeight / ink.height, (pointSize.width - 2) / ink.width)
-        let drawSize = NSSize(width: symbol.size.width * scale,
-                              height: symbol.size.height * scale)
-        // Offsets used to center the ink rather than the padded box.
-        let inkOrigin = NSPoint(x: ink.minX * scale, y: ink.minY * scale)
-        let inkSize = NSSize(width: ink.width * scale, height: ink.height * scale)
-        let image = NSImage(size: pointSize, flipped: false) { rect in
-            let target = NSRect(x: rect.midX - inkOrigin.x - inkSize.width / 2,
-                                y: rect.midY - inkOrigin.y - inkSize.height / 2 - drop,
-                                width: drawSize.width,
-                                height: drawSize.height)
-            symbol.draw(in: target, from: .zero, operation: .sourceOver, fraction: 1)
-            return true
-        }
-        image.isTemplate = true
-        return image
-    }
-
-    /// Bounding box of an image's visible pixels, in its own (bottom-up) point
-    /// space. Only runs when the menu bar icon changes, so rasterizing is cheap.
-    private static func inkBounds(of image: NSImage) -> NSRect? {
-        let sampling = 2
-        let wide = Int(ceil(image.size.width)) * sampling
-        let high = Int(ceil(image.size.height)) * sampling
-        guard wide > 0, high > 0,
-              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: wide, pixelsHigh: high,
-                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
-                                         isPlanar: false, colorSpaceName: .deviceRGB,
-                                         bytesPerRow: 0, bitsPerPixel: 0),
-              let context = NSGraphicsContext(bitmapImageRep: rep) else { return nil }
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = context
-        // The context comes from the rep's pixel dimensions, so it draws in
-        // pixels; fill the whole bitmap and scale the bounds back down. A
-        // point-sized rect here would only cover a corner of it.
-        image.draw(in: NSRect(x: 0, y: 0, width: CGFloat(wide), height: CGFloat(high)))
-        NSGraphicsContext.restoreGraphicsState()
-
-        var minX = wide, minY = high, maxX = -1, maxY = -1
-        for y in 0..<high {
-            for x in 0..<wide where (rep.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.05 {
-                minX = min(minX, x); maxX = max(maxX, x)
-                minY = min(minY, y); maxY = max(maxY, y)
-            }
-        }
-        guard maxX >= minX, maxY >= minY else { return nil }
-        // colorAt() reads top-down; NSImage coordinates run bottom-up.
-        let unit = CGFloat(sampling)
-        return NSRect(x: CGFloat(minX) / unit,
-                      y: CGFloat(high - 1 - maxY) / unit,
-                      width: CGFloat(maxX - minX + 1) / unit,
-                      height: CGFloat(maxY - minY + 1) / unit)
+    static func image() -> NSImage? {
+        base ?? fallback(active: false)
     }
 
     /// A blue, full-strength glyph used to flag an available update. Non-template
@@ -764,41 +560,6 @@ enum BlackHoleGlyph {
     static func attentionImage() -> NSImage? {
         guard let base else { return fallback(active: true) }
         return tintedImage(base, color: .systemBlue) ?? fallback(active: true)
-    }
-
-    /// The given state image with a red slashed microphone beside it, shown
-    /// while the mute indicator option is on and the mic is muted. The badge
-    /// is a real color, so the composite can't stay a template image; the
-    /// drawing handler runs against the destination appearance, which keeps a
-    /// template underlying glyph legible on both light and dark menu bars.
-    static func micMutedImage(over underlying: NSImage?) -> NSImage? {
-        guard let underlying else { return nil }
-        guard let badge = NSImage(systemSymbolName: "mic.slash.fill",
-                                  accessibilityDescription: nil)?
-            .withSymbolConfiguration(.init(pointSize: 12, weight: .semibold)) else { return nil }
-        let gap: CGFloat = 2
-        let badgeSize = badge.size
-        let height = max(underlying.size.height, badgeSize.height)
-        let size = NSSize(width: underlying.size.width + gap + badgeSize.width, height: height)
-        let composed = NSImage(size: size, flipped: false) { _ in
-            let glyphRect = NSRect(x: 0, y: (height - underlying.size.height) / 2,
-                                   width: underlying.size.width, height: underlying.size.height)
-            underlying.draw(in: glyphRect, from: .zero, operation: .sourceOver, fraction: 1)
-            if underlying.isTemplate {
-                // Template pixels carry no usable color of their own.
-                NSColor.labelColor.setFill()
-                glyphRect.fill(using: .sourceAtop)
-            }
-            let badgeRect = NSRect(x: underlying.size.width + gap,
-                                   y: (height - badgeSize.height) / 2,
-                                   width: badgeSize.width, height: badgeSize.height)
-            badge.draw(in: badgeRect, from: .zero, operation: .sourceOver, fraction: 1)
-            NSColor.systemRed.setFill()
-            badgeRect.fill(using: .sourceAtop)
-            return true
-        }
-        composed.isTemplate = false
-        return composed
     }
 
     private static func tintedImage(_ source: NSImage, color: NSColor) -> NSImage? {
@@ -810,17 +571,6 @@ enum BlackHoleGlyph {
         }
         tinted.isTemplate = false
         return tinted
-    }
-
-    private static func color(for tint: KeepAwakeIconTint) -> NSColor? {
-        switch tint {
-        case .orange: return .systemOrange
-        case .green: return .systemGreen
-        case .blue: return .systemBlue
-        case .purple: return .systemPurple
-        case .pink: return .systemPink
-        case .none: return nil
-        }
     }
 
     /// Keeps a recognizable presence if the bundled asset is ever missing

@@ -630,11 +630,6 @@ final class ClipboardHistoryService: ObservableObject {
         // own textual fallbacks.
         if includeImagesFiles {
             if let paths = copiedFilePaths(from: pasteboard) {
-                if ClipboardHistoryCapturePolicy.isCopiedScreenshot(
-                    paths, in: ScreenshotSupport.copiedFilesDirectory()) {
-                    guard let image = copiedPNGImage(from: pasteboard) else { return nil }
-                    return .image(image)
-                }
                 return .files(paths)
             }
             if let image = copiedPNGImage(from: pasteboard) { return .image(image) }

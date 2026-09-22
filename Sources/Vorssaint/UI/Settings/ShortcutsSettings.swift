@@ -9,18 +9,13 @@ import SwiftUI
 struct ShortcutsSettings: View {
     @ObservedObject private var l10n = L10n.shared
     @ObservedObject private var features = FeatureRuntime.shared
-    @ObservedObject private var superKey = SuperKeyService.shared
-    @State private var expandedFeatures: Set<AppFeature> = [.screenshot]
+    @State private var expandedFeatures: Set<AppFeature> = []
 
     private var text: ShortcutSettingsStrings { FeatureStrings.shortcuts(l10n.language) }
     private var hub: FeatureHubStrings { FeatureStrings.hub(l10n.language) }
 
     private var availableRoles: [GlobalShortcutRole] {
         GlobalShortcutRole.availableRoles(isAvailable: { $0.isAvailable })
-    }
-
-    private var captureRoles: [GlobalShortcutRole] {
-        GlobalShortcutRole.captureRoles(in: availableRoles)
     }
 
     private var visibleGroups: [FeatureGroup] {
@@ -41,9 +36,7 @@ struct ShortcutsSettings: View {
             ForEach(visibleGroups, id: \.self) { group in
                 Section(groupTitle(group)) {
                     ForEach(featuresWithShortcuts(in: group), id: \.self) { feature in
-                        if feature == .screenshot {
-                            captureGroupRows
-                        } else if feature == .soundOutputSwitcher {
+                        if feature == .soundOutputSwitcher {
                             featureRows(feature)
                                 .settingsSectionAnchor(.soundOutputSwitcher)
                         } else {
@@ -58,31 +51,8 @@ struct ShortcutsSettings: View {
 
     private func featuresWithShortcuts(in group: FeatureGroup) -> [AppFeature] {
         AppFeature.features(in: group).filter { feature in
-            // The screenshot slot anchors the combined capture group; the
-            // other capture tools render inside it instead of on their own.
-            if feature == .screenshot { return !captureRoles.isEmpty }
-            if GlobalShortcutRole.captureFeatures.contains(feature) { return false }
-            return (feature.isAvailable || availableRoles.contains { $0.feature == feature })
+            (feature.isAvailable || availableRoles.contains { $0.feature == feature })
                 && (feature == .windowLayout || availableRoles.contains { $0.feature == feature })
-        }
-    }
-
-    /// One group for every capture tool's shortcut. Rows keep each tool's own
-    /// icon; the group carries the shared page's name and symbol.
-    @ViewBuilder
-    private var captureGroupRows: some View {
-        let roles = captureRoles
-        disclosureHeader(
-            title: FeatureStrings.screenshot(l10n.language).screenCaptureTitle,
-            symbolName: AppFeature.screenshot.symbolName,
-            isActive: featureHasActiveShortcut(.screenshot, roles: roles),
-            count: roles.count,
-            isExpanded: expansionBinding(for: .screenshot))
-        if expandedFeatures.contains(.screenshot) {
-            ForEach(roles) { role in
-                roleRow(role, showsFeatureContext: false)
-                    .disclosureIndent()
-            }
         }
     }
 
@@ -104,8 +74,8 @@ struct ShortcutsSettings: View {
                             action: action,
                             shortcutsEnabled: UserDefaults.standard.bool(
                                 forKey: DefaultsKey.windowLayoutShortcutsEnabled),
-                            showsSuperKeyAlternative: superKey.isRunning,
-                            superKeyModifiers: superKey.modifiers,
+                            showsSuperKeyAlternative: false,
+                            superKeyModifiers: [],
                             text: text
                         )
                         .disclosureIndent()
@@ -159,8 +129,8 @@ struct ShortcutsSettings: View {
             contextLabel: showsFeatureContext && title != featureTitle ? featureTitle : nil,
             statusText: active ? text.active : text.inactive,
             statusIsActive: active,
-            showsSuperKeyAlternative: superKey.isRunning,
-            superKeyModifiers: superKey.modifiers,
+            showsSuperKeyAlternative: false,
+            superKeyModifiers: [],
             includeInactiveConflicts: true,
             additionalConflict: { shortcut in
                 guard AppFeature.windowLayout.isAvailable else { return nil }
@@ -198,10 +168,8 @@ struct ShortcutsSettings: View {
     private func groupTitle(_ group: FeatureGroup) -> String {
         switch group {
         case .windowsDock: return hub.groupWindowsDock
-        case .mouseKeyboard: return hub.groupMouseKeyboard
         case .clipboardFiles: return hub.groupClipboardFiles
         case .sound: return hub.groupSound
-        case .energyDisplay: return hub.groupEnergyDisplay
         case .tools: return hub.groupTools
         case .monitor: return hub.groupMonitor
         }
@@ -210,7 +178,6 @@ struct ShortcutsSettings: View {
 
 private struct CentralWindowLayoutShortcutRow: View {
     @ObservedObject private var l10n = L10n.shared
-    @ObservedObject private var superKey = SuperKeyService.shared
     let action: WindowLayoutAction
     let shortcutsEnabled: Bool
     let showsSuperKeyAlternative: Bool
@@ -318,12 +285,7 @@ private struct CentralWindowLayoutShortcutRow: View {
         shortcutsEnabled && shortcut != nil
     }
 
-    private var superKeyAlternative: String? {
-        guard showsSuperKeyAlternative, let shortcut else { return nil }
-        return shortcut.superKeyAlternative(
-            sourceLabel: FeatureStrings.superKey(l10n.language).sourceLabel(superKey.source),
-            superKeyModifiers: superKeyModifiers)
-    }
+    private var superKeyAlternative: String? { nil }
 
     private func clear() {
         rawValue = WindowLayoutAction.clearedShortcutStorageValue

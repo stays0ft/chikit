@@ -27,10 +27,8 @@ enum SelfUninstall {
             _ = suspendInputInterceptors()
             DispatchQueue.global(qos: .userInitiated).async {
                 detachFromSystem()
-                removeSudoersRuleIfPresent {           // may show one admin prompt
-                    resetTCC()
-                    DispatchQueue.main.async(execute: completion)
-                }
+                resetTCC()
+                DispatchQueue.main.async(execute: completion)
             }
         }
     }
@@ -48,11 +46,9 @@ enum SelfUninstall {
                     DispatchQueue.main.async(execute: onFailure)
                     return
                 }
-                removeSudoersRuleIfPresent {
-                    resetTCC()
-                    removePreferences()
-                    DispatchQueue.main.async { trashOwnBundleAndQuit() }
-                }
+                resetTCC()
+                removePreferences()
+                DispatchQueue.main.async { trashOwnBundleAndQuit() }
             }
         }
     }
@@ -67,55 +63,16 @@ enum SelfUninstall {
     /// `suspend`/`deactivate` is idempotent, so calling it when a service is
     /// already off is a no-op.
     private static func suspendInputInterceptors() -> Bool {
-        // Deactivating Cleaning Mode re-syncs the services it paused back to
-        // their preferences, so it has to happen before the suspends below,
-        // or it would re-arm the very taps this teardown just stopped.
-        CleaningModeManager.shared.deactivate()
-        ScrollInverter.shared.suspend()
-        FocusFollowsMouseService.shared.stop()
-        SmoothScrollService.shared.suspend()
-        // Its machine-local recovery journal is deleted by a full uninstall,
-        // so the uninstall cannot continue until every HID value is restored.
-        let mouseAccelerationRestored = MouseAccelerationService.shared.stop()
-        MouseNavigationService.shared.suspend()
-        MouseButtonShortcutService.shared.suspend()
-        WindowMaximizer.shared.stop()
         WindowLayoutService.shared.suspend()
-        AppSwitcher.shared.suspend()
-        DockPreviewService.shared.stop()
         AutoQuitService.shared.suspend()
-        FinderCutPaste.shared.suspend()
         FinderRenameService.shared.suspend()
-        KeyboardDebounceService.shared.suspend()
-        MouseClickDebounceService.shared.suspend()
-        // Also takes the Super key mapping back out, synchronously, so the
-        // key is never left remapped behind a tap that is about to die.
-        SuperKeyService.shared.suspend()
-        DockClickService.shared.suspend()
-        MiddleClickService.shared.suspend()
-        PastePlainService.shared.suspend()
-        SnippetLibraryService.shared.suspend()
         ScreenCaptureService.shared.suspend()
-        QuickLauncherService.shared.suspend()
-        ScreenTextService.shared.suspend()
-        CameraPreviewService.shared.suspend()
-        RadialMenuService.shared.suspend()
-        ScratchpadService.shared.suspend()
-        CommandBarService.shared.suspend()
         PreciseVolumeRollerService.shared.suspend()
-        // Leaving the mic cut after the app is gone would strand the user
-        // with a silent input and no indicator anywhere.
-        MicMuteService.shared.unmuteForTeardown()
-        MicMuteService.shared.suspend()
-        return mouseAccelerationRestored
+        return true
     }
 
     @discardableResult
     private static func detachFromSystem() -> Bool {
-        if UserDefaults.standard.bool(forKey: DefaultsKey.sleepDisabledFlag),
-           !restoreSleepBeforeRemoval() {
-            return false
-        }
         guard FanControlService.restoreAndUnregisterForRemoval() else { return false }
         // Unregister the login item (scoped to our bundle id). The stored
         // intent goes with it, or the startup repair would quietly register
@@ -123,40 +80,6 @@ enum SelfUninstall {
         UserDefaults.standard.set(false, forKey: DefaultsKey.launchAtLoginWanted)
         try? SMAppService.mainApp.unregister()
         return true
-    }
-
-    /// Puts normal sleep back before the app goes.
-    ///
-    /// `KeepAwakeManager` is allowed to give up on a failed revert when the app
-    /// is merely quitting, because "the next start repairs a revert that was
-    /// missed". Removal is the one exit with no next start, and the flag that
-    /// would trigger that repair is deleted with the rest of the preferences a
-    /// moment later — so a reinstall does not fix it either, since recovery
-    /// reads the flag before it reads the setting. This is the last chance
-    /// anything has, which is why it may ask for the password the launch-time
-    /// recovery would have asked for.
-    private static func restoreSleepBeforeRemoval() -> Bool {
-        // The flag can outlive the setting, so a stale one must not put a
-        // password dialog in front of someone uninstalling. Only a reading that
-        // answered, and answered "off", is allowed to skip the rest: a probe
-        // that failed says nothing. Going on then costs a no-op call, and a
-        // dialog only if that call fails too — the case where sleep really may
-        // still be off with nothing else left to put it back.
-        let probe = Shell.run("/usr/bin/pmset", ["-g"])
-        if probe.status == 0, !SudoersSupport.sleepDisabled(inPmsetOutput: probe.output) {
-            return true
-        }
-        if Sudoers.pmsetDisableSleep(false) { return true }
-        guard AdminShell.runSync("pmset disablesleep 0",
-                                 prompt: L10n.shared.s.adminPromptRecover) else { return false }
-        let verification = Shell.run("/usr/bin/pmset", ["-g"])
-        return verification.status == 0
-            && !SudoersSupport.sleepDisabled(inPmsetOutput: verification.output)
-    }
-
-    private static func removeSudoersRuleIfPresent(then: @escaping () -> Void) {
-        guard Sudoers.ruleFilesPresent || Sudoers.isConfigured() else { then(); return }
-        Sudoers.remove { _ in then() }            // shows the admin password prompt
     }
 
     /// `tccutil reset All <bundle id>` clears Accessibility, Screen Recording,

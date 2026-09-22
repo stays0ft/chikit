@@ -271,7 +271,6 @@ private struct PurposeStep: View {
     private func name(_ preset: FeaturePreset) -> String {
         switch preset {
         case .essential: return hub.presetEssentialName
-        case .windows: return hub.presetWindowsName
         case .battery: return hub.presetBatteryName
         }
     }
@@ -279,7 +278,6 @@ private struct PurposeStep: View {
     private func caption(_ preset: FeaturePreset) -> String {
         switch preset {
         case .essential: return hub.presetEssentialDesc
-        case .windows: return hub.presetWindowsDesc
         case .battery: return hub.presetBatteryDesc
         }
     }
@@ -397,10 +395,8 @@ private struct PurposeStep: View {
     private func groupTitle(_ group: FeatureGroup) -> String {
         switch group {
         case .windowsDock: return hub.groupWindowsDock
-        case .mouseKeyboard: return hub.groupMouseKeyboard
         case .clipboardFiles: return hub.groupClipboardFiles
         case .sound: return hub.groupSound
-        case .energyDisplay: return hub.groupEnergyDisplay
         case .tools: return hub.groupTools
         case .monitor: return hub.groupMonitor
         }

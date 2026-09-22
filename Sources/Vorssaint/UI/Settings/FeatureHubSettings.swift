@@ -14,8 +14,6 @@ struct FeatureHubSettings: View {
     @ObservedObject private var features = FeatureRuntime.shared
     @ObservedObject private var router = SettingsRouter.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @AppStorage(DefaultsKey.superKeySource) private var superKeySourceRaw =
-        SuperKeySource.capsLock.rawValue
     @State private var tab: Tab = .features
     @State private var confirmingPreset: FeaturePreset?
     /// Tracks the feature-target request currently being revealed, so a
@@ -190,7 +188,6 @@ struct FeatureHubSettings: View {
     private func presetName(_ preset: FeaturePreset) -> String {
         switch preset {
         case .essential: return hub.presetEssentialName
-        case .windows: return hub.presetWindowsName
         case .battery: return hub.presetBatteryName
         }
     }
@@ -198,7 +195,6 @@ struct FeatureHubSettings: View {
     private func presetDescription(_ preset: FeaturePreset) -> String {
         switch preset {
         case .essential: return hub.presetEssentialDesc
-        case .windows: return hub.presetWindowsDesc
         case .battery: return hub.presetBatteryDesc
         }
     }
@@ -211,9 +207,7 @@ struct FeatureHubSettings: View {
                     FeatureHubRow(
                         feature: feature,
                         hub: hub,
-                        symbolName: feature == .superKey
-                            ? SuperKeySource.sanitized(superKeySourceRaw).systemImage
-                            : feature.symbolName,
+                        symbolName: feature.symbolName,
                         isHighlighted: highlightedFeature == feature
                     )
                         .id(feature)
@@ -238,10 +232,8 @@ struct FeatureHubSettings: View {
     private func groupTitle(_ group: FeatureGroup) -> String {
         switch group {
         case .windowsDock: return hub.groupWindowsDock
-        case .mouseKeyboard: return hub.groupMouseKeyboard
         case .clipboardFiles: return hub.groupClipboardFiles
         case .sound: return hub.groupSound
-        case .energyDisplay: return hub.groupEnergyDisplay
         case .tools: return hub.groupTools
         case .monitor: return hub.groupMonitor
         }
@@ -314,7 +306,6 @@ private struct FeatureHubRow: View {
     private var energyLabel: String {
         switch feature.energyProfile {
         case .idle: return hub.energyIdle
-        case .mouse: return hub.energyMouse
         case .pointer: return hub.energyPointer
         case .keyboard: return hub.energyKeyboard
         case .inputs: return hub.energyInputs
@@ -515,7 +506,6 @@ struct PermissionsPortalSections: View {
             case .unknown: return .unknown
             }
         case .automationFinder: return automationStatus(.finder)
-        case .automationTerminal: return automationStatus(.terminal)
         case .audioCapture:
             // No public check exists for system audio capture; the mixer
             // reports a failed tap, which is the one readable signal.
@@ -529,16 +519,6 @@ struct PermissionsPortalSections: View {
             case .denied, .undetermined: return .missing
             case .unknown: return .unknown
             }
-        case .camera:
-            switch permissions.camera {
-            case .granted: return .granted
-            case .denied, .undetermined: return .missing
-            case .unknown: return .unknown
-            }
-        case .appManagement:
-            // macOS has no public preflight API for this permission. The
-            // system records the app only after its first protected write.
-            return .unknown
         }
     }
 
@@ -649,10 +629,8 @@ private struct PermissionPortalRow: View {
         switch permission {
         case .accessibility, .screenRecording, .fullDiskAccess: return true
         case .notifications: return Permissions.shared.notifications == .undetermined
-        case .camera: return Permissions.shared.camera == .undetermined
         case .microphone: return Permissions.shared.microphone == .undetermined
-        case .filesAndFolders, .automationFinder, .automationTerminal, .audioCapture,
-             .appManagement: return false
+        case .filesAndFolders, .automationFinder, .audioCapture: return false
         }
     }
 
@@ -666,10 +644,8 @@ private struct PermissionPortalRow: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 Permissions.shared.refresh()
             }
-        case .camera: Permissions.shared.requestCamera()
         case .microphone: Permissions.shared.requestMicrophone()
-        case .filesAndFolders, .automationFinder, .automationTerminal, .audioCapture,
-             .appManagement:
+        case .filesAndFolders, .automationFinder, .audioCapture:
             break
         }
     }
@@ -681,11 +657,9 @@ private struct PermissionPortalRow: View {
         case .fullDiskAccess: Permissions.shared.openFullDiskAccessSettings()
         case .filesAndFolders: Permissions.shared.openFilesAndFoldersSettings()
         case .notifications: Permissions.shared.openNotificationSettings()
-        case .automationFinder, .automationTerminal: Permissions.shared.openAutomationSettings()
+        case .automationFinder: Permissions.shared.openAutomationSettings()
         case .audioCapture: Permissions.shared.openAudioCaptureSettings()
         case .microphone: Permissions.shared.openMicrophoneSettings()
-        case .camera: Permissions.shared.openCameraSettings()
-        case .appManagement: Permissions.shared.openAppManagementSettings()
         }
     }
 }
@@ -697,59 +671,16 @@ extension AppFeature {
     /// with no clean existing form live in the hub strings.
     func hubTitle(_ s: Strings, hub: FeatureHubStrings) -> String {
         switch self {
-        case .switcher: return s.switcherSection
-        case .dockPreview: return s.dockPreviewName
-        case .dockClick: return hub.titleDockClick
-        case .windowMaximizer: return s.windowMaximizeName
         case .windowLayout: return FeatureStrings.windowLayout(L10n.shared.language).title
         case .autoQuit: return s.autoQuitName
-        case .quitWindowProtection: return FeatureStrings.quitProtection(L10n.shared.language).name
-        case .scrollInverter: return s.invertMouseScroll
-        case .focusFollowsMouse: return s.focusFollowsMouseName
-        case .smoothScroll: return s.smoothScrollName
-        case .mouseAcceleration: return s.mouseAccelerationName
-        case .mouseNavigation: return hub.titleMouseNavigation
-        case .mouseButtonShortcuts: return FeatureStrings.mouseButtons(L10n.shared.language).pageTitle
-        case .middleClick: return s.middleClickSection
-        case .keyboardDebounce: return s.keyDebounceName
-        case .textSnippets: return FeatureStrings.snippets(L10n.shared.language).pageTitle
-        case .superKey: return FeatureStrings.superKey(L10n.shared.language).pageTitle
-        case .mouseClickDebounce:
-            return FeatureStrings.mouseClickDebounce(L10n.shared.language).title
         case .clipboardHistory: return FeatureStrings.clipboard(L10n.shared.language).title
-        case .pastePlain: return s.pastePlainName
-        case .finderCutPaste: return s.cutPasteName
         case .finderRename: return FeatureStrings.finderRename(L10n.shared.language).hubTitle
-        case .shelf: return s.shelfName
-        case .urlCleaner: return s.urlCleanerName
-        case .diskImageInstaller:
-            return FeatureStrings.diskImageInstaller(L10n.shared.language).title
         case .mixer: return s.mixerSection
         case .soundOutputSwitcher: return s.soundOutputSwitcherTitle
-        case .micMute: return s.micMuteName
-        case .musicBlock: return hub.titleMusicBlock
-        case .keepAwake: return s.keepAwakeTitle
-        case .brightness: return FeatureStrings.brightness(L10n.shared.language).pageTitle
-        case .extraBrightness: return s.extraBrightnessName
-        case .bluetoothSleep: return FeatureStrings.bluetoothSleep(L10n.shared.language).pageTitle
-        case .quickLauncher: return s.launcherName
-        case .quickToggles: return FeatureStrings.quickToggles(L10n.shared.language).pageTitle
-        case .colorPicker: return s.colorPickerName
-        case .screenOCR: return s.ocrName
-        case .screenshot: return FeatureStrings.screenshot(L10n.shared.language).pageTitle
         case .screenRecorder: return FeatureStrings.recorder(L10n.shared.language).pageTitle
-        case .cameraPreview: return FeatureStrings.cameraPreview(L10n.shared.language).pageTitle
         case .notchMediaControls: return FeatureStrings.notchMedia(L10n.shared.language).pageTitle
-        case .radialMenu: return FeatureStrings.radialMenu(L10n.shared.language).pageTitle
-        case .scratchpad: return FeatureStrings.scratchpad(L10n.shared.language).pageTitle
-        case .commandBar: return FeatureStrings.commandBar(L10n.shared.language).pageTitle
-        case .cleaningMode: return s.cleaningMenuItem
-        case .mediaTools: return s.mediaName
         case .cleaner: return s.cleanerName
         case .uninstaller: return s.uninstallerName
-        case .killProcess: return FeatureStrings.killProcess(L10n.shared.language).pageTitle
-        case .homebrew: return s.homebrewName
-        case .appUpdates: return FeatureStrings.appUpdates(L10n.shared.language).pageTitle
         case .monitorCPU: return s.monitorShowCPU
         case .monitorGPU: return s.monitorShowGPU
         case .monitorMemory: return s.monitorShowMemory
@@ -762,54 +693,14 @@ extension AppFeature {
 
     func hubDescription(_ hub: FeatureHubStrings) -> String {
         switch self {
-        case .switcher: return hub.descSwitcher
-        case .dockPreview: return hub.descDockPreview
-        case .dockClick: return hub.descDockClick
-        case .windowMaximizer: return hub.descWindowMaximizer
         case .windowLayout: return hub.descWindowLayout
         case .autoQuit: return hub.descAutoQuit
-        case .quitWindowProtection: return FeatureStrings.quitProtection(L10n.shared.language).description
-        case .scrollInverter: return hub.descScrollInverter
-        case .focusFollowsMouse: return L10n.shared.s.focusFollowsMouseCaption
-        case .smoothScroll: return hub.descSmoothScroll
-        case .mouseAcceleration: return L10n.shared.s.mouseAccelerationCaption
-        case .mouseNavigation: return hub.descMouseNavigation
-        case .mouseButtonShortcuts: return FeatureStrings.mouseButtons(L10n.shared.language).hubDescription
-        case .middleClick: return hub.descMiddleClick
-        case .keyboardDebounce: return hub.descKeyboardDebounce
-        case .textSnippets: return FeatureStrings.snippets(L10n.shared.language).hubDescription
-        case .superKey: return FeatureStrings.superKey(L10n.shared.language).hubDescription
-        case .mouseClickDebounce:
-            return FeatureStrings.mouseClickDebounce(L10n.shared.language).caption
         case .clipboardHistory: return hub.descClipboardHistory
-        case .pastePlain: return hub.descPastePlain
-        case .finderCutPaste: return hub.descFinderCutPaste
         case .finderRename: return FeatureStrings.finderRename(L10n.shared.language).hubDescription
-        case .shelf: return hub.descShelf
-        case .urlCleaner: return hub.descURLCleaner
-        case .diskImageInstaller:
-            return FeatureStrings.diskImageInstaller(L10n.shared.language).hubDescription
         case .mixer: return hub.descMixer
         case .soundOutputSwitcher: return hub.descSoundOutputSwitcher
-        case .micMute: return hub.descMicMute
-        case .musicBlock: return hub.descMusicBlock
-        case .keepAwake: return hub.descKeepAwake
-        case .brightness: return FeatureStrings.brightness(L10n.shared.language).hubDescription
-        case .extraBrightness: return hub.descExtraBrightness
-        case .bluetoothSleep: return FeatureStrings.bluetoothSleep(L10n.shared.language).hubDescription
-        case .quickLauncher: return hub.descQuickLauncher
-        case .quickToggles: return FeatureStrings.quickToggles(L10n.shared.language).hubDescription
-        case .colorPicker: return hub.descColorPicker
-        case .screenOCR: return hub.descScreenOCR
-        case .screenshot: return FeatureStrings.screenshot(L10n.shared.language).hubDescription
         case .screenRecorder: return FeatureStrings.recorder(L10n.shared.language).hubDescription
-        case .cameraPreview: return FeatureStrings.cameraPreview(L10n.shared.language).hubDescription
         case .notchMediaControls: return FeatureStrings.notchMedia(L10n.shared.language).hubDescription
-        case .radialMenu: return FeatureStrings.radialMenu(L10n.shared.language).hubDescription
-        case .scratchpad: return FeatureStrings.scratchpad(L10n.shared.language).hubDescription
-        case .commandBar: return FeatureStrings.commandBar(L10n.shared.language).hubDescription
-        case .cleaningMode: return hub.descCleaningMode
-        case .mediaTools: return hub.descMediaTools
         case .cleaner:
             let description = hub.descCleaner
             guard WhatsAppDownloadSupport.isEnabled else {
@@ -818,9 +709,6 @@ extension AppFeature {
             return description + " · "
                 + FeatureStrings.whatsAppDownloads(L10n.shared.language).hubDescription
         case .uninstaller: return hub.descUninstaller
-        case .killProcess: return FeatureStrings.killProcess(L10n.shared.language).hubDescription
-        case .homebrew: return hub.descHomebrew
-        case .appUpdates: return FeatureStrings.appUpdates(L10n.shared.language).hubDescription
         case .monitorCPU: return hub.descMonitorCPU
         case .monitorGPU: return hub.descMonitorGPU
         case .monitorMemory: return hub.descMonitorMemory
@@ -841,11 +729,8 @@ extension AppPermission {
         case .filesAndFolders: return hub.permFilesAndFolders
         case .notifications: return hub.permNotifications
         case .automationFinder: return hub.permAutomationFinder
-        case .automationTerminal: return hub.permAutomationTerminal
         case .audioCapture: return hub.permAudioCapture
         case .microphone: return FeatureStrings.recorder(L10n.shared.language).microphonePermissionName
-        case .camera: return FeatureStrings.cameraPreview(L10n.shared.language).permName
-        case .appManagement: return FeatureStrings.settingsCategories(L10n.shared.language).appManagement
         }
     }
 
@@ -857,12 +742,9 @@ extension AppPermission {
         case .filesAndFolders: return hub.explainFilesAndFolders
         case .notifications: return hub.explainNotifications
         case .automationFinder: return hub.explainAutomationFinder
-        case .automationTerminal: return hub.explainAutomationTerminal
         case .audioCapture: return hub.explainAudioCapture
         case .microphone:
             return FeatureStrings.recorder(L10n.shared.language).microphonePermissionExplain
-        case .camera: return FeatureStrings.cameraPreview(L10n.shared.language).permExplain
-        case .appManagement: return hub.explainAppManagement
         }
     }
 }

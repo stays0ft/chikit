@@ -10,7 +10,9 @@ struct ScreenRecordingCaptureSettings: View {
     @ObservedObject private var l10n = L10n.shared
     @ObservedObject private var permissions = Permissions.shared
     @ObservedObject private var service = ScreenRecorderService.shared
+    @ObservedObject private var captureService = ScreenCaptureService.shared
     @ObservedObject private var sharing = RecordingShareService.shared
+    @AppStorage(DefaultsKey.recorderShortcutEnabled) private var shortcutEnabled = false
     @AppStorage(DefaultsKey.recorderCountdown) private var countdown = 3
     @AppStorage(DefaultsKey.recorderQuality) private var qualityRaw =
         RecorderSupport.Quality.balanced.rawValue
@@ -41,7 +43,7 @@ struct ScreenRecordingCaptureSettings: View {
     }
 
     var body: some View {
-        Group {
+        Form {
             Section {
                 Button {
                     ScreenRecorderService.shared.toggle()
@@ -65,6 +67,21 @@ struct ScreenRecordingCaptureSettings: View {
                 Text(strings.pageTitle)
             }
             .settingsSectionAnchor(.screenRecorder)
+
+            Section {
+                Toggle(GlobalShortcutRole.screenRecorder.title(l10n.s), isOn: $shortcutEnabled)
+                    .onChange(of: shortcutEnabled) { _, _ in
+                        captureService.syncWithPreferences()
+                    }
+                ShortcutPreferenceRow(role: .screenRecorder, isEnabled: shortcutEnabled) {
+                    captureService.syncWithPreferences()
+                }
+                if shortcutEnabled, captureService.toolShortcutRegistrationFailures.contains(.recording) {
+                    Text(l10n.s.shortcutUnavailable)
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
 
             Section {
                 Picker(strings.countdownLabel, selection: $countdown) {
@@ -184,6 +201,7 @@ struct ScreenRecordingCaptureSettings: View {
                 Text(screenshotStrings.shareSectionTitle)
             }
         }
+        .formStyle(.grouped)
         .onAppear { sharing.refresh() }
         .sheet(isPresented: $showingSharedLinks) {
             RecorderSharedLinksView()

@@ -29,11 +29,8 @@ struct RecentCapturesView: View {
     }
 
     private var visibleEntries: [RecentCaptureEntry] {
-        history.entries.filter { entry in
-            entry.kind == .screenshot
-                ? AppFeature.screenshot.isAvailable
-                : AppFeature.screenRecorder.isAvailable
-        }
+        guard AppFeature.screenRecorder.isAvailable else { return [] }
+        return history.entries
     }
 
     var body: some View {
@@ -108,9 +105,9 @@ struct RecentCapturesView: View {
         HStack(spacing: 10) {
             preview(entry)
             VStack(alignment: .leading, spacing: 5) {
-                Text(entry.kind == .screenshot ? text.screenshot : text.recording)
+                Text(text.recording)
                     .font(.system(size: 11.5, weight: .semibold))
-                if entry.kind == .recording, let name = entry.recordingURL?.lastPathComponent {
+                if let name = entry.recordingURL?.lastPathComponent {
                     Text(name)
                         .font(.system(size: 9.5))
                         .foregroundStyle(.secondary)
@@ -121,7 +118,7 @@ struct RecentCapturesView: View {
                     .font(.system(size: 9.5))
                     .foregroundStyle(.tertiary)
                 HStack(spacing: 6) {
-                    Button(entry.kind == .screenshot ? text.restore : text.open) {
+                    Button(text.open) {
                         history.open(entry)
                     }
                     .buttonStyle(.borderedProminent)
@@ -155,7 +152,7 @@ struct RecentCapturesView: View {
                     .scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             } else {
-                Image(systemName: entry.kind == .screenshot ? "photo" : "film")
+                Image(systemName: "film")
                     .font(.system(size: 20, weight: .medium))
                     .foregroundStyle(.tertiary)
             }

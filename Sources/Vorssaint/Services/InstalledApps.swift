@@ -30,10 +30,59 @@ enum InstalledApps {
     /// A list entry can also be the path of a program that is not packaged as
     /// an app, which has no bundle identifier to be named by (issue #1009).
     private static func fileURL(forIdentity identity: String) -> URL? {
-        guard MouseAppExceptionSupport.isExecutablePathIdentity(identity) else {
+        guard isExecutablePathIdentity(identity) else {
             return url(for: identity)
         }
         return URL(fileURLWithPath: identity)
+    }
+
+    /// A list entry that starts with "/" is the path of a program rather than
+    /// a bundle identifier.
+    static func isExecutablePathIdentity(_ identity: String) -> Bool {
+        identity.hasPrefix("/")
+    }
+
+    /// The one spelling a path identity is stored and matched by. The file
+    /// sheet hands back the name the user browsed while a running program
+    /// reports the name it was started under, and the same file reaches the
+    /// two ends under different names whenever anything on the way is a link:
+    /// resolving lets them meet. A relative path is nothing to resolve
+    /// against and is no identity at all.
+    static func executablePathIdentity(_ path: String?) -> String? {
+        guard let path, isExecutablePathIdentity(path) else { return nil }
+        return URL(fileURLWithPath: path).resolvingSymlinksInPath().path
+    }
+
+    /// What a picked file will be reported as once it runs, which is what the
+    /// picker has to store. A file sheet can be walked into a bundle, and the
+    /// binary at Contents/MacOS is reported by its bundle identifier rather
+    /// than by its path, so storing the file there would match nothing.
+    ///
+    /// Only the bundle's OWN executable counts, which is the same rule the
+    /// system applies. Walking up to any enclosing .app when storing would
+    /// mis-attribute a runtime shipped deeper inside a bundle, so the walk
+    /// only credits the bundle whose own executable matches what was picked.
+    static func pickedIdentity(for url: URL) -> String? {
+        // Pointed at the bundle: its identifier, or the binary it runs when
+        // the Info.plist names none, which is what the system reports for it.
+        if let bundle = Bundle(url: url) {
+            return bundle.bundleIdentifier ?? executablePathIdentity(bundle.executableURL?.path)
+        }
+        // Walked inside one: only the bundle's own executable is reported by
+        // the identifier, so anything deeper keeps its own path.
+        let picked = executablePathIdentity(url.path)
+        var candidate = url.deletingLastPathComponent()
+        while candidate.path != "/" {
+            if candidate.pathExtension.caseInsensitiveCompare("app") == .orderedSame,
+               let bundle = Bundle(url: candidate),
+               executablePathIdentity(bundle.executableURL?.path) == picked {
+                return bundle.bundleIdentifier ?? picked
+            }
+            let parent = candidate.deletingLastPathComponent()
+            guard parent != candidate else { break }
+            candidate = parent
+        }
+        return picked
     }
 
     /// Where a path identity's file sits, spelled from home. Every bundled
@@ -41,7 +90,7 @@ enum InstalledApps {
     /// what tells two of them apart in a list. A bundle identifier names its
     /// app on its own and carries no location.
     static func location(for identity: String) -> String? {
-        guard MouseAppExceptionSupport.isExecutablePathIdentity(identity) else { return nil }
+        guard isExecutablePathIdentity(identity) else { return nil }
         return ((identity as NSString).deletingLastPathComponent as NSString)
             .abbreviatingWithTildeInPath
     }

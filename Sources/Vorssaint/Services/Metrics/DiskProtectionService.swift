@@ -50,10 +50,62 @@ final class DiskProtectionService: ObservableObject {
     func isExcluded(disk: DiskDeviceReading) -> Bool {
         guard !excludedVolumes.isEmpty else { return false }
         let set = Set(excludedVolumes.map { $0.lowercased() })
-        return QuickTogglesSupport.isExcluded(volumeName: disk.name,
-                                              volumeUUID: disk.volumeUUID,
-                                              mountPath: disk.mountPath,
-                                              excludedVolumes: set)
+        return Self.isExcluded(volumeName: disk.name,
+                               volumeUUID: disk.volumeUUID,
+                               mountPath: disk.mountPath,
+                               excludedVolumes: set)
+    }
+
+    /// Whether a volume is even worth offering for eject: local, not the
+    /// root filesystem, and either removable/ejectable or genuinely external.
+    /// A volume already in the exclusion list is never offered again.
+    static func shouldOfferEject(isInternal: Bool,
+                                 isRemovable: Bool,
+                                 isEjectable: Bool,
+                                 isLocal: Bool,
+                                 isRootFileSystem: Bool,
+                                 volumeName: String? = nil,
+                                 volumeUUID: String? = nil,
+                                 mountPath: String? = nil,
+                                 excludedVolumes: Set<String> = []) -> Bool {
+        guard isLocal && !isRootFileSystem && (!isInternal || isRemovable || isEjectable) else {
+            return false
+        }
+        guard !excludedVolumes.isEmpty else { return true }
+        return !isExcluded(volumeName: volumeName,
+                           volumeUUID: volumeUUID,
+                           mountPath: mountPath,
+                           excludedVolumes: excludedVolumes)
+    }
+
+    /// Whether a volume matches any entry in the user's exclusion list by
+    /// name (case-insensitive), volume UUID, full mount path or mount
+    /// directory name.
+    static func isExcluded(volumeName: String?,
+                           volumeUUID: String?,
+                           mountPath: String?,
+                           excludedVolumes: Set<String>) -> Bool {
+        guard !excludedVolumes.isEmpty else { return false }
+        if let name = volumeName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+            if excludedVolumes.contains(name) || excludedVolumes.contains(name.lowercased()) {
+                return true
+            }
+        }
+        if let uuid = volumeUUID?.trimmingCharacters(in: .whitespacesAndNewlines), !uuid.isEmpty {
+            if excludedVolumes.contains(uuid) || excludedVolumes.contains(uuid.lowercased()) {
+                return true
+            }
+        }
+        if let mountPath = mountPath?.trimmingCharacters(in: .whitespacesAndNewlines), !mountPath.isEmpty {
+            if excludedVolumes.contains(mountPath) || excludedVolumes.contains(mountPath.lowercased()) {
+                return true
+            }
+            let lastComponent = (mountPath as NSString).lastPathComponent
+            if !lastComponent.isEmpty && (excludedVolumes.contains(lastComponent) || excludedVolumes.contains(lastComponent.lowercased())) {
+                return true
+            }
+        }
+        return false
     }
 
     func state(for disk: DiskDeviceReading) -> DiskEjectState? {
