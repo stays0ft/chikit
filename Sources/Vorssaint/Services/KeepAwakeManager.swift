@@ -388,7 +388,11 @@ final class KeepAwakeManager: ObservableObject {
                 hasSystemAssertion = true
             }
         }
-        let allowDisplaySleep = UserDefaults.standard.bool(
+        // Closed-lid sessions have no open display to keep lit — the internal
+        // panel is already off, and an external one should still follow its
+        // own sleep timer to save power. Never hold it awake just because a
+        // keep-awake session is running, regardless of the general toggle.
+        let allowDisplaySleep = clamshellPreferred || UserDefaults.standard.bool(
             forKey: DefaultsKey.keepAwakeAllowDisplaySleep
         )
         if allowDisplaySleep, hasDisplayAssertion {
