@@ -53,9 +53,6 @@ enum SettingsBackupSupport {
         DefaultsKey.hasOnboarded,
         DefaultsKey.onboardingStep,
         DefaultsKey.featuresOnboardingVersion,
-        DefaultsKey.lastUpdateIntroVersion,
-        DefaultsKey.supportUpdateIntroVersion,
-        DefaultsKey.updateHighlightsSeenVersion,
         DefaultsKey.panelCollapsedResetVersion,
     ]
 
@@ -82,10 +79,6 @@ enum SettingsBackupSupport {
         DefaultsKey.whatsAppOrganizerLastMoved,
         DefaultsKey.whatsAppOrganizerLastDuplicates,
         DefaultsKey.whatsAppOrganizerLastFailed,
-        DefaultsKey.simulateUpdate,
-        DefaultsKey.updateShowcaseIntroVersion,
-        DefaultsKey.updateShowcaseMediaOverride,
-        DefaultsKey.screenshotSharingDeveloperEndpoint,
         DefaultsKey.settingsWindowWidth,
         DefaultsKey.settingsWindowHeight,
         DefaultsKey.fanControlRecoveryNeeded,

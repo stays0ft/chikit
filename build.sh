@@ -252,7 +252,6 @@ if (( TEST )); then
         Sources/Vorssaint/Core/FeatureStrings.swift \
         Sources/Vorssaint/Core/WhatsAppDownloadStrings.swift \
         Sources/Vorssaint/Core/WhatsAppOrganizerStrings.swift \
-        Sources/Vorssaint/Core/ReleaseNotes.swift \
         Sources/Vorssaint/Services/GeneralPasteboardAccess.swift \
         Sources/Vorssaint/Services/Audio/MixerRoutingSupport.swift \
         Sources/Vorssaint/Services/Audio/MusicLaunchSupport.swift \
@@ -267,8 +266,6 @@ if (( TEST )); then
         Sources/Vorssaint/Services/SpaceHopSupport.swift \
         Sources/Vorssaint/Services/WindowUseOrder.swift \
         Sources/Vorssaint/Services/Finder/FinderRenameSupport.swift \
-        Sources/Vorssaint/Services/Update/UpdateInstallerSupport.swift \
-        Sources/Vorssaint/Services/Update/UpdateServiceSupport.swift \
         Sources/Vorssaint/Services/InstalledApps.swift \
         Sources/Vorssaint/Services/LaunchAtLoginSupport.swift \
         Sources/Vorssaint/UI/Settings/SettingsSearchSupport.swift \
@@ -392,7 +389,6 @@ cp "build/$FAN_HELPER_ID" "$STAGE/Contents/Library/LaunchServices/$FAN_HELPER_ID
 cp Resources/com.chikit.utils.fan-control.plist \
     "$STAGE/Contents/Library/LaunchDaemons/$FAN_HELPER_ID.plist"
 cp Resources/Info.plist "$STAGE/Contents/Info.plist"
-cp CHANGELOG.md "$STAGE/Contents/Resources/CHANGELOG.md"
 for lproj in Resources/*.lproj(N); do
     cp -R "$lproj" "$STAGE/Contents/Resources/"
 done

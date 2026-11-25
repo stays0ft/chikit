@@ -9,7 +9,7 @@ import Foundation
 enum SettingsPage: Hashable {
     case general, features, monitor
     case autoQuit, cleaner, uninstaller, clipboard, windowLayout, finderRename, screenRecorder, notchMedia
-    case shortcuts, advanced, about, releaseNotes, support
+    case shortcuts, advanced, about
 }
 
 /// Stable, non-localized identities for destinations inside shared Settings
@@ -177,7 +177,7 @@ enum FeatureVisibilitySupport {
         case .uninstaller: return [.uninstaller]
         case .screenRecorder: return [.screenRecorder]
         case .notchMedia: return [.notchMediaControls]
-        case .general, .features, .shortcuts, .advanced, .about, .releaseNotes, .support:
+        case .general, .features, .shortcuts, .advanced, .about:
             return []
         }
     }

@@ -110,11 +110,6 @@ final class StatusItemController {
     }
 
     private func bind() {
-        UpdateService.shared.$state
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.updateIconAppearance() }
-            .store(in: &cancellables)
-
         L10n.shared.$language
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.refresh() }
@@ -180,21 +175,14 @@ final class StatusItemController {
     private func updateIconAppearance() {
         guard let button = statusItem?.button else { return }
         let defaults = UserDefaults.standard
-        let updateAvailable: Bool
-        if case .available = UpdateService.shared.state {
-            updateAvailable = true
-        } else {
-            updateAvailable = false
-        }
         let optionEnabled = defaults.bool(forKey: DefaultsKey.menuBarHideIconWithMetrics)
         let separateMetrics = defaults.bool(forKey: DefaultsKey.menuBarSeparateMetrics)
-        let signal = updateAvailable
         let hidden = MenuBarSpacingSupport.shouldHideStatusIcon(
             optionEnabled: optionEnabled,
             separateMetrics: separateMetrics,
             metricsEnabled: MenuBarMetric.anyEnabled(in: defaults),
             renderedTitleLength: button.attributedTitle.length,
-            mustShowForSignal: signal)
+            mustShowForSignal: false)
         // In the separate-items mode the metrics are their own clickable
         // items, so hiding means the whole main item steps aside instead of
         // just its image (which is all that item has).
@@ -203,13 +191,12 @@ final class StatusItemController {
             separateMetrics: separateMetrics,
             metricItemsShown: renderedMetricItemCount,
             renderedTitleLength: button.attributedTitle.length,
-            mustShowForSignal: signal)
+            mustShowForSignal: false)
 
         // refresh() runs on every monitor tick and lands here; re-rendering
         // the same image every 2 seconds would be wasted composition, so the
         // image is only touched when some ingredient actually changed.
-        let stateKey = [String(hidden), String(mainItemHidden),
-                        String(updateAvailable)].joined(separator: "|")
+        let stateKey = [String(hidden), String(mainItemHidden)].joined(separator: "|")
         guard stateKey != lastIconStateKey else { return }
         lastIconStateKey = stateKey
 
@@ -221,11 +208,7 @@ final class StatusItemController {
             button.image = Self.emptyStatusImage
             return
         }
-        if updateAvailable {
-            button.image = BlackHoleGlyph.attentionImage()
-        } else {
-            button.image = BlackHoleGlyph.image()
-        }
+        button.image = BlackHoleGlyph.image()
     }
 
     @objc private func clicked() {
@@ -304,18 +287,12 @@ final class StatusItemController {
             // padding on the item's left edge. Same decision inputs as
             // updateIconAppearance, with a sentinel length: the title is
             // known non-empty on this branch.
-            let updateAvailable: Bool
-            if case .available = UpdateService.shared.state {
-                updateAvailable = true
-            } else {
-                updateAvailable = false
-            }
             let glyphHidden = MenuBarSpacingSupport.shouldHideStatusIcon(
                 optionEnabled: defaults.bool(forKey: DefaultsKey.menuBarHideIconWithMetrics),
                 separateMetrics: separateMetrics,
                 metricsEnabled: !metrics.isEmpty,
                 renderedTitleLength: 1,
-                mustShowForSignal: updateAvailable)
+                mustShowForSignal: false)
             let full = NSMutableAttributedString(string: glyphHidden ? "" : " ")
             full.append(title)
             let stacked = full.string.contains("\n")
@@ -527,7 +504,7 @@ final class StatusItemController {
 }
 
 /// The official mark, bundled as a template image so the idle state adapts to
-/// light and dark menu bars. Active states can use real colors for attention.
+/// light and dark menu bars.
 enum BlackHoleGlyph {
     /// Logical size of the glyph in the menu bar, in points. Wide because the
     /// mark is ~1.97:1 and sized from its height. Tools/MakeIcon.swift writes
@@ -552,32 +529,14 @@ enum BlackHoleGlyph {
     }()
 
     static func image() -> NSImage? {
-        base ?? fallback(active: false)
-    }
-
-    /// A blue, full-strength glyph used to flag an available update. Non-template
-    /// (a real color), drawn by masking blue into the glyph's shape.
-    static func attentionImage() -> NSImage? {
-        guard let base else { return fallback(active: true) }
-        return tintedImage(base, color: .systemBlue) ?? fallback(active: true)
-    }
-
-    private static func tintedImage(_ source: NSImage, color: NSColor) -> NSImage? {
-        let tinted = NSImage(size: source.size, flipped: false) { rect in
-            source.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
-            color.setFill()
-            rect.fill(using: .sourceAtop)
-            return true
-        }
-        tinted.isTemplate = false
-        return tinted
+        base ?? fallback()
     }
 
     /// Keeps a recognizable presence if the bundled asset is ever missing
     /// (e.g. running the bare binary from build/).
-    private static func fallback(active: Bool) -> NSImage? {
+    private static func fallback() -> NSImage? {
         if let symbol = NSImage(systemSymbolName: "circle.fill", accessibilityDescription: AppInfo.name)?
-            .withSymbolConfiguration(.init(pointSize: 13, weight: active ? .bold : .regular)) {
+            .withSymbolConfiguration(.init(pointSize: 13, weight: .regular)) {
             symbol.isTemplate = true
             return symbol
         }

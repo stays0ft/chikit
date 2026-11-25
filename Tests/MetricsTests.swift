@@ -1396,66 +1396,6 @@ struct MetricsTests {
         let previewScales = Defaults.allowedPreviewSizes.map { PreviewSizing.scale(for: $0) }
         expect(previewScales.count == 4 && previewScales.contains(1.0),
                "every preview size on offer has a scale, including the unscaled one")
-        expect(registeredDefaults[DefaultsKey.autoCheckUpdates] as? Bool == true,
-               "update checks are on for clean installs")
-        expect(registeredDefaults[DefaultsKey.updateShowcaseIntroVersion] as? String == "",
-               "update showcase intro starts unseen")
-        expect(registeredDefaults[DefaultsKey.updateShowcaseMediaOverride] as? String == "",
-               "update showcase media override is empty by default")
-        expect(SupportUpdateIntroInfo.releaseVersion == "3.3.2",
-               "support prompt is deliberately pinned to 3.3.2")
-        expect(SupportUpdateIntroInfo.shouldShow(appVersion: "3.3.2", lastSeenVersion: "3.3.1"),
-               "support prompt shows once after updating to its pinned release")
-        expect(!SupportUpdateIntroInfo.shouldShow(appVersion: "3.3.2", lastSeenVersion: "3.3.2"),
-               "support prompt stays hidden after it is seen")
-        expect(!SupportUpdateIntroInfo.shouldShow(appVersion: "3.3.0", lastSeenVersion: nil)
-               && !SupportUpdateIntroInfo.shouldShow(appVersion: "3.3.1", lastSeenVersion: nil)
-               && !SupportUpdateIntroInfo.shouldShow(appVersion: "3.3.3", lastSeenVersion: nil),
-               "support prompt never leaks into another release")
-        expect(SupportUpdateIntroStep.discord.next == .social
-               && SupportUpdateIntroStep.social.next == .support
-               && SupportUpdateIntroStep.support.next == nil,
-               "update intro moves from Discord to social updates and support")
-        expect(SupportUpdateIntroStep.discord.previous == nil
-               && SupportUpdateIntroStep.social.previous == .discord
-               && SupportUpdateIntroStep.support.previous == .social,
-               "update intro navigates back without closing")
-        expect(SupportUpdateIntroStep.allCases == [.discord, .social, .support],
-               "update intro page indicators follow the navigation order")
-        expect(AppInfo.discordURL.absoluteString == "https://discord.gg/M6BwWH4BJp",
-               "the community action uses the permanent Discord invitation")
-        expect(AppInfo.coffeeURL.absoluteString == "https://buymeacoffee.com/vorssaint",
-               "financial support uses Buy Me a Coffee")
-        expect(AppInfo.socialURL.absoluteString == "https://x.com/vorssaint",
-               "social previews keep the official X profile")
-        // AppInfo.version falls back to "dev" in this bare harness, so read
-        // the plist the shipped app will actually carry. The pin is a
-        // per-release decision: this check fails on every version bump so the
-        // decision above is made consciously, never by omission.
-        let releasePlist = NSDictionary(contentsOfFile: "Resources/Info.plist")
-        let plistVersion = (releasePlist?["CFBundleShortVersionString"] as? String) ?? ""
-        expect(plistVersion == "3.3.3-beta.3",
-               "bumping the app version requires re-deciding the support prompt pin above")
-        let plistBuild = (releasePlist?["CFBundleVersion"] as? String) ?? ""
-        expect(plistBuild == "82",
-               "every app version needs its own incremented bundle build")
-        expect(SupportUpdateIntroInfo.releaseVersion == "3.3.2",
-               "the support prompt remains deliberately pinned to 3.3.2")
-        // 3.3.2 adds several headline features, so the tour is re-curated
-        // around only what this update genuinely introduces.
-        expect(UpdateHighlightsInfo.releaseVersion == "3.3.2",
-               "re-decide the highlights tour on a feature release: re-curate its rows and move the pin to the shipping version")
-        expect(UpdateHighlightsInfo.shouldShow(appVersion: "3.3.2", lastSeenVersion: "3.3.1")
-               && UpdateHighlightsInfo.shouldShow(appVersion: "3.3.2", lastSeenVersion: nil),
-               "highlights tour shows once after updating to its pinned release")
-        expect(!UpdateHighlightsInfo.shouldShow(appVersion: "3.3.2", lastSeenVersion: "3.3.2"),
-               "highlights tour stays hidden after it is seen")
-        expect(!UpdateHighlightsInfo.shouldShow(appVersion: "3.3.1", lastSeenVersion: nil)
-               && !UpdateHighlightsInfo.shouldShow(appVersion: "3.3.3", lastSeenVersion: nil),
-               "highlights tour never leaks into another release")
-        expect(FileManager.default.fileExists(atPath: "Resources/Images/highlights-capture.png")
-               && FileManager.default.fileExists(atPath: "Resources/Images/highlights-clipboard.png"),
-               "3.3.2 highlights tour includes curated real captures for screenshot palette and clipboard")
         expect(registeredDefaults[DefaultsKey.mixerLowerVolumeOnHeadphonesDisconnect] as? Bool == false,
                "headphone disconnect volume lowering is opt-in")
         expect(registeredDefaults[DefaultsKey.mixerHeadphonesDisconnectVolumePercent] as? Int
@@ -5359,64 +5299,6 @@ struct MetricsTests {
         expect(!GlobalShortcut.matchesSystemShortcut(optionShiftS, symbolicHotKeys: nil),
                "an unreadable system list reserves nothing")
 
-        expect(UpdateInstallerSupport.progressStepAdvanced(from: nil, to: 0.004),
-               "the first known download fraction always publishes")
-        expect(!UpdateInstallerSupport.progressStepAdvanced(from: 0.011, to: 0.019),
-               "fractions inside the same percent stay quiet")
-        expect(UpdateInstallerSupport.progressStepAdvanced(from: 0.019, to: 0.021),
-               "crossing into the next percent publishes")
-        expect(!UpdateInstallerSupport.progressStepAdvanced(from: 0.5, to: 0.5),
-               "an unchanged fraction stays quiet")
-
-        let updateCeiling = UpdateInstallerSupport.downloadCeilingBytes
-        expect(UpdateInstallerSupport.downloadByteLimit(expectedBytes: 9_638_011) == 9_638_011,
-               "a download stops at the size the release advertises")
-        expect(UpdateInstallerSupport.downloadByteLimit(expectedBytes: nil) == updateCeiling,
-               "an asset with no size still stops at the ceiling")
-        expect(UpdateInstallerSupport.downloadByteLimit(expectedBytes: 0) == updateCeiling,
-               "a zero size is not a limit of zero")
-        expect(UpdateInstallerSupport.downloadByteLimit(expectedBytes: updateCeiling + 1) == updateCeiling,
-               "an advertised size beyond the ceiling cannot raise it")
-
-        expect(UpdateInstallerSupport.downloadIsUsable(status: 200,
-                                                       receivedBytes: 9_638_011,
-                                                       expectedBytes: 9_638_011),
-               "a complete asset download is handed to the installer")
-        expect(!UpdateInstallerSupport.downloadIsUsable(status: 404,
-                                                        receivedBytes: 1_200,
-                                                        expectedBytes: 9_638_011),
-               "an error page is refused whatever it contains")
-        expect(!UpdateInstallerSupport.downloadIsUsable(status: 200,
-                                                        receivedBytes: 4_000_000,
-                                                        expectedBytes: 9_638_011),
-               "a truncated body is refused")
-        expect(!UpdateInstallerSupport.downloadIsUsable(status: 200,
-                                                        receivedBytes: 0,
-                                                        expectedBytes: nil),
-               "an empty body is refused even with no advertised size")
-        expect(!UpdateInstallerSupport.downloadIsUsable(status: 200,
-                                                        receivedBytes: updateCeiling + 1,
-                                                        expectedBytes: nil),
-               "a body past the ceiling is refused with no advertised size")
-        expect(UpdateInstallerSupport.downloadIsUsable(status: 200,
-                                                       receivedBytes: 9_638_011,
-                                                       expectedBytes: nil),
-               "a plausible body with no advertised size is accepted")
-
-        // The showcase loader is a @StateObject, so it can be released without
-        // `.onDisappear` running. Its session holds the download delegate, and
-        // that delegate's deinit is what deletes the scratch file, so the
-        // release path has to invalidate the session too.
-        let showcaseSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/Update/UpdateShowcaseMedia.swift",
-            encoding: .utf8)) ?? ""
-        let showcaseDeinitBody = (showcaseSource.components(separatedBy: "\n    deinit {")
-            .dropFirst().first ?? "").components(separatedBy: "\n    }").first ?? ""
-        expect(showcaseDeinitBody.contains("session?.invalidateAndCancel()"),
-               "a released showcase loader invalidates its session, freeing the delegate and its scratch file")
-        expect(!showcaseDeinitBody.contains("finishTasksAndInvalidate"),
-               "a released showcase loader cancels its download instead of letting it finish")
-
         expect(SettingsSearchSupport.matches(query: "", title: "Monitor"),
                "a blank settings search matches everything")
         expect(SettingsSearchSupport.matches(query: "moni", title: "Monitor"),
@@ -5523,23 +5405,6 @@ struct MetricsTests {
                 && verticalPlacement.frame.maxY == 472,
                "vertical avoidance moves settings below the panel with the standard gap")
 
-        expect(UpdateInstallerSupport.shouldForceAdminInstall(afterFailureCode: "fail-copy"),
-               "a copy failure retries through the admin prompt")
-        expect(UpdateInstallerSupport.shouldForceAdminInstall(afterFailureCode: "fail-swap"),
-               "a swap failure retries through the admin prompt")
-        expect(!UpdateInstallerSupport.shouldForceAdminInstall(afterFailureCode: "fail-verify"),
-               "a verification failure is not a permission problem")
-        expect(!UpdateInstallerSupport.shouldForceAdminInstall(afterFailureCode: nil),
-               "no remembered failure means the normal path")
-
-        let adminSource = AdminShell.appleScriptSource(
-            command: #"printf "quoted" \ path"#,
-            prompt: #"Approve "update" \ now"#)
-        expect(adminSource == #"do shell script "printf \"quoted\" \\ path" with administrator privileges with prompt "Approve \"update\" \\ now""#,
-               "administrator source keeps commands and prompts inside AppleScript strings")
-        var adminCompileError: NSDictionary?
-        expect(NSAppleScript(source: adminSource)?.compileAndReturnError(&adminCompileError) == true,
-               "administrator source compiles in process")
         let inProcessScript = AppleScriptRunner.run(
             #"do shell script "/usr/bin/printf admin-probe""#)
         expect(inProcessScript.ok && inProcessScript.output == "admin-probe",
@@ -5557,81 +5422,13 @@ struct MetricsTests {
         expect(WindowLayoutAction.hiddenActions(from: "").isEmpty,
                "an empty stored value hides nothing")
 
-        expect(UpdateInstallerSupport.shellSingleQuoted("/Applications/My App.app")
-                   == "'/Applications/My App.app'",
-               "shell quoting wraps paths with spaces")
-        expect(UpdateInstallerSupport.shellSingleQuoted("it's") == "'it'\\''s'",
-               "shell quoting survives embedded single quotes")
-        expect(UpdateInstallerSupport.installFailureCode(fromMarker: "ok\n") == nil,
-               "an ok marker is not a failure")
-        expect(UpdateInstallerSupport.installFailureCode(fromMarker: " fail-verify\n") == "fail-verify",
-               "a fail marker surfaces its step code")
-        expect(UpdateInstallerSupport.installFailureCode(fromMarker: "") == nil,
-               "an empty marker is not a failure")
-        expect(UpdateInstallerSupport.runsFromImmutableLocation(
-                   appPath: "/private/var/folders/ab/xyz/T/AppTranslocation/1F2/d/Chikit.app",
-                   volumeIsReadOnly: { _ in false }),
-               "translocated apps are flagged as not updatable in place")
-        expect(UpdateInstallerSupport.runsFromImmutableLocation(appPath: "/Volumes/Chikit/Chikit.app",
-                                                                volumeIsReadOnly: { _ in true }),
-               "apps on a read-only volume (the DMG) are flagged as not updatable in place")
-        expect(!UpdateInstallerSupport.runsFromImmutableLocation(appPath: "/Volumes/ExternalSSD/Chikit.app",
-                                                                 volumeIsReadOnly: { _ in false }),
-               "apps on a writable external volume stay updatable in place")
-        let installerScript = UpdateInstallerSupport.installerScript()
-        for step in ["fail-dmg-verify", "fail-tempdir", "fail-mount", "fail-no-app-in-dmg",
-                     "fail-copy", "fail-version", "fail-verify", "fail-swap", "note ok"] {
-            expect(installerScript.contains(step),
-                   "installer script reports the \(step) step")
-        }
-        expect(installerScript.contains("spctl --status"),
-               "installer script skips Gatekeeper assessment when the user disabled it")
-        let dmgVerification = installerScript.range(of: "DMG_VERIFY_REQ")
-        let dmgMount = installerScript.range(of: "/usr/bin/hdiutil attach")
-        expect(dmgVerification != nil && dmgMount != nil
-               && dmgVerification!.lowerBound < dmgMount!.lowerBound,
-               "installer verifies the release signer before mounting the DMG")
-        expect(installerScript.contains("BUNDLE_VERSION=")
-               && installerScript.contains("\"$BUNDLE_VERSION\" = \"$EXPECTED_VERSION\""),
-               "installer requires the signed app to match the offered release version")
-        expect(installerScript.contains("chown -R"),
-               "an elevated install hands the bundle back to the user")
-        expect(installerScript.contains("update-old.$PID"),
-               "the swap backup name is unique per run so a stale root-owned one never blocks it")
-        expect(installerScript.contains("launchctl asuser"),
-               "installer script relaunches as the user when running as root")
-        expect(installerScript.contains("$RESULT.progress") && installerScript.contains("finalize"),
-               "installer markers stay in a progress file until the run finishes")
-        expect(installerScript.contains("/usr/bin/sudo -n -u \"#$ASUSER\" /bin/sh -c")
-                && installerScript.contains("'/bin/echo \"$1\" > \"$2.progress\"' marker \"$1\" \"$RESULT\"")
-                && installerScript.contains("/usr/bin/sudo -n -u \"#$ASUSER\" /bin/mv -f")
-                && !installerScript.contains("note() { /bin/echo \"$1\" > \"$RESULT.progress\""),
-               "elevated marker writes drop to the original user's credentials")
-        let elevated = UpdateInstallerSupport.elevatedInstallCommand(
-            appPath: "/Applications/Chikit.app",
-            dmgPath: "/tmp/Chikit-update.dmg",
-            pid: 123,
-            resultPath: "/tmp/result",
-            uid: 501,
-            expectedVersion: "3.3.3")
-        expect(elevated.contains("POSIX::setsid()") && elevated.hasSuffix("&"),
-               "elevated installer leaves this app's session so it outlives the app it replaces")
-        expect(elevated.contains("nohup"),
-               "elevated installer keeps the nohup fallback if setsid is unavailable")
-        expect(elevated.contains("'/Applications/Chikit.app'"),
-               "elevated installer passes the app path quoted for the shell")
-        expect(elevated.contains("'3.3.3'"),
-               "elevated installer passes the expected version quoted for the shell")
-        // The script travels inline and is long; it must be spelled once, with
-        // both the setsid attempt and the fallback reusing the same "$@".
-        expect(elevated.components(separatedBy: "DMG_VERIFY_REQ=").count == 2
-               && elevated.components(separatedBy: "\"$@\"").count == 3,
-               "elevated installer names its arguments once and reuses them for the fallback")
-
         // The fallback branch has to be chosen on whether perl is there, never
         // on an exit code: perl execs the payload, so the status the shell sees
         // is the payload's own. Every `exit 1` inside the installer script would
         // otherwise start the whole installer a second time, as root.
+        func shellSingleQuoted(_ value: String) -> String {
+            "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        }
         let detachRoot = FileManager.default.temporaryDirectory
             .appendingPathComponent("ChikitDetachTests-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: detachRoot, withIntermediateDirectories: true)
@@ -5641,7 +5438,7 @@ struct MetricsTests {
             .write(to: detachPayload, atomically: true, encoding: .utf8)
         let detachCommand = DetachedProcess.detachedShellCommand(
             quotedArgv: ["/bin/sh", detachPayload.path, detachLedger.path]
-                .map(UpdateInstallerSupport.shellSingleQuoted)
+                .map(shellSingleQuoted)
                 .joined(separator: " "))
         let detachShell = Process()
         detachShell.executableURL = URL(fileURLWithPath: "/bin/sh")
@@ -5691,7 +5488,7 @@ struct MetricsTests {
         do {
             let probe = "{ /bin/echo leaked >&\(holderDescriptor); } 2>/dev/null; INHERITED=$?; "
                 + "{ /bin/echo stdio; } 2>/dev/null; STDIO=$?; "
-                + "/bin/echo \"$INHERITED $STDIO\" > \(UpdateInstallerSupport.shellSingleQuoted(fdReport.path))"
+                + "/bin/echo \"$INHERITED $STDIO\" > \(shellSingleQuoted(fdReport.path))"
             let child = try DetachedProcess.spawn("/bin/sh", ["-c", probe])
             var reaped: Int32 = 0
             waitpid(child, &reaped, 0)
@@ -5709,90 +5506,6 @@ struct MetricsTests {
         }
         close(holderDescriptor)
         try? FileManager.default.removeItem(at: fdRoot)
-
-        // MARK: - UpdateServiceSupport & SemVer channel reconciliation
-
-        let vStable = UpdateServiceSupport.SemanticVersion(raw: "3.3.3")
-        expect(vStable?.major == 3 && vStable?.minor == 3 && vStable?.patch == 3 && !vStable!.isPrerelease,
-               "parses standard stable version")
-
-        let vBeta = UpdateServiceSupport.SemanticVersion(raw: "v3.3.4-beta.1")
-        expect(vBeta?.major == 3 && vBeta?.minor == 3 && vBeta?.patch == 4 && vBeta!.isPrerelease,
-               "parses beta version with leading v")
-
-        let vBuild = UpdateServiceSupport.SemanticVersion(raw: "3.3.4-rc.2+20260822")
-        expect(vBuild?.major == 3 && vBuild?.minor == 3 && vBuild?.patch == 4 && vBuild!.isPrerelease,
-               "parses version with build metadata")
-
-        // SemVer 2.0.0 ordering rules
-        expect(UpdateServiceSupport.isNewer("3.3.4", than: "3.3.3"),
-               "newer major/minor/patch stable is newer")
-        expect(!UpdateServiceSupport.isNewer("3.3.3", than: "3.3.4"),
-               "older stable is not newer")
-        expect(UpdateServiceSupport.isNewer("3.3.4-beta.1", than: "3.3.3"),
-               "beta of higher version is newer than older stable")
-        expect(UpdateServiceSupport.isNewer("3.3.4-beta.2", than: "3.3.4-beta.1"),
-               "beta.2 is newer than beta.1 of the same cycle")
-        expect(UpdateServiceSupport.isNewer("3.3.4-rc.1", than: "3.3.4-beta.2"),
-               "rc.1 is newer than beta.2")
-        expect(UpdateServiceSupport.isNewer("3.3.4", than: "3.3.4-beta.2"),
-               "final stable release is newer than beta of same version")
-        expect(UpdateServiceSupport.isNewer("3.3.4", than: "3.3.4-rc.1"),
-               "final stable release is newer than rc of same version")
-        expect(!UpdateServiceSupport.isNewer("3.3.3", than: "3.3.4-beta.1"),
-               "older stable is never newer than a beta of higher version (no downgrade)")
-        expect(!UpdateServiceSupport.isNewer("3.3.4-beta.1", than: "3.3.4"),
-               "beta is not newer than the released final version")
-
-        // Release candidate selection
-        let dummyDMG = URL(string: "https://github.com/vorssaintapp/vorssaint-utils/releases/download/v3.3.4/Vorssaint.dmg")!
-        let dummyBetaDMG = URL(string: "https://github.com/vorssaintapp/vorssaint-utils/releases/download/v3.3.4-beta.1/Vorssaint.dmg")!
-
-        let candidateList = [
-            UpdateServiceSupport.ReleaseCandidate(tagName: "v3.3.4-beta.1", isPrerelease: true, isDraft: false, dmgURL: dummyBetaDMG, dmgExpectedBytes: 1000, body: "Beta notes"),
-            UpdateServiceSupport.ReleaseCandidate(tagName: "v3.3.3", isPrerelease: false, isDraft: false, dmgURL: dummyDMG, dmgExpectedBytes: 1000, body: "Stable notes"),
-            UpdateServiceSupport.ReleaseCandidate(tagName: "v3.3.5-beta.1", isPrerelease: true, isDraft: true, dmgURL: dummyBetaDMG, dmgExpectedBytes: 1000, body: "Draft notes")
-        ]
-
-        let selectedStable = UpdateServiceSupport.selectUpdate(from: candidateList, currentVersion: "3.3.2", includeBetas: false)
-        expect(selectedStable?.tagName == "v3.3.3", "stable channel only picks stable releases")
-
-        let selectedBeta = UpdateServiceSupport.selectUpdate(from: candidateList, currentVersion: "3.3.2", includeBetas: true)
-        expect(selectedBeta?.tagName == "v3.3.4-beta.1", "beta channel picks highest non-draft release")
-
-        let selectedFromHigherBeta = UpdateServiceSupport.selectUpdate(from: candidateList, currentVersion: "3.3.4-beta.1", includeBetas: false)
-        expect(selectedFromHigherBeta == nil, "user on beta turning off betas does not downgrade to older stable")
-
-        let knownDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-        expect(UpdateServiceSupport.sha256Matches(Data("abc".utf8), expectedHex: knownDigest),
-               "update media accepts its pinned SHA-256 digest")
-        expect(!UpdateServiceSupport.sha256Matches(Data("altered".utf8), expectedHex: knownDigest),
-               "update media rejects content that does not match its pinned digest")
-        expect(!UpdateServiceSupport.sha256Matches(Data("abc".utf8), expectedHex: "invalid"),
-               "update media rejects a malformed pinned digest")
-
-        // Defaults registered
-        expect(Defaults.registeredDefaults[DefaultsKey.includeBetaUpdates] as? Bool == false,
-               "includeBetaUpdates defaults to false in registeredDefaults")
-
-        let testDefaults = UserDefaults(suiteName: "com.chikit.tests.betaActivation")!
-        testDefaults.removePersistentDomain(forName: "com.chikit.tests.betaActivation")
-        Defaults.activateBetaChannelIfRunningBeta(in: testDefaults, version: "3.3.3-beta.1")
-        expect(testDefaults.bool(forKey: DefaultsKey.includeBetaUpdates) == true,
-               "beta channel is activated automatically on a beta build")
-        testDefaults.set(false, forKey: DefaultsKey.includeBetaUpdates)
-        Defaults.activateBetaChannelIfRunningBeta(in: testDefaults, version: "3.3.3-beta.1")
-        expect(testDefaults.bool(forKey: DefaultsKey.includeBetaUpdates) == false,
-               "manual opt-out on a beta build is preserved across launches")
-
-        // Stable version does not activate beta channel
-        let stableDefaults = UserDefaults(suiteName: "com.chikit.tests.stableActivation")!
-        stableDefaults.removePersistentDomain(forName: "com.chikit.tests.stableActivation")
-        Defaults.activateBetaChannelIfRunningBeta(in: stableDefaults, version: "3.3.3")
-        expect(stableDefaults.object(forKey: DefaultsKey.includeBetaUpdates) == nil,
-               "stable release does not touch beta channel default")
-        stableDefaults.removePersistentDomain(forName: "com.chikit.tests.stableActivation")
-        testDefaults.removePersistentDomain(forName: "com.chikit.tests.betaActivation")
 
         // Localization completeness & formatting
         for language in AppLanguage.allCases {
@@ -6135,99 +5848,6 @@ struct MetricsTests {
         // an accented letter that folds cleanly to "i", an unrelated letter, so
         // the pin must still fire from the key's position (issue: ⌥S + Caps Lock).
         let switcherPanelFrame = CGRect(x: 400, y: 300, width: 600, height: 400)
-        // MARK: Release notes parsing
-
-        let changelog = """
-        # Changelog
-
-        ## [2.17.2] - 2026-06-17
-
-        ### Summary
-        This update keeps **Shelf** clear
-        and the update window centered.
-
-        ### Fixed
-        - **Shelf** no longer shows an extra outline.
-        - The update window opens centered
-          on the visible screen.
-
-        ### Added
-        - Coffee shortcut in the menu panel.
-        ![Menu bar temperature metrics](Resources/Images/menu-bar-temperature-metrics.png)
-
-        ### Website
-        - Official site: [vorssaint.com](https://vorssaint.com).
-
-        ## [2.17.1] - 2026-06-17
-
-        ### Fixed
-        - Older release note.
-        """
-        let notes = ReleaseNotes.notes(for: "2.17.2", changelog: changelog)
-        expect(notes.version == "2.17.2", "release notes version is parsed")
-        expect(notes.date == "2026-06-17", "release notes date is parsed")
-        expect(notes.sections.count == 3, "release notes keep sections for the requested version")
-        expect(notes.sections.first?.title == "Summary", "release notes first section title is parsed")
-        expect(notes.sections.first?.paragraphItems.first == "This update keeps Shelf clear and the update window centered.",
-               "release notes parse summary paragraphs")
-        expect(notes.sections.dropFirst().first?.title == "Fixed", "release notes fixed section title is parsed")
-        expect(notes.sections.dropFirst().first?.bulletItems.first == "Shelf no longer shows an extra outline.",
-               "release notes strip simple markdown emphasis")
-        expect(notes.sections.dropFirst().first?.bulletItems.dropFirst().first == "The update window opens centered on the visible screen.",
-               "release notes join continuation lines")
-        expect(notes.sections.last?.bulletItems == ["Coffee shortcut in the menu panel."],
-               "release notes stop before the next version")
-        expect(notes.sections.last?.items.last == .image(ReleaseNoteImage(alt: "Menu bar temperature metrics",
-                                                                          path: "Resources/Images/menu-bar-temperature-metrics.png")),
-               "release notes parse changelog images")
-        expect(!notes.sections.contains(where: { $0.title == "Website" }),
-               "release notes hide website sections from the feature list")
-        let previewBodyWithoutSummaryHeading = """
-        ## [2.17.3]
-
-        A short release summary from the GitHub release body.
-
-        ### Fixed
-        - Preview bullet.
-        """
-        let previewNotes = ReleaseNotes.notes(for: "2.17.3", changelog: previewBodyWithoutSummaryHeading)
-        expect(previewNotes.sections.first?.title == "Summary",
-               "release notes preserve an unheaded release-body summary paragraph")
-        expect(previewNotes.sections.first?.paragraphItems.first == "A short release summary from the GitHub release body.",
-               "release notes keep summary text before the first subsection")
-        let githubReleaseBodyWithFooter = """
-        ### Fixed
-        - Update preview stays focused on changes.
-
-        Signed with an Apple Developer ID and notarized by Apple, so it downloads and opens normally. Requires macOS 14 or later. Open the .dmg below and drag Chikit to Applications.
-        """
-        let inAppUpdateBody = ReleaseNotes.inAppUpdateNotes(from: githubReleaseBodyWithFooter) ?? ""
-        expect(!inAppUpdateBody.contains("Signed with an Apple Developer ID"),
-               "in-app update notes remove the GitHub installation footer")
-        let githubPreviewNotes = ReleaseNotes.notes(for: "2.17.4",
-                                                    changelog: "## [2.17.4]\n\n" + inAppUpdateBody)
-        expect(githubPreviewNotes.sections.first?.bulletItems == ["Update preview stays focused on changes."],
-               "in-app update notes keep release changes after removing the footer")
-        let unreleasedChangelog = """
-        ## [Unreleased]
-
-        ### Added
-        - Feature pending release.
-
-        ## [2.17.4] - 2026-06-18
-
-        ### Fixed
-        - Shipped fix.
-        """
-        let unreleasedNotes = ReleaseNotes.notes(for: "Unreleased", changelog: unreleasedChangelog)
-        expect(unreleasedNotes.version == "Unreleased" && unreleasedNotes.date == nil
-               && unreleasedNotes.sections.first?.bulletItems == ["Feature pending release."],
-               "release notes parse unreleased blocks without dates")
-        expect(ReleaseNotes.allVersions(changelog: unreleasedChangelog) == ["2.17.4"],
-               "allVersions excludes the unreleased header")
-        expect(ReleaseNotes.rawNotes(for: "dev", changelog: unreleasedChangelog).contains("Feature pending release."),
-               "rawNotes for dev falls back to the unreleased block")
-
         // MARK: URL cleaning
 
         // A grouped Form keeps a label column even for an empty label, which
@@ -9688,9 +9308,8 @@ struct MetricsTests {
         expect(!backupKeys.contains(DefaultsKey.startupDidNotFinish),
                "the backup never carries a note about a start that did not finish")
         expect(backupKeys.contains(DefaultsKey.hasOnboarded)
-                && backupKeys.contains(DefaultsKey.featuresOnboardingVersion)
-                && backupKeys.contains(DefaultsKey.lastUpdateIntroVersion),
-               "a restored Mac does not replay onboarding or the intros already seen")
+                && backupKeys.contains(DefaultsKey.featuresOnboardingVersion),
+               "a restored Mac does not replay onboarding")
         let backupPayload = SettingsBackupSupport.payload(appVersion: "test") { key in
             key == DefaultsKey.autoQuitEnabled ? true : nil
         }

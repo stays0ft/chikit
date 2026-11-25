@@ -12,10 +12,6 @@ enum DefaultsKey {
     static let liquidGlassEnabled = "liquidGlassEnabled"  // Liquid Glass visual styling on macOS 26+
     static let onboardingStep = "onboardingStep"          // resume point if onboarding is interrupted
     static let featuresOnboardingVersion = "featuresOnboardingVersion" // last feature-tour marker handled
-    static let lastUpdateIntroVersion = "lastUpdateIntroVersion"
-    static let supportUpdateIntroVersion = "supportUpdateIntroVersion"
-    static let updateHighlightsSeenVersion = "updateHighlightsSeenVersion"
-    static let updateShowcaseIntroVersion = "updateShowcaseIntroVersion"
     static let updateShowcaseMediaOverride = "updateShowcaseMediaOverride"
     static let showCountdown = "showCountdownInMenuBar"
     static let statusItemPlacementGeneration = "statusItemPlacementGeneration"
@@ -24,9 +20,6 @@ enum DefaultsKey {
     static let mouseClickDebounceWindowMs = "mouseClickDebounceWindowMs" // legacy sanitizer default, kept for storage compatibility
     static let switcherEnabled = "switcherEnabled" // legacy key, kept only for feature-shortcut silencing reads
     static let previewSize = "previewSize"                // app switcher + dock preview thumbnail size
-    static let autoCheckUpdates = "autoCheckUpdates"
-    static let includeBetaUpdates = "includeBetaUpdates"
-    static let releaseNotesOnUpdate = "releaseNotesOnUpdate" // show What's New after an update
     static let appVolumes = "appVolumes"                  // [bundle id: 0...2]
     static let appOutputDevices = "appOutputDevices"      // [bundle id: audio device UID]
     static let mixerShowFinder = "mixerShowFinder"
@@ -323,7 +316,6 @@ enum DefaultsKey {
     static let windowLayoutShortcutBottomRightSixth = "windowLayoutShortcutBottomRightSixth"
 
     // Dev-build only: force the "update available" UI for local testing.
-    static let simulateUpdate = "simulateUpdate"
     static let simulateBetaUI = "simulateBetaUI"
 
     /// Features hub availability layer, one key per AppFeature raw value.
@@ -338,53 +330,6 @@ enum OnboardingInfo {
     // 3: app languages and support settings.
     // 4: navigable menu panel sections.
     static let currentFeatureSet = 4
-}
-
-/// The one-time tour of a release's headline features, shown right after the
-/// update. Each row deep links to the exact Settings page or opens the tool
-/// itself, so a new feature is one click from being tried instead of buried.
-enum UpdateHighlightsInfo {
-    /// The single release whose first launch shows the tour; any other
-    /// version never shows it. Bump deliberately for releases with headline
-    /// features worth a tour.
-    static let releaseVersion = "3.3.2"
-
-    static func shouldShow(appVersion: String, lastSeenVersion: String?) -> Bool {
-        appVersion == releaseVersion && lastSeenVersion != releaseVersion
-    }
-}
-
-enum SupportUpdateIntroInfo {
-    /// The single release whose first launch shows the update intro. It used
-    /// to track AppInfo.version, which re-showed the ask on every update; now a
-    /// release only shows it when this constant is deliberately bumped.
-    static let releaseVersion = "3.3.2"
-
-    static func shouldShow(appVersion: String, lastSeenVersion: String?) -> Bool {
-        appVersion == releaseVersion && lastSeenVersion != releaseVersion
-    }
-}
-
-enum SupportUpdateIntroStep: CaseIterable, Hashable {
-    case discord
-    case social
-    case support
-
-    var next: SupportUpdateIntroStep? {
-        switch self {
-        case .discord: return .social
-        case .social: return .support
-        case .support: return nil
-        }
-    }
-
-    var previous: SupportUpdateIntroStep? {
-        switch self {
-        case .discord: return nil
-        case .social: return .discord
-        case .support: return .social
-        }
-    }
 }
 
 /// Thumbnail size for the app switcher and Dock preview, scaled from one user
@@ -439,10 +384,6 @@ enum Defaults {
         DefaultsKey.showCountdown: false,
         DefaultsKey.launchAtLoginWanted: false,
         DefaultsKey.previewSize: "normal",
-        DefaultsKey.autoCheckUpdates: true,
-        DefaultsKey.includeBetaUpdates: false,
-        DefaultsKey.releaseNotesOnUpdate: true,
-        DefaultsKey.updateShowcaseIntroVersion: "",
         DefaultsKey.updateShowcaseMediaOverride: "",
         DefaultsKey.mixerShowFinder: true,
         DefaultsKey.mixerHideInactiveApps: false,
@@ -676,25 +617,8 @@ enum Defaults {
         migrateWhatsAppDownloadsEnabled(in: defaults)
         defaults.register(defaults: registeredDefaults)
         defaults.register(defaults: AppFeature.availabilityDefaults)
-        activateBetaChannelIfRunningBeta(in: defaults)
         migrateLegacyMenuBarTemperatureMetric(in: defaults)
         migrateSilentHeadphonesDisconnectVolume(in: defaults)
-    }
-
-    /// When the user installs or runs a beta pre-release, activate the beta
-    /// channel default once so they seamlessly receive subsequent beta builds.
-    static func activateBetaChannelIfRunningBeta(in defaults: UserDefaults,
-                                                 version: String = AppInfo.version,
-                                                 isBeta: Bool = AppInfo.isBeta) {
-        let isPre = isBeta || {
-            let v = version.lowercased()
-            return v.contains("-beta") || v.contains("-rc") || v.contains("-alpha")
-        }()
-        guard isPre else { return }
-        let markerKey = "betaChannelActivatedFor.\(version)"
-        guard !defaults.bool(forKey: markerKey) else { return }
-        defaults.set(true, forKey: markerKey)
-        defaults.set(true, forKey: DefaultsKey.includeBetaUpdates)
     }
 
     /// The downloads cleanup for a messaging app used to sit in Cleaner for
