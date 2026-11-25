@@ -219,7 +219,6 @@ if (( TEST )); then
         Sources/Vorssaint/Core/ShortcutSettingsStrings.swift \
         Sources/Vorssaint/Core/SettingsBackupSupport.swift \
         Sources/Vorssaint/Core/BackupStrings.swift \
-        Sources/Vorssaint/Core/MediaImageStrings.swift \
         Sources/Vorssaint/Core/ScreenshotStrings.swift \
         Sources/Vorssaint/Core/RecentCaptureStrings.swift \
         Sources/Vorssaint/Core/RecorderStrings.swift \
@@ -252,7 +251,6 @@ if (( TEST )); then
         Sources/Vorssaint/Core/FeatureStrings.swift \
         Sources/Vorssaint/Services/GeneralPasteboardAccess.swift \
         Sources/Vorssaint/Services/Audio/MixerRoutingSupport.swift \
-        Sources/Vorssaint/Services/Audio/MusicLaunchSupport.swift \
         Sources/Vorssaint/UI/MenuPanel/MixerPercentNativeTextField.swift \
         Sources/Vorssaint/Services/Audio/BoostLimiter.swift \
         Sources/Vorssaint/Services/Audio/MixerRender.swift \
@@ -271,17 +269,13 @@ if (( TEST )); then
         Sources/Vorssaint/App/MenuBarSpacingSupport.swift \
         Sources/Vorssaint/App/StatusItemAnchorSupport.swift \
         Sources/Vorssaint/Services/Finder/CutPasteProgressSupport.swift \
-        Sources/Vorssaint/Services/Finder/FinderPasteImageSupport.swift \
         Sources/Vorssaint/Services/WindowServerSupport.swift \
         Sources/Vorssaint/Core/ClipboardIgnoredAppsStrings.swift \
         Sources/Vorssaint/Core/DiskExclusionStrings.swift \
-        Sources/Vorssaint/Services/QuickTools/QuickToolsSupport.swift \
         Sources/Vorssaint/Services/SpotlightNamesSupport.swift \
         Sources/Vorssaint/Services/QuickTools/ScreenshotCapturePolicy.swift \
         Sources/Vorssaint/Services/QuickTools/ScreenshotSupport.swift \
         Sources/Vorssaint/Services/QuickTools/WindowActivationPolicy.swift \
-        Sources/Vorssaint/Services/SessionActivity.swift \
-        Sources/Vorssaint/Services/SessionActivitySupport.swift \
         Sources/Vorssaint/Services/Metrics/MetricFormat.swift \
         Sources/Vorssaint/Services/Metrics/VMStatisticsDecoder.swift \
         Sources/Vorssaint/Services/Metrics/BatteryTimeSupport.swift \

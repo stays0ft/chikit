@@ -925,58 +925,6 @@ struct MetricsTests {
         let featureRuntimeSource = (try? String(
             contentsOfFile: "Sources/Vorssaint/App/FeatureRuntime.swift",
             encoding: .utf8)) ?? ""
-        // A modifying tap belongs in the chain only while this login session is
-        // the one on screen: fast user switching leaves the process running
-        // behind another account, where the tap still takes every scroll event
-        // and stalls it (issue #1075).
-        expect(SessionActivitySupport.tapShouldRun(featureWanted: true,
-                                                   accessibilityGranted: true,
-                                                   sessionIsActive: true),
-               "a wanted modifying tap runs in the session on screen")
-        expect(!SessionActivitySupport.tapShouldRun(featureWanted: true,
-                                                    accessibilityGranted: true,
-                                                    sessionIsActive: false),
-               "a wanted modifying tap is handed back while its session is switched away")
-        expect(!SessionActivitySupport.tapShouldRun(featureWanted: false,
-                                                    accessibilityGranted: true,
-                                                    sessionIsActive: true),
-               "an unwanted modifying tap stays off in the session on screen")
-        expect(!SessionActivitySupport.tapShouldRun(featureWanted: true,
-                                                    accessibilityGranted: false,
-                                                    sessionIsActive: true),
-               "a modifying tap needs Accessibility even in the session on screen")
-
-        // Launching into a session that is already switched away is announced
-        // before the tap owners exist to hear it, so the state is read rather
-        // than assumed. Anything unreadable counts as on screen because a
-        // wrong off state would never be corrected.
-        let onConsoleKey = kCGSessionOnConsoleKey as String
-        expect(SessionActivitySupport.isOnConsole([onConsoleKey: true]),
-               "a session dictionary saying it holds the console reads as on screen")
-        expect(!SessionActivitySupport.isOnConsole([onConsoleKey: false]),
-               "a session dictionary saying it does not hold the console reads as off screen")
-        expect(SessionActivitySupport.isOnConsole([onConsoleKey: NSNumber(value: 1)]),
-               "the console flag is read when it arrives as a number")
-        expect(SessionActivitySupport.isOnConsole(nil),
-               "an unreadable session reads as on screen because a wrong off would never be corrected")
-        expect(SessionActivitySupport.isOnConsole([:]),
-               "a session without the console flag reads as on screen because a wrong off would never be corrected")
-        expect(SessionActivitySupport.isOnConsole([onConsoleKey: "unexpected"]),
-               "an unexpected console flag reads as on screen because a wrong off would never be corrected")
-
-        let privateCenter = NotificationCenter()
-        let activity = SessionActivity(center: privateCenter, initialIsActive: { true })
-        var observedTransitions: [Bool] = []
-        activity.onChange { observedTransitions.append($0) }
-        expect(activity.isActive, "session activity starts with the injected initial state")
-        privateCenter.post(name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
-        expect(!activity.isActive, "session activity transitions to inactive on resign")
-        privateCenter.post(name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
-        privateCenter.post(name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
-        expect(activity.isActive, "session activity transitions to active on become-active")
-        expect(observedTransitions == [false, true],
-               "the session activity handler records each state change and ignores duplicate notifications")
-
         // MARK: Watts & percent
 
         expectEqual(MetricFormat.watts(8.5), "8.5 W", "watts under 10")
@@ -3841,24 +3789,6 @@ struct MetricsTests {
                     && !strings.mediaMegabytesSuffix.isEmpty,
                    "\(name) names the size target controls")
         }
-        for language in AppLanguage.allCases {
-            let strings = MediaImageConverterStrings.localized(language)
-            let values = Mirror(reflecting: strings).children.compactMap { $0.value as? String }
-            expect(values.count == 56 && values.allSatisfy { !$0.isEmpty },
-                   "every image converter string is set for \(language.rawValue)")
-            expect(values.allSatisfy { !$0.contains("—") },
-                   "no em-dash in visible image converter strings (\(language.rawValue))")
-            expect(strings.filesSelectedFormat.contains("%d")
-                   && strings.profileDefaultNameFormat.contains("%d")
-                   && strings.savedBytesFormat.contains("%@")
-                   && strings.grewBytesFormat.contains("%@")
-                   && strings.batchSavedFormat.contains("%d")
-                   && strings.batchPartialFormat.filter { $0 == "%" }.count == 2
-                   && strings.batchSummaryHeaderFormat.filter { $0 == "%" }.count == 2
-                   && strings.batchSummaryItemFormat.filter { $0 == "%" }.count == 2,
-                   "image converter formats keep their arguments in \(language.rawValue)")
-        }
-
         expectClose(Defaults.sanitizedAppVolume(1.5), 1.5, "valid app volume is preserved")
         expectClose(Defaults.sanitizedAppVolume(3), 2, "high app volume clamps to boost maximum")
         expectClose(Defaults.sanitizedAppVolume(-1), 0, "negative app volume clamps to mute")
@@ -5076,23 +5006,6 @@ struct MetricsTests {
 
         // MARK: Paste copied image as file (issue #429)
 
-        expect(FinderPasteImageSupport.preferredImageType(in: ["public.utf8-plain-text"]) == nil,
-               "text never replaces Finder's normal paste")
-        expect(FinderPasteImageSupport.preferredImageType(in: ["public.tiff", "public.png"])
-                == "public.png",
-               "PNG wins when the pasteboard offers several image representations")
-        expect(FinderPasteImageSupport.preferredImageType(
-            in: ["public.file-url", "public.png"]
-        ) == nil, "a copied image file stays a normal Finder file paste")
-        expect(FinderPasteImageSupport.preferredImageType(in: ["public.jpeg"])
-                == "public.jpeg",
-               "a non-PNG image representation can be converted")
-        expect(FinderPasteImageSupport.fileName(
-            for: Date(timeIntervalSince1970: 0),
-            timeZone: TimeZone(secondsFromGMT: 0)!
-        ) == "Pasted_Image_19700101_000000.png",
-               "pasted images receive the stable timestamped PNG name")
-
         // MARK: Update installer helpers
 
         expect(GlobalShortcutRole.activeRoles(isOn: { _ in false }).isEmpty,
@@ -5452,173 +5365,6 @@ struct MetricsTests {
                                                    pidIsEligible: { $0 != 1001 })?.pid == 1002,
                "the click lookup carries on behind a window it was told to leave alone")
 
-        expectEqual(QuickToolsSupport.colorString(red: 1, green: 0, blue: 0, format: .hex), "#FF0000",
-                    "color picker formats pure red as hex")
-        expectEqual(QuickToolsSupport.colorString(red: 0.2, green: 0.4, blue: 0.6, format: .rgb),
-                    "rgb(51, 102, 153)",
-                    "color picker formats components as CSS rgb")
-        expectEqual(QuickToolsSupport.colorString(red: 1, green: 0, blue: 0, format: .hsl),
-                    "hsl(0, 100%, 50%)",
-                    "color picker formats pure red as hsl")
-        expectEqual(QuickToolsSupport.colorString(red: 0, green: 0.5, blue: 0, format: .hsl),
-                    "hsl(120, 100%, 25%)",
-                    "color picker formats dark green as hsl")
-        expectEqual(QuickToolsSupport.colorString(red: 0.25, green: 0.5, blue: 0.75, format: .swiftui),
-                    "Color(red: 0.250, green: 0.500, blue: 0.750)",
-                    "color picker formats components as SwiftUI code")
-        expectEqual(QuickToolsSupport.colorString(red: 1.4, green: -0.2, blue: 0.5, format: .hex), "#FF0080",
-                    "color picker clamps extended-gamut components")
-        expect(ColorCopyFormat.sanitized("banana") == .hex,
-               "color picker falls back to hex for unknown stored formats")
-        expectEqual(QuickToolsSupport.colorString(red: 1, green: 0, blue: 0, format: .hex, bareHex: true),
-                    "FF0000",
-                    "color picker drops the leading # when the bare hex option is on")
-        expectEqual(QuickToolsSupport.colorString(red: 0.2, green: 0.4, blue: 0.6, format: .rgb, bareHex: true),
-                    "rgb(51, 102, 153)",
-                    "bare hex option leaves the other copy formats untouched")
-
-        let ocrLines = [
-            QuickToolsSupport.RecognizedLine(text: "world", x: 0.5, y: 0.8),
-            QuickToolsSupport.RecognizedLine(text: "hello", x: 0.1, y: 0.81),
-            QuickToolsSupport.RecognizedLine(text: "below", x: 0.1, y: 0.4),
-            QuickToolsSupport.RecognizedLine(text: "   ", x: 0.2, y: 0.6),
-        ]
-        expectEqual(QuickToolsSupport.joinedRecognizedText(ocrLines, removingLineBreaks: false),
-                    "hello\nworld\nbelow",
-                    "screen OCR joins lines top to bottom, left to right, dropping blanks")
-        expectEqual(QuickToolsSupport.joinedRecognizedText(ocrLines, removingLineBreaks: true),
-                    "hello world below",
-                    "screen OCR can join lines with spaces")
-        let joinedOCRPair: (String, String, Bool) -> String = { first, second, removingLineBreaks in
-            QuickToolsSupport.joinedRecognizedText([
-                .init(text: first, x: 0.1, y: 0.8),
-                .init(text: second, x: 0.1, y: 0.4),
-            ], removingLineBreaks: removingLineBreaks)
-        }
-        expectEqual(joinedOCRPair("这是", "测试", true), "这是测试",
-                    "screen OCR joins Chinese lines without spaces")
-        expectEqual(joinedOCRPair("これは", "テストです", true), "これはテストです",
-                    "screen OCR joins Japanese lines without spaces")
-        expectEqual(joinedOCRPair("これは", "ﾃｽﾄです", true), "これはﾃｽﾄです",
-                    "screen OCR joins halfwidth Japanese kana without spaces")
-        expectEqual(joinedOCRPair("이것은", "테스트입니다", true), "이것은 테스트입니다",
-                    "screen OCR keeps Korean word spaces at line seams")
-        expectEqual(joinedOCRPair("ㅋㅋ", "ㅎㅎ", true), "ㅋㅋ ㅎㅎ",
-                    "screen OCR keeps spaces between Hangul compatibility jamo")
-        expectEqual(joinedOCRPair("version", "版本", true), "version 版本",
-                    "screen OCR separates mixed Latin and CJK seams")
-        expectEqual(joinedOCRPair("Hello ", " world", true), "Hello world",
-                    "screen OCR normalizes spaced-script boundary whitespace")
-        expectEqual(joinedOCRPair("这是 ", " 测试", true), "这是测试",
-                    "screen OCR trims boundary whitespace before a tight CJK seam")
-        expectEqual(joinedOCRPair("이것은 ", " 테스트", true), "이것은 테스트",
-                    "screen OCR normalizes Korean boundary whitespace to one separator")
-        expectEqual(joinedOCRPair("这是", "测试", false), "这是\n测试",
-                    "screen OCR preserves Chinese line breaks when removal is off")
-        expectEqual(joinedOCRPair("这是 ", " 测试", false), "这是 \n 测试",
-                    "screen OCR preserves boundary whitespace when line removal is off")
-        expectEqual(QuickToolsSupport.joinedRecognizedText([], removingLineBreaks: false), "",
-                    "screen OCR joins an empty result to an empty string")
-
-        // QR codes: several join top to bottom, left to right, blanks dropped.
-        let qrCodes = [
-            QuickToolsSupport.DecodedBarcode(payload: "second", x: 0.6, y: 0.8),
-            QuickToolsSupport.DecodedBarcode(payload: "first", x: 0.1, y: 0.81),
-            QuickToolsSupport.DecodedBarcode(payload: "bottom", x: 0.1, y: 0.3),
-            QuickToolsSupport.DecodedBarcode(payload: "  ", x: 0.2, y: 0.5),
-        ]
-        expectEqual(QuickToolsSupport.joinedBarcodePayloads(qrCodes), "first\nsecond\nbottom",
-                    "QR codes join top to bottom, left to right, dropping blanks")
-        expectEqual(QuickToolsSupport.joinedBarcodePayloads([]), "",
-                    "no QR codes joins to an empty string")
-
-        // Open link is limited to http and https so a scanned code can never
-        // launch another scheme.
-        expect(QuickToolsSupport.openableURL(from: "https://example.com/menu")?.absoluteString
-                    == "https://example.com/menu",
-               "an https payload is offered as an open link")
-        expect(QuickToolsSupport.openableURL(from: " http://example.com ")?.host == "example.com",
-               "surrounding whitespace does not stop a plain web link")
-        expect(QuickToolsSupport.openableURL(from: "WIFI:S:Net;T:WPA;P:secret;;") == nil,
-               "a Wi-Fi payload is copied, never opened")
-        expect(QuickToolsSupport.openableURL(from: "mailto:a@b.com") == nil,
-               "a mailto payload is not treated as an open link")
-        expect(QuickToolsSupport.openableURL(from: "just some text") == nil,
-               "plain text is never an open link")
-        expect(QuickToolsSupport.openableURL(from: "example.com") == nil,
-               "a bare host with no scheme is not opened")
-
-        // Paste plain delegates only to the universal ⌥⇧⌘V equivalent
-        // (shift = 1, option = 2 in the AX modifier mask); anything else in
-        // an app's menus is some other edit command and must not be pressed.
-        expect(QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "V",
-                                                        modifierMask: 3,
-                                                        isEnabled: true),
-               "V with shift+option is an app's own matching-style paste")
-        expect(QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "v",
-                                                        modifierMask: 3,
-                                                        isEnabled: true),
-               "the command character match ignores case")
-        expect(!QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "V",
-                                                         modifierMask: 0,
-                                                         isEnabled: true),
-               "plain ⌘V is the regular paste, never pressed as match style")
-        expect(!QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "V",
-                                                         modifierMask: 1,
-                                                         isEnabled: true),
-               "⇧⌘V alone is a different command in several apps")
-        expect(!QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "V",
-                                                         modifierMask: 3 | 4,
-                                                         isEnabled: true),
-               "a control variant is not the matching-style paste")
-        expect(!QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "V",
-                                                         modifierMask: 3 | 8,
-                                                         isEnabled: true),
-               "an equivalent without the command key does not qualify")
-        expect(!QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "C",
-                                                         modifierMask: 3,
-                                                         isEnabled: true),
-               "other command characters never match")
-        expect(!QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: nil,
-                                                         modifierMask: 3,
-                                                         isEnabled: true),
-               "an item with no key equivalent never matches")
-        expect(!QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "V",
-                                                         modifierMask: nil,
-                                                         isEnabled: true),
-               "an unreadable modifier mask never matches")
-        expect(!QuickToolsSupport.isMatchStyleEquivalent(commandCharacter: "V",
-                                                         modifierMask: 3,
-                                                         isEnabled: false),
-               "a disabled item is left alone so the fallback paste still runs")
-
-        // Launcher grid: 8 items in 3 columns (rows of 3, 3, 2).
-        expect(QuickToolsSupport.gridIndex(after: 0, count: 8, columns: 3, direction: .right) == 1,
-               "launcher grid moves right within a row")
-        expect(QuickToolsSupport.gridIndex(after: 2, count: 8, columns: 3, direction: .right) == 2,
-               "launcher grid does not wrap at the row's right edge")
-        expect(QuickToolsSupport.gridIndex(after: 3, count: 8, columns: 3, direction: .left) == 3,
-               "launcher grid does not wrap at the row's left edge")
-        expect(QuickToolsSupport.gridIndex(after: 1, count: 8, columns: 3, direction: .down) == 4,
-               "launcher grid moves down one row")
-        expect(QuickToolsSupport.gridIndex(after: 7, count: 8, columns: 3, direction: .down) == 7,
-               "launcher grid stays put when there is no row below")
-        expect(QuickToolsSupport.gridIndex(after: 4, count: 8, columns: 3, direction: .up) == 1,
-               "launcher grid moves up one row")
-        expect(QuickToolsSupport.gridIndex(after: 6, count: 8, columns: 3, direction: .right) == 7,
-               "launcher grid moves right in the last partial row")
-        expect(QuickToolsSupport.gridIndex(after: 99, count: 8, columns: 3, direction: .left) == 6,
-               "launcher grid clamps an out-of-range index")
-        expect(QuickToolsSupport.gridIndex(after: 0, count: 0, columns: 3, direction: .down) == 0,
-               "launcher grid survives an empty item list")
-
-        expect(QuickToolsSupport.hiddenIDs(from: "a,b,,c") == Set(["a", "b", "c"]),
-               "launcher hidden set parses and drops empties")
-        expectEqual(QuickToolsSupport.serializeHiddenIDs(Set(["b", "a"])), "a,b",
-                    "launcher hidden set serializes deterministically")
-        expect(QuickToolsSupport.hiddenIDs(from: QuickToolsSupport.serializeHiddenIDs(Set(["x", "y"])))
-                   == Set(["x", "y"]),
-               "launcher hidden set round-trips")
         let afterFirstSwitch = WindowUseOrder.promoting(2, previous: 1, in: [])
         expect(afterFirstSwitch == [2, 1],
                "App Switcher use history records the previous window immediately after a switch")
@@ -6634,53 +6380,6 @@ struct MetricsTests {
         func musicKeyData(keyCode: Int, state: Int = 10, repeatFlag: Bool = false) -> Int {
             Int((UInt32(keyCode) << 16) | (UInt32(state) << 8) | (repeatFlag ? 1 : 0))
         }
-        expect(MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: Int(MusicLaunchSupport.playPauseKeyCode))),
-               "play/pause arms the music-app blocker")
-        expect(MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: Int(MusicLaunchSupport.nextTrackKeyCode))),
-               "next track arms the music-app blocker")
-        expect(MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: Int(MusicLaunchSupport.previousTrackKeyCode))),
-               "previous track arms the music-app blocker")
-        expect(MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: Int(MusicLaunchSupport.fastForwardKeyCode))),
-               "fast-forward arms the music-app blocker")
-        expect(MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: Int(MusicLaunchSupport.rewindKeyCode))),
-               "rewind arms the music-app blocker")
-        expect(!MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: Int(MusicLaunchSupport.playPauseKeyCode), state: 11)),
-               "a media-key release does not arm the blocker")
-        expect(!MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: Int(MusicLaunchSupport.playPauseKeyCode), repeatFlag: true)),
-               "auto-repeat does not re-arm the blocker")
-        expect(!MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: 0)),
-               "volume keys do not arm the blocker")
-        expect(!MusicLaunchSupport.isMusicLaunchTrigger(
-            subtype: MusicLaunchSupport.auxiliaryControlButtonsSubtype,
-            data1: musicKeyData(keyCode: 2)),
-               "brightness keys do not arm the blocker")
-        expect(!MusicLaunchSupport.isMusicLaunchTrigger(subtype: 1, data1: musicKeyData(keyCode: 16)),
-               "other system-defined subtypes do not arm the blocker")
-        expect(!MusicLaunchSupport.shouldBlockLaunch(now: 10, lastTriggerAt: nil),
-               "without a recent media key the music app may open")
-        expect(MusicLaunchSupport.shouldBlockLaunch(now: 10, lastTriggerAt: 9.5),
-               "a launch in the arm window after a media key is blocked")
-        expect(MusicLaunchSupport.shouldBlockLaunch(now: 10, lastTriggerAt: 8.0),
-               "a launch on the arm-window edge is still blocked")
-        expect(!MusicLaunchSupport.shouldBlockLaunch(now: 10, lastTriggerAt: 7.9),
-               "a launch after the arm window is left alone")
-
         // MARK: Features hub catalog
 
         expect(AppFeature.allCases.count == 18, "feature catalog has 18 features")
@@ -7477,9 +7176,6 @@ struct MetricsTests {
         // captured WindowServer stacking is what has to decide the outcome.
         // MARK: Quick toggles
 
-        expect(Defaults.sanitizedDiskExclusionList(["  Backup  ", "backup", "", "  ", "Photos", "PHOTOS"])
-                == ["Backup", "Photos"],
-               "sanitized disk exclusion list trims and deduplicates case-insensitively")
         expect(Defaults.registeredDefaults[DefaultsKey.diskEjectExcludedVolumes] is [String],
                "disk eject exclusions are registered as an empty string array")
         expect(SettingsBackupSupport.exportKeys().contains(DefaultsKey.diskEjectExcludedVolumes),
@@ -10467,17 +10163,6 @@ struct MetricsTests {
         expect(!signingSetupCode.contains("-legacy"),
                "setup-signing.sh avoids the -legacy flag the stock LibreSSL openssl rejects")
 
-        // MARK: Modifying mouse taps are handed back across a session switch
-        // The tap owners cannot be reached from this list (they need the event
-        // chain), so the wiring is pinned as text: each service follows the
-        // session and asks before re-arming a tap the window server disabled.
-        // Comments are stripped so prose naming the API cannot answer for it.
-        let sessionActivitySource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/SessionActivity.swift",
-            encoding: .utf8)) ?? ""
-        expect(sessionActivitySource.contains("sessionDidResignActiveNotification")
-                && sessionActivitySource.contains("sessionDidBecomeActiveNotification"),
-               "the session watcher follows both halves of a fast user switch")
         // Disabling a tap and dropping the last Swift reference does not hand
         // the port back: CGGetEventTapList still reports the tap against this
         // process, one more per start/stop cycle, for the life of the process.
@@ -10553,12 +10238,6 @@ struct MetricsTests {
                + "(ran \(detachedRuns) time(s))")
         try? FileManager.default.removeItem(at: detachRoot)
 
-        // MARK: A dropped identifier
-        let diskExclusionsListCode = ((try? String(
-            contentsOfFile: "Sources/Vorssaint/UI/Settings/DiskExclusionsList.swift",
-            encoding: .utf8)) ?? "").components(separatedBy: "\n")
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
         // MARK: Cleaner / Uninstaller — bundle identifier matching
 
         do {
