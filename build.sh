@@ -271,7 +271,6 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Finder/CutPasteProgressSupport.swift \
         Sources/Vorssaint/Services/WindowServerSupport.swift \
         Sources/Vorssaint/Core/ClipboardIgnoredAppsStrings.swift \
-        Sources/Vorssaint/Core/DiskExclusionStrings.swift \
         Sources/Vorssaint/Services/SpotlightNamesSupport.swift \
         Sources/Vorssaint/Services/QuickTools/ScreenshotCapturePolicy.swift \
         Sources/Vorssaint/Services/QuickTools/ScreenshotSupport.swift \

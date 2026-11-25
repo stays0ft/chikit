@@ -13,7 +13,6 @@ struct NotchMediaFeatureStrings {
     let idlePillCaption: String
     let nowPlayingFallback: String
     let openAppFormat: String
-    let noSourceCaption: String
 }
 
 extension FeatureStrings {
@@ -45,8 +44,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "Show a slim pill while something is playing",
         idlePillCaption: "Off hides the widget completely until you hover or click near it",
         nowPlayingFallback: "Now Playing",
-        openAppFormat: "Open %@",
-        noSourceCaption: "Nothing is playing"
+        openAppFormat: "Open %@"
     )
 
     static let ptBR = NotchMediaFeatureStrings(
@@ -57,8 +55,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "Mostrar uma pílula fina enquanto algo está tocando",
         idlePillCaption: "Desativado esconde o widget completamente até você passar o mouse ou clicar perto dele",
         nowPlayingFallback: "Tocando agora",
-        openAppFormat: "Abrir %@",
-        noSourceCaption: "Nada está tocando"
+        openAppFormat: "Abrir %@"
     )
 
     static let tr = NotchMediaFeatureStrings(
@@ -69,8 +66,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "Bir şeyler çalarken ince bir hap göster",
         idlePillCaption: "Kapalıyken, üzerine gelene veya tıklayana kadar widget tamamen gizlenir",
         nowPlayingFallback: "Şu An Çalıyor",
-        openAppFormat: "%@ uygulamasını aç",
-        noSourceCaption: "Hiçbir şey çalmıyor"
+        openAppFormat: "%@ uygulamasını aç"
     )
 
     static let ru = NotchMediaFeatureStrings(
@@ -81,8 +77,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "Показывать тонкую капсулу во время воспроизведения",
         idlePillCaption: "При выключении виджет полностью скрыт, пока вы не наведёте курсор или не нажмёте рядом",
         nowPlayingFallback: "Сейчас играет",
-        openAppFormat: "Открыть %@",
-        noSourceCaption: "Ничего не воспроизводится"
+        openAppFormat: "Открыть %@"
     )
 
     static let es = NotchMediaFeatureStrings(
@@ -93,8 +88,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "Mostrar una píldora fina mientras algo se reproduce",
         idlePillCaption: "Desactivado oculta el widget por completo hasta que pases el cursor o hagas clic cerca",
         nowPlayingFallback: "Reproduciendo",
-        openAppFormat: "Abrir %@",
-        noSourceCaption: "No se está reproduciendo nada"
+        openAppFormat: "Abrir %@"
     )
 
     static let de = NotchMediaFeatureStrings(
@@ -105,8 +99,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "Schmale Pille anzeigen, während etwas abgespielt wird",
         idlePillCaption: "Aus blendet das Widget vollständig aus, bis du in die Nähe fährst oder klickst",
         nowPlayingFallback: "Läuft gerade",
-        openAppFormat: "%@ öffnen",
-        noSourceCaption: "Es wird nichts wiedergegeben"
+        openAppFormat: "%@ öffnen"
     )
 
     static let fr = NotchMediaFeatureStrings(
@@ -117,8 +110,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "Afficher une fine pilule pendant la lecture",
         idlePillCaption: "Désactivé masque entièrement le widget jusqu'à ce que vous surviez ou cliquiez à proximité",
         nowPlayingFallback: "Lecture en cours",
-        openAppFormat: "Ouvrir %@",
-        noSourceCaption: "Rien n'est en cours de lecture"
+        openAppFormat: "Ouvrir %@"
     )
 
     static let it = NotchMediaFeatureStrings(
@@ -129,8 +121,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "Mostra una pillola sottile durante la riproduzione",
         idlePillCaption: "Disattivato nasconde completamente il widget finché non passi con il cursore o clicchi nelle vicinanze",
         nowPlayingFallback: "In riproduzione",
-        openAppFormat: "Apri %@",
-        noSourceCaption: "Non è in riproduzione nulla"
+        openAppFormat: "Apri %@"
     )
 
     static let ja = NotchMediaFeatureStrings(
@@ -141,8 +132,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "再生中は細いピルを表示",
         idlePillCaption: "オフにすると、近くにカーソルを合わせるかクリックするまでウィジェットは完全に非表示になります",
         nowPlayingFallback: "再生中",
-        openAppFormat: "%@ を開く",
-        noSourceCaption: "再生中のものはありません"
+        openAppFormat: "%@ を開く"
     )
 
     static let ko = NotchMediaFeatureStrings(
@@ -153,8 +143,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "재생 중일 때 얇은 알약 표시",
         idlePillCaption: "끄면 근처에 마우스를 올리거나 클릭할 때까지 위젯이 완전히 숨겨집니다",
         nowPlayingFallback: "현재 재생 중",
-        openAppFormat: "%@ 열기",
-        noSourceCaption: "재생 중인 항목이 없습니다"
+        openAppFormat: "%@ 열기"
     )
 
     static let zhHans = NotchMediaFeatureStrings(
@@ -165,8 +154,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "播放时显示纤细的药丸提示",
         idlePillCaption: "关闭后小组件将完全隐藏，直到你将指针移近或点击附近区域",
         nowPlayingFallback: "正在播放",
-        openAppFormat: "打开 %@",
-        noSourceCaption: "当前没有播放内容"
+        openAppFormat: "打开 %@"
     )
 
     static let zhTW = NotchMediaFeatureStrings(
@@ -177,8 +165,7 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "播放時顯示纖細的藥丸提示",
         idlePillCaption: "關閉後小工具將完全隱藏，直到你將指標移近或點按附近區域",
         nowPlayingFallback: "正在播放",
-        openAppFormat: "打開 %@",
-        noSourceCaption: "目前沒有播放內容"
+        openAppFormat: "打開 %@"
     )
 
     static let zhHK = NotchMediaFeatureStrings(
@@ -189,7 +176,6 @@ extension NotchMediaFeatureStrings {
         idlePillToggleLabel: "播放時顯示纖細的藥丸提示",
         idlePillCaption: "關閉後小工具將完全隱藏，直到你將指標移近或點按附近區域",
         nowPlayingFallback: "正在播放",
-        openAppFormat: "打開 %@",
-        noSourceCaption: "目前沒有播放內容"
+        openAppFormat: "打開 %@"
     )
 }

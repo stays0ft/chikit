@@ -137,9 +137,6 @@ extension ClipboardFeatureStrings {
         showInPanel: "패널에 표시",
         shortcut: "기록 단축키",
         shortcutCaption: "검색, 고정 항목 및 이전 앱에 붙여넣기 위한 ⌘1~⌘9 단축키가 있는 빠른 윈도우를 엽니다.",
-        shortcutHint: "행을 클릭하면 이전 앱에 붙여넣습니다. ⌘-클릭으로 여러 항목을 선택하고, ⌘C로 붙여넣지 않고 복사합니다.",
-        clickRowShortcut: "행 클릭",
-        commandClickShortcut: "⌘ 클릭",
         pinned: "고정됨",
         recent: "최근 항목",
         pin: "고정",
@@ -154,7 +151,6 @@ extension ClipboardFeatureStrings {
         delete: "항목 삭제",
         selectMultiple: "묶음에 추가",
         unselectMultiple: "묶음에서 제거",
-        selectShortcutAction: "선택",
         pasteSelectedFormat: "%d개 붙여넣기",
         copySelectedFormat: "%d개 복사",
         clearSelection: "선택 해제",
@@ -167,8 +163,6 @@ extension ClipboardFeatureStrings {
         includeImagesFilesCaption: "이미지는 기록에 추가되고 파일은 위치 링크로 저장됩니다. 텍스트 항목처럼 고정하고 붙여넣을 수 있습니다.",
         imageEntryLabel: "이미지",
         fileCountFormat: "파일 %d개",
-        pasteImageAsFile: "복사한 이미지를 파일로 붙여넣기",
-        pasteImageAsFileCaption: "Finder가 활성화되어 있을 때 ⌘V를 누르면 복사한 이미지가 현재 폴더에 PNG로 저장됩니다.",
         previewLabel: "미리보기",
         edit: "편집",
         cancel: "취소",
@@ -207,8 +201,6 @@ extension WindowLayoutFeatureStrings {
         noRestore: "복원할 이전 정렬이 없습니다.",
         target: "활성 윈도우",
         halves: "2등분",
-        thirds: "3등분",
-        sixths: "6등분",
         corners: "모서리",
         other: "동작",
         leftHalf: "왼쪽",
@@ -242,16 +234,8 @@ extension WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "데스크탑 및 Dock 열기",
         edgeSnapWaitingForSystem: "Chikit에서 켜졌습니다. macOS 타일링을 끄면 바로 작동합니다.",
         marginMaximize: "여백 두고 최대화",
-        gapsSection: "간격",
-        gapsCaption: "스냅된 윈도우 사이, 그리고 윈도우와 화면 가장자리 사이의 간격입니다.",
         windowGap: "윈도우 간격",
-        screenGap: "화면 간격",
-        gapNone: "없음",
-        gapTiny: "아주 작게",
-        gapSmall: "작게",
-        gapMedium: "중간",
-        gapLarge: "크게",
-        gapExtraLarge: "아주 크게"
+        screenGap: "화면 간격"
     )
 }
 
@@ -421,9 +405,6 @@ struct ClipboardFeatureStrings {
     let showInPanel: String
     let shortcut: String
     let shortcutCaption: String
-    let shortcutHint: String
-    let clickRowShortcut: String
-    let commandClickShortcut: String
     let pinned: String
     let recent: String
     let pin: String
@@ -438,7 +419,6 @@ struct ClipboardFeatureStrings {
     let delete: String
     let selectMultiple: String
     let unselectMultiple: String
-    let selectShortcutAction: String
     let pasteSelectedFormat: String
     let copySelectedFormat: String
     let clearSelection: String
@@ -451,8 +431,6 @@ struct ClipboardFeatureStrings {
     let includeImagesFilesCaption: String
     let imageEntryLabel: String
     let fileCountFormat: String
-    let pasteImageAsFile: String
-    let pasteImageAsFileCaption: String
     let previewLabel: String
     let edit: String
     let cancel: String
@@ -477,9 +455,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "Show in panel",
         shortcut: "History shortcut",
         shortcutCaption: "Opens a quick window with search, pinned items and ⌘1 to ⌘9 shortcuts for pasting into the previous app.",
-        shortcutHint: "Click a row to paste it into the previous app. ⌘-click selects several; ⌘C copies without pasting.",
-        clickRowShortcut: "Click row",
-        commandClickShortcut: "⌘ Click",
         pinned: "Pinned",
         recent: "Recent",
         pin: "Pin",
@@ -494,7 +469,6 @@ struct ClipboardFeatureStrings {
         delete: "Delete item",
         selectMultiple: "Add to pile",
         unselectMultiple: "Remove from pile",
-        selectShortcutAction: "Select",
         pasteSelectedFormat: "Paste %d",
         copySelectedFormat: "Copy %d",
         clearSelection: "Clear selection",
@@ -507,8 +481,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "Images join the history and files are remembered as links to their location. Pin and paste them like any text item.",
         imageEntryLabel: "Image",
         fileCountFormat: "%d files",
-        pasteImageAsFile: "Paste copied images as files",
-        pasteImageAsFileCaption: "When Finder is active, ⌘V saves a copied image as a PNG in the current folder.",
         previewLabel: "Preview",
         edit: "Edit",
         cancel: "Cancel",
@@ -534,9 +506,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "Mostrar no painel",
         shortcut: "Atalho do histórico",
         shortcutCaption: "Abre uma janela rápida com busca, favoritos e atalhos ⌘1 a ⌘9 para colar no app anterior.",
-        shortcutHint: "Clique numa linha para colar no app anterior. ⌘+clique seleciona várias; ⌘C copia sem colar.",
-        clickRowShortcut: "Clique na linha",
-        commandClickShortcut: "⌘ Clique",
         pinned: "Fixados",
         recent: "Recentes",
         pin: "Fixar",
@@ -551,7 +520,6 @@ struct ClipboardFeatureStrings {
         delete: "Apagar item",
         selectMultiple: "Marcar para pilha",
         unselectMultiple: "Remover da pilha",
-        selectShortcutAction: "Selecionar",
         pasteSelectedFormat: "Colar %d",
         copySelectedFormat: "Copiar %d",
         clearSelection: "Limpar seleção",
@@ -564,8 +532,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "Imagens entram no histórico e arquivos são lembrados como links para o local deles. Fixe e cole como qualquer texto.",
         imageEntryLabel: "Imagem",
         fileCountFormat: "%d arquivos",
-        pasteImageAsFile: "Colar imagens copiadas como arquivos",
-        pasteImageAsFileCaption: "Com o Finder ativo, ⌘V salva uma imagem copiada como PNG na pasta atual.",
         previewLabel: "Prévia",
         edit: "Editar",
         cancel: "Cancelar",
@@ -591,9 +557,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "Panelde göster",
         shortcut: "Geçmiş kısayolu",
         shortcutCaption: "Arama, sabitlenmiş öğeler ve önceki uygulamaya yapıştırmak için ⌘1 - ⌘9 kısayolları olan hızlı bir pencere açar.",
-        shortcutHint: "Bir satıra tıklayarak önceki uygulamaya yapıştırın. ⌘-tıklama birden çok öğe seçer; ⌘C yapıştırmadan kopyalar.",
-        clickRowShortcut: "Satıra tıkla",
-        commandClickShortcut: "⌘ Tıkla",
         pinned: "Sabitlenenler",
         recent: "Son",
         pin: "Sabitle",
@@ -608,7 +571,6 @@ struct ClipboardFeatureStrings {
         delete: "Öğeyi sil",
         selectMultiple: "Yığına ekle",
         unselectMultiple: "Yığından çıkar",
-        selectShortcutAction: "Seç",
         pasteSelectedFormat: "%d öğeyi yapıştır",
         copySelectedFormat: "%d öğeyi kopyala",
         clearSelection: "Seçimi temizle",
@@ -621,8 +583,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "Görseller geçmişe eklenir, dosyalar konumlarına bağlantı olarak hatırlanır. Metin gibi sabitle ve yapıştır.",
         imageEntryLabel: "Görsel",
         fileCountFormat: "%d dosya",
-        pasteImageAsFile: "Kopyalanan görselleri dosya olarak yapıştır",
-        pasteImageAsFileCaption: "Finder etkinken ⌘V, kopyalanan görseli geçerli klasöre PNG olarak kaydeder.",
         previewLabel: "Önizleme",
         edit: "Düzenle",
         cancel: "İptal",
@@ -648,9 +608,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "Показывать в панели",
         shortcut: "Горячая клавиша истории",
         shortcutCaption: "Открывает быстрое окно с поиском, закреплёнными элементами и сочетаниями ⌘1–⌘9 для вставки в предыдущее приложение.",
-        shortcutHint: "Щёлкните по строке, чтобы вставить её в предыдущее приложение. ⌘-клик выбирает несколько; ⌘C копирует без вставки.",
-        clickRowShortcut: "Щелчок по строке",
-        commandClickShortcut: "⌘ Клик",
         pinned: "Закреплённые",
         recent: "Недавние",
         pin: "Закрепить",
@@ -665,7 +622,6 @@ struct ClipboardFeatureStrings {
         delete: "Удалить элемент",
         selectMultiple: "Добавить в стопку",
         unselectMultiple: "Убрать из стопки",
-        selectShortcutAction: "Выбрать",
         pasteSelectedFormat: "Вставить: %d",
         copySelectedFormat: "Копировать: %d",
         clearSelection: "Снять выделение",
@@ -678,8 +634,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "Изображения попадают в историю, а файлы запоминаются как ссылки на их расположение. Закрепляйте и вставляйте их как текст.",
         imageEntryLabel: "Изображение",
         fileCountFormat: "Файлов: %d",
-        pasteImageAsFile: "Вставлять скопированные изображения как файлы",
-        pasteImageAsFileCaption: "Когда Finder активен, ⌘V сохраняет скопированное изображение как PNG в текущей папке.",
         previewLabel: "Просмотр",
         edit: "Редактировать",
         cancel: "Отмена",
@@ -705,9 +659,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "Mostrar en el panel",
         shortcut: "Atajo del historial",
         shortcutCaption: "Abre una ventana rápida con búsqueda, elementos fijados y atajos ⌘1 a ⌘9 para pegar en la app anterior.",
-        shortcutHint: "Haz clic en una fila para pegarla en la app anterior. ⌘+clic selecciona varias; ⌘C copia sin pegar.",
-        clickRowShortcut: "Clic en fila",
-        commandClickShortcut: "⌘ Clic",
         pinned: "Fijados",
         recent: "Recientes",
         pin: "Fijar",
@@ -722,7 +673,6 @@ struct ClipboardFeatureStrings {
         delete: "Eliminar elemento",
         selectMultiple: "Añadir a la pila",
         unselectMultiple: "Quitar de la pila",
-        selectShortcutAction: "Seleccionar",
         pasteSelectedFormat: "Pegar %d",
         copySelectedFormat: "Copiar %d",
         clearSelection: "Limpiar selección",
@@ -735,8 +685,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "Las imágenes entran en el historial y los archivos se recuerdan como enlaces a su ubicación. Fíjalos y pégalos como cualquier texto.",
         imageEntryLabel: "Imagen",
         fileCountFormat: "%d archivos",
-        pasteImageAsFile: "Pegar imágenes copiadas como archivos",
-        pasteImageAsFileCaption: "Con Finder activo, ⌘V guarda una imagen copiada como PNG en la carpeta actual.",
         previewLabel: "Vista previa",
         edit: "Editar",
         cancel: "Cancelar",
@@ -762,9 +710,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "Im Panel anzeigen",
         shortcut: "Verlaufskürzel",
         shortcutCaption: "Öffnet ein Schnellfenster mit Suche, angehefteten Einträgen und ⌘1 bis ⌘9 zum Einfügen in die vorherige App.",
-        shortcutHint: "Klicke auf eine Zeile, um sie in die vorherige App einzufügen. ⌘-Klick wählt mehrere aus; ⌘C kopiert ohne Einfügen.",
-        clickRowShortcut: "Zeile klicken",
-        commandClickShortcut: "⌘ Klick",
         pinned: "Angeheftet",
         recent: "Zuletzt",
         pin: "Anheften",
@@ -779,7 +724,6 @@ struct ClipboardFeatureStrings {
         delete: "Eintrag löschen",
         selectMultiple: "Zum Stapel hinzufügen",
         unselectMultiple: "Aus dem Stapel entfernen",
-        selectShortcutAction: "Auswählen",
         pasteSelectedFormat: "%d einfügen",
         copySelectedFormat: "%d kopieren",
         clearSelection: "Auswahl löschen",
@@ -792,8 +736,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "Bilder wandern in den Verlauf, Dateien werden als Verweise auf ihren Ort gemerkt. Anheften und Einsetzen wie bei Text.",
         imageEntryLabel: "Bild",
         fileCountFormat: "%d Dateien",
-        pasteImageAsFile: "Kopierte Bilder als Dateien einsetzen",
-        pasteImageAsFileCaption: "Wenn Finder aktiv ist, speichert ⌘V ein kopiertes Bild als PNG im aktuellen Ordner.",
         previewLabel: "Vorschau",
         edit: "Bearbeiten",
         cancel: "Abbrechen",
@@ -819,9 +761,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "Afficher dans le panneau",
         shortcut: "Raccourci de l'historique",
         shortcutCaption: "Ouvre une fenêtre rapide avec recherche, éléments épinglés et raccourcis ⌘1 à ⌘9 pour coller dans l'app précédente.",
-        shortcutHint: "Cliquez sur une ligne pour la coller dans l'app précédente. ⌘+clic en sélectionne plusieurs ; ⌘C copie sans coller.",
-        clickRowShortcut: "Cliquer la ligne",
-        commandClickShortcut: "⌘ Clic",
         pinned: "Épinglés",
         recent: "Récents",
         pin: "Épingler",
@@ -836,7 +775,6 @@ struct ClipboardFeatureStrings {
         delete: "Supprimer l'élément",
         selectMultiple: "Ajouter à la pile",
         unselectMultiple: "Retirer de la pile",
-        selectShortcutAction: "Sélectionner",
         pasteSelectedFormat: "Coller %d",
         copySelectedFormat: "Copier %d",
         clearSelection: "Effacer la sélection",
@@ -849,8 +787,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "Les images rejoignent l'historique et les fichiers sont mémorisés comme des liens vers leur emplacement. Épinglez-les et collez-les comme du texte.",
         imageEntryLabel: "Image",
         fileCountFormat: "%d fichiers",
-        pasteImageAsFile: "Coller les images copiées comme fichiers",
-        pasteImageAsFileCaption: "Lorsque Finder est actif, ⌘V enregistre l’image copiée au format PNG dans le dossier actuel.",
         previewLabel: "Aperçu",
         edit: "Modifier",
         cancel: "Annuler",
@@ -876,9 +812,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "Mostra nel pannello",
         shortcut: "Scorciatoia cronologia",
         shortcutCaption: "Apre una finestra rapida con ricerca, elementi fissati e scorciatoie ⌘1 a ⌘9 per incollare nell'app precedente.",
-        shortcutHint: "Fai clic su una riga per incollarla nell'app precedente. ⌘+clic ne seleziona diverse; ⌘C copia senza incollare.",
-        clickRowShortcut: "Clic sulla riga",
-        commandClickShortcut: "⌘ Clic",
         pinned: "Fissati",
         recent: "Recenti",
         pin: "Fissa",
@@ -893,7 +826,6 @@ struct ClipboardFeatureStrings {
         delete: "Elimina elemento",
         selectMultiple: "Aggiungi alla pila",
         unselectMultiple: "Rimuovi dalla pila",
-        selectShortcutAction: "Seleziona",
         pasteSelectedFormat: "Incolla %d",
         copySelectedFormat: "Copia %d",
         clearSelection: "Cancella selezione",
@@ -906,8 +838,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "Le immagini entrano nella cronologia e i file vengono ricordati come collegamenti alla loro posizione. Fissali e incollali come qualsiasi testo.",
         imageEntryLabel: "Immagine",
         fileCountFormat: "%d file",
-        pasteImageAsFile: "Incolla le immagini copiate come file",
-        pasteImageAsFileCaption: "Quando Finder è attivo, ⌘V salva un’immagine copiata come PNG nella cartella attuale.",
         previewLabel: "Anteprima",
         edit: "Modifica",
         cancel: "Annulla",
@@ -933,9 +863,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "パネルに表示",
         shortcut: "履歴ショートカット",
         shortcutCaption: "検索、固定項目、前のアプリへ貼り付ける ⌘1 から ⌘9 のショートカットを備えたクイックウインドウを開きます。",
-        shortcutHint: "行をクリックすると前のアプリに貼り付けます。⌘クリックで複数選択、⌘C は貼り付けずにコピーします。",
-        clickRowShortcut: "行をクリック",
-        commandClickShortcut: "⌘ クリック",
         pinned: "固定済み",
         recent: "最近",
         pin: "固定",
@@ -950,7 +877,6 @@ struct ClipboardFeatureStrings {
         delete: "項目を削除",
         selectMultiple: "束に追加",
         unselectMultiple: "束から削除",
-        selectShortcutAction: "選択",
         pasteSelectedFormat: "%d件を貼り付け",
         copySelectedFormat: "%d件をコピー",
         clearSelection: "選択を解除",
@@ -963,8 +889,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "画像は履歴に入り、ファイルは場所へのリンクとして記憶されます。テキストと同じようにピン留めやペーストができます。",
         imageEntryLabel: "画像",
         fileCountFormat: "%d個のファイル",
-        pasteImageAsFile: "コピーした画像をファイルとしてペースト",
-        pasteImageAsFileCaption: "Finder がアクティブなとき、⌘V でコピーした画像を現在のフォルダに PNG として保存します。",
         previewLabel: "プレビュー",
         edit: "編集",
         cancel: "キャンセル",
@@ -990,9 +914,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "在面板中显示",
         shortcut: "历史快捷键",
         shortcutCaption: "打开快速窗口，支持搜索、固定项目，以及用 ⌘1 到 ⌘9 粘贴到上一个 App。",
-        shortcutHint: "点击整行即可粘贴到上一个 App。⌘+点击可选择多项；⌘C 仅拷贝不粘贴。",
-        clickRowShortcut: "点击整行",
-        commandClickShortcut: "⌘ 点击",
         pinned: "已固定",
         recent: "最近",
         pin: "固定",
@@ -1007,7 +928,6 @@ struct ClipboardFeatureStrings {
         delete: "删除项目",
         selectMultiple: "加入堆叠",
         unselectMultiple: "从堆叠移除",
-        selectShortcutAction: "选择",
         pasteSelectedFormat: "粘贴 %d 项",
         copySelectedFormat: "拷贝 %d 项",
         clearSelection: "清除选择",
@@ -1020,8 +940,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "图片会进入历史记录，文件会以其位置链接的形式被记住。可以像文本一样固定和粘贴。",
         imageEntryLabel: "图片",
         fileCountFormat: "%d 个文件",
-        pasteImageAsFile: "将拷贝的图片粘贴为文件",
-        pasteImageAsFileCaption: "Finder 处于活动状态时，按 ⌘V 会将拷贝的图片以 PNG 格式存储到当前文件夹。",
         previewLabel: "预览",
         edit: "编辑",
         cancel: "取消",
@@ -1047,9 +965,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "在面板中顯示",
         shortcut: "剪貼簿紀錄快速鍵",
         shortcutCaption: "開啟快速視窗，可搜尋、釘選項目，並使用 ⌘1 到 ⌘9 貼到上一個 App。",
-        shortcutHint: "點選整列即可貼到上一個 App。⌘+點選可選取多個項目；⌘C 只複製不貼上。",
-        clickRowShortcut: "點選整列",
-        commandClickShortcut: "⌘ 點選",
         pinned: "已釘選",
         recent: "最近",
         pin: "釘選",
@@ -1064,7 +979,6 @@ struct ClipboardFeatureStrings {
         delete: "刪除項目",
         selectMultiple: "加入堆疊",
         unselectMultiple: "從堆疊移除",
-        selectShortcutAction: "選取",
         pasteSelectedFormat: "貼上 %d 個",
         copySelectedFormat: "拷貝 %d 個",
         clearSelection: "清除選取項目",
@@ -1077,8 +991,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "圖片會進入歷史記錄，檔案會以其位置連結的形式被記住。可以像文字一樣固定和貼上。",
         imageEntryLabel: "圖片",
         fileCountFormat: "%d 個檔案",
-        pasteImageAsFile: "將複製的圖片貼上為檔案",
-        pasteImageAsFileCaption: "Finder 啟用時，按下 ⌘V 會將複製的圖片以 PNG 格式儲存到目前的資料夾。",
         previewLabel: "預覽",
         edit: "編輯",
         cancel: "取消",
@@ -1104,9 +1016,6 @@ struct ClipboardFeatureStrings {
         showInPanel: "在面板中顯示",
         shortcut: "剪貼簿記錄快捷鍵",
         shortcutCaption: "開啟快速視窗，可搜尋、釘選項目，並使用 ⌘1 至 ⌘9 貼到上一個 App。",
-        shortcutHint: "按一下整列即可貼到上一個 App。⌘+按一下可選取多個項目；⌘C 只複製不貼上。",
-        clickRowShortcut: "按一下整列",
-        commandClickShortcut: "⌘ 按一下",
         pinned: "已釘選",
         recent: "最近",
         pin: "釘選",
@@ -1121,7 +1030,6 @@ struct ClipboardFeatureStrings {
         delete: "刪除項目",
         selectMultiple: "加入堆疊",
         unselectMultiple: "從堆疊移除",
-        selectShortcutAction: "選取",
         pasteSelectedFormat: "貼上 %d 個",
         copySelectedFormat: "複製 %d 個",
         clearSelection: "清除所選項目",
@@ -1134,8 +1042,6 @@ struct ClipboardFeatureStrings {
         includeImagesFilesCaption: "圖片會加入歷史記錄，檔案會以其位置連結的形式被記住。可以像文字一樣固定和貼上。",
         imageEntryLabel: "圖片",
         fileCountFormat: "%d 個檔案",
-        pasteImageAsFile: "將複製的圖片貼上為檔案",
-        pasteImageAsFileCaption: "Finder 啟用時，按下 ⌘V 會將複製的圖片以 PNG 格式儲存到目前的資料夾。",
         previewLabel: "預覽",
         edit: "編輯",
         cancel: "取消",
@@ -1173,8 +1079,6 @@ struct WindowLayoutFeatureStrings {
     let noRestore: String
     let target: String
     let halves: String
-    let thirds: String
-    let sixths: String
     let corners: String
     let other: String
     let leftHalf: String
@@ -1208,16 +1112,8 @@ struct WindowLayoutFeatureStrings {
     let edgeSnapOpenSystemSettings: String
     let edgeSnapWaitingForSystem: String
     let marginMaximize: String
-    let gapsSection: String
-    let gapsCaption: String
     let windowGap: String
     let screenGap: String
-    let gapNone: String
-    let gapTiny: String
-    let gapSmall: String
-    let gapMedium: String
-    let gapLarge: String
-    let gapExtraLarge: String
 
     static let enUS = WindowLayoutFeatureStrings(
         title: "Window layout",
@@ -1242,8 +1138,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "No previous layout to restore.",
         target: "Active window",
         halves: "Halves",
-        thirds: "Thirds",
-        sixths: "Sixths",
         corners: "Corners",
         other: "Actions",
         leftHalf: "Left",
@@ -1277,16 +1171,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "Open Desktop & Dock",
         edgeSnapWaitingForSystem: "Enabled in Chikit. It starts working as soon as macOS tiling is off.",
         marginMaximize: "Maximize with Margin",
-        gapsSection: "Gaps",
-        gapsCaption: "Space between snapped windows, and between windows and the screen edge.",
         windowGap: "Window gap",
-        screenGap: "Screen gap",
-        gapNone: "None",
-        gapTiny: "Tiny",
-        gapSmall: "Small",
-        gapMedium: "Medium",
-        gapLarge: "Large",
-        gapExtraLarge: "Extra large"
+        screenGap: "Screen gap"
     )
 
     static let ptBR = WindowLayoutFeatureStrings(
@@ -1312,8 +1198,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "Nenhum layout anterior para restaurar.",
         target: "Janela ativa",
         halves: "Metades",
-        thirds: "Terços",
-        sixths: "Sextos",
         corners: "Cantos",
         other: "Ações",
         leftHalf: "Esquerda",
@@ -1347,16 +1231,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "Abrir Mesa e Dock",
         edgeSnapWaitingForSystem: "Ativado no Chikit. Começa a funcionar assim que o encaixe do macOS for desligado.",
         marginMaximize: "Maximizar com margem",
-        gapsSection: "Espaçamento",
-        gapsCaption: "Espaço entre janelas ajustadas e entre as janelas e a borda da tela.",
         windowGap: "Espaço entre janelas",
-        screenGap: "Espaço até a borda da tela",
-        gapNone: "Nenhum",
-        gapTiny: "Minúsculo",
-        gapSmall: "Pequeno",
-        gapMedium: "Médio",
-        gapLarge: "Grande",
-        gapExtraLarge: "Extragrande"
+        screenGap: "Espaço até a borda da tela"
     )
 
     static let tr = WindowLayoutFeatureStrings(
@@ -1382,8 +1258,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "Geri yüklenecek önceki yerleşim yok.",
         target: "Etkin pencere",
         halves: "Yarımlar",
-        thirds: "Üçlüler",
-        sixths: "Altıda birler",
         corners: "Köşeler",
         other: "Eylemler",
         leftHalf: "Sol",
@@ -1417,16 +1291,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "Masaüstü ve Dock’u Aç",
         edgeSnapWaitingForSystem: "Chikit’ta açık. macOS döşemesi kapanınca çalışmaya başlar.",
         marginMaximize: "Kenar boşluklu büyüt",
-        gapsSection: "Boşluklar",
-        gapsCaption: "Yaslanan pencereler arasındaki ve pencerelerle ekran kenarı arasındaki boşluk.",
         windowGap: "Pencere boşluğu",
-        screenGap: "Ekran boşluğu",
-        gapNone: "Yok",
-        gapTiny: "Çok küçük",
-        gapSmall: "Küçük",
-        gapMedium: "Orta",
-        gapLarge: "Büyük",
-        gapExtraLarge: "Çok büyük"
+        screenGap: "Ekran boşluğu"
     )
 
     static let ru = WindowLayoutFeatureStrings(
@@ -1452,8 +1318,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "Нет предыдущей раскладки для восстановления.",
         target: "Активное окно",
         halves: "Половины",
-        thirds: "Трети",
-        sixths: "Шестые",
         corners: "Углы",
         other: "Действия",
         leftHalf: "Левая половина",
@@ -1487,16 +1351,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "Открыть «Рабочий стол и Dock»",
         edgeSnapWaitingForSystem: "Включено в Chikit. Заработает сразу после отключения размещения окон macOS.",
         marginMaximize: "Развернуть с отступом",
-        gapsSection: "Отступы",
-        gapsCaption: "Расстояние между прикреплёнными окнами и между окнами и краем экрана.",
         windowGap: "Отступ между окнами",
-        screenGap: "Отступ от края экрана",
-        gapNone: "Нет",
-        gapTiny: "Крошечный",
-        gapSmall: "Маленький",
-        gapMedium: "Средний",
-        gapLarge: "Большой",
-        gapExtraLarge: "Очень большой"
+        screenGap: "Отступ от края экрана"
     )
 
     static let es = WindowLayoutFeatureStrings(
@@ -1522,8 +1378,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "No hay un diseño anterior para restaurar.",
         target: "Ventana activa",
         halves: "Mitades",
-        thirds: "Tercios",
-        sixths: "Sextos",
         corners: "Esquinas",
         other: "Acciones",
         leftHalf: "Izquierda",
@@ -1557,16 +1411,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "Abrir Escritorio y Dock",
         edgeSnapWaitingForSystem: "Activado en Chikit. Funcionará en cuanto se desactive el ajuste de ventanas de macOS.",
         marginMaximize: "Maximizar con margen",
-        gapsSection: "Espaciado",
-        gapsCaption: "Espacio entre ventanas ajustadas y entre las ventanas y el borde de la pantalla.",
         windowGap: "Espacio entre ventanas",
-        screenGap: "Espacio hasta el borde de la pantalla",
-        gapNone: "Ninguno",
-        gapTiny: "Diminuto",
-        gapSmall: "Pequeño",
-        gapMedium: "Mediano",
-        gapLarge: "Grande",
-        gapExtraLarge: "Extragrande"
+        screenGap: "Espacio hasta el borde de la pantalla"
     )
 
     static let de = WindowLayoutFeatureStrings(
@@ -1592,8 +1438,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "Kein vorheriges Layout zum Wiederherstellen.",
         target: "Aktives Fenster",
         halves: "Hälften",
-        thirds: "Drittel",
-        sixths: "Sechstel",
         corners: "Ecken",
         other: "Aktionen",
         leftHalf: "Links",
@@ -1627,16 +1471,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "Schreibtisch & Dock öffnen",
         edgeSnapWaitingForSystem: "In Chikit aktiviert. Es funktioniert, sobald die Fensteranordnung von macOS aus ist.",
         marginMaximize: "Mit Rand maximieren",
-        gapsSection: "Abstände",
-        gapsCaption: "Abstand zwischen angedockten Fenstern sowie zwischen Fenstern und dem Bildschirmrand.",
         windowGap: "Fensterabstand",
-        screenGap: "Abstand zum Bildschirmrand",
-        gapNone: "Kein",
-        gapTiny: "Winzig",
-        gapSmall: "Klein",
-        gapMedium: "Mittel",
-        gapLarge: "Groß",
-        gapExtraLarge: "Sehr groß"
+        screenGap: "Abstand zum Bildschirmrand"
     )
 
     static let fr = WindowLayoutFeatureStrings(
@@ -1662,8 +1498,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "Aucune disposition précédente à restaurer.",
         target: "Fenêtre active",
         halves: "Moitiés",
-        thirds: "Tiers",
-        sixths: "Sixièmes",
         corners: "Coins",
         other: "Actions",
         leftHalf: "Gauche",
@@ -1697,16 +1531,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "Ouvrir Bureau et Dock",
         edgeSnapWaitingForSystem: "Activé dans Chikit. Il fonctionnera dès que le placement des fenêtres de macOS sera désactivé.",
         marginMaximize: "Agrandir avec marge",
-        gapsSection: "Espacements",
-        gapsCaption: "Espace entre les fenêtres ancrées et entre les fenêtres et le bord de l'écran.",
         windowGap: "Espace entre fenêtres",
-        screenGap: "Espace au bord de l'écran",
-        gapNone: "Aucun",
-        gapTiny: "Minuscule",
-        gapSmall: "Petit",
-        gapMedium: "Moyen",
-        gapLarge: "Grand",
-        gapExtraLarge: "Très grand"
+        screenGap: "Espace au bord de l'écran"
     )
 
     static let it = WindowLayoutFeatureStrings(
@@ -1732,8 +1558,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "Nessun layout precedente da ripristinare.",
         target: "Finestra attiva",
         halves: "Metà",
-        thirds: "Terzi",
-        sixths: "Sesti",
         corners: "Angoli",
         other: "Azioni",
         leftHalf: "Sinistra",
@@ -1767,16 +1591,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "Apri Scrivania e Dock",
         edgeSnapWaitingForSystem: "Attivato in Chikit. Funzionerà appena l’affiancamento di macOS sarà disattivato.",
         marginMaximize: "Massimizza con margine",
-        gapsSection: "Spaziatura",
-        gapsCaption: "Spazio tra le finestre agganciate e tra le finestre e il bordo dello schermo.",
         windowGap: "Spazio tra finestre",
-        screenGap: "Spazio dal bordo dello schermo",
-        gapNone: "Nessuno",
-        gapTiny: "Minuscolo",
-        gapSmall: "Piccolo",
-        gapMedium: "Medio",
-        gapLarge: "Grande",
-        gapExtraLarge: "Molto grande"
+        screenGap: "Spazio dal bordo dello schermo"
     )
 
     static let ja = WindowLayoutFeatureStrings(
@@ -1802,8 +1618,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "復元できる前回の配置はありません。",
         target: "アクティブなウインドウ",
         halves: "半分",
-        thirds: "3分割",
-        sixths: "6分割",
         corners: "四隅",
         other: "操作",
         leftHalf: "左",
@@ -1837,16 +1651,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "デスクトップとDockを開く",
         edgeSnapWaitingForSystem: "Chikitでオンになっています。macOSのタイル表示をオフにすると動作します。",
         marginMaximize: "余白付きで最大化",
-        gapsSection: "間隔",
-        gapsCaption: "スナップしたウインドウ同士、およびウインドウと画面端の間隔です。",
         windowGap: "ウインドウの間隔",
-        screenGap: "画面端との間隔",
-        gapNone: "なし",
-        gapTiny: "極小",
-        gapSmall: "小",
-        gapMedium: "中",
-        gapLarge: "大",
-        gapExtraLarge: "特大"
+        screenGap: "画面端との間隔"
     )
 
     static let zhHans = WindowLayoutFeatureStrings(
@@ -1872,8 +1678,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "没有可恢复的上一个布局。",
         target: "当前窗口",
         halves: "半屏",
-        thirds: "三分屏",
-        sixths: "六分屏",
         corners: "角落",
         other: "操作",
         leftHalf: "左半屏",
@@ -1907,16 +1711,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "打开桌面与程序坞",
         edgeSnapWaitingForSystem: "已在 Chikit 中开启。关闭 macOS 窗口平铺后即可使用。",
         marginMaximize: "带边距最大化",
-        gapsSection: "间距",
-        gapsCaption: "贴靠窗口之间以及窗口与屏幕边缘之间的间距。",
         windowGap: "窗口间距",
-        screenGap: "屏幕边距",
-        gapNone: "无",
-        gapTiny: "极小",
-        gapSmall: "小",
-        gapMedium: "中",
-        gapLarge: "大",
-        gapExtraLarge: "特大"
+        screenGap: "屏幕边距"
     )
 
     static let zhTW = WindowLayoutFeatureStrings(
@@ -1942,8 +1738,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "沒有可還原的上一個排列方式。",
         target: "目前視窗",
         halves: "半邊",
-        thirds: "三等分",
-        sixths: "六等分",
         corners: "角落",
         other: "其他操作",
         leftHalf: "左半邊",
@@ -1977,16 +1771,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "開啟桌面與 Dock",
         edgeSnapWaitingForSystem: "已在 Chikit 中開啟。關閉 macOS 視窗並排後即可使用。",
         marginMaximize: "保留邊距最大化",
-        gapsSection: "間距",
-        gapsCaption: "貼齊視窗之間以及視窗與螢幕邊緣之間的間距。",
         windowGap: "視窗間距",
-        screenGap: "螢幕邊距",
-        gapNone: "無",
-        gapTiny: "極小",
-        gapSmall: "小",
-        gapMedium: "中",
-        gapLarge: "大",
-        gapExtraLarge: "特大"
+        screenGap: "螢幕邊距"
     )
 
     static let zhHK = WindowLayoutFeatureStrings(
@@ -2012,8 +1798,6 @@ struct WindowLayoutFeatureStrings {
         noRestore: "沒有可還原的上一個排列方式。",
         target: "目前視窗",
         halves: "半邊",
-        thirds: "三等分",
-        sixths: "六等分",
         corners: "角落",
         other: "其他操作",
         leftHalf: "左半邊",
@@ -2047,16 +1831,8 @@ struct WindowLayoutFeatureStrings {
         edgeSnapOpenSystemSettings: "開啟桌面與 Dock",
         edgeSnapWaitingForSystem: "已在 Chikit 中開啟。關閉 macOS 視窗並排後即可使用。",
         marginMaximize: "保留邊距最大化",
-        gapsSection: "間距",
-        gapsCaption: "貼齊視窗之間以及視窗與螢幕邊緣之間的間距。",
         windowGap: "視窗間距",
-        screenGap: "螢幕邊距",
-        gapNone: "無",
-        gapTiny: "極小",
-        gapSmall: "小",
-        gapMedium: "中",
-        gapLarge: "大",
-        gapExtraLarge: "特大"
+        screenGap: "螢幕邊距"
     )
 }
 
