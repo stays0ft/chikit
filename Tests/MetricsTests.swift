@@ -1377,10 +1377,6 @@ struct MetricsTests {
         expect(!GlobalShortcut(keyCode: Int64(kVK_ANSI_C), modifiers: [.command])
                    .isStandardPasteCommand,
                "other Command shortcuts never release the plain-text paste hotkey")
-        expect(registeredDefaults[DefaultsKey.panelUtilityCleaning] as? Bool == true,
-               "panel cleaning utility is visible by default")
-        expect(registeredDefaults[DefaultsKey.panelUtilityURLCleaner] as? Bool == true,
-               "panel URL cleaner utility is visible by default")
         expect(registeredDefaults[DefaultsKey.panelUtilityUninstaller] as? Bool == true,
                "panel uninstaller utility is visible by default")
         expect(registeredDefaults[DefaultsKey.panelUtilityConverter] as? Bool == true,
@@ -1419,8 +1415,6 @@ struct MetricsTests {
         expect(ConverterSupport.isDateFormatCode("yyyy-mm-dd") && ConverterSupport.isDateFormatCode("[$-409]d-mmm;@")
                && !ConverterSupport.isDateFormatCode("0.00") && !ConverterSupport.isDateFormatCode("\"day\"0"),
                "date number formats are told apart from numeric ones")
-        expect(registeredDefaults[DefaultsKey.panelUtilityMedia] as? Bool == true,
-               "panel Media utility is visible by default")
         expect(registeredDefaults[DefaultsKey.menuBarMetricSpacing] as? String == "compact",
                "menu bar metric spacing defaults to the compact look")
         expect(registeredDefaults[DefaultsKey.menuBarMetricAppearance] as? String == "values",
@@ -1727,14 +1721,10 @@ struct MetricsTests {
                    "bumpPlacementGeneration does not seed any hardcoded preferred position")
             statusDefaults.removePersistentDomain(forName: statusPlacementSuite)
         }
-        expect(registeredDefaults[DefaultsKey.panelControlAutoQuit] as? Bool == true,
-               "panel auto quit control is visible by default")
         expect(registeredDefaults[DefaultsKey.panelShowUtilities] as? Bool == true,
                "Utilities panel section is shown by default")
         expect(registeredDefaults[DefaultsKey.panelShowControls] as? Bool == true,
                "Quick Controls panel section is shown by default")
-        expect(registeredDefaults[DefaultsKey.panelShowToggles] as? Bool == true,
-               "Quick toggles panel section is shown by default")
         expect(registeredDefaults[DefaultsKey.monitorInterval] as? Int == 2,
                "monitor default interval stays at 2 seconds")
         expect(registeredDefaults[DefaultsKey.monitorShowDisk] as? Bool == true,
@@ -2643,8 +2633,6 @@ struct MetricsTests {
                "panel collapsed sections intentionally has no registered default")
         expect(registeredDefaults[DefaultsKey.panelUtilityOrder] == nil,
                "panel utility order intentionally has no registered default")
-        expect(registeredDefaults[DefaultsKey.panelToggleOrder] == nil,
-               "panel toggle order intentionally has no registered default")
         expect(Defaults.sanitizedClipboardHistoryLimit(1_000) == 1_000,
                "larger clipboard history limits are preserved")
         expect(Defaults.sanitizedClipboardHistoryLimit(999) == 50,
@@ -8762,8 +8750,6 @@ struct MetricsTests {
                 && !backupKeys.contains(DefaultsKey.fanControlRecoveryNeeded)
                 && !backupKeys.contains(DefaultsKey.fanControlHelperVersion),
                "fan display and cooling preferences travel while helper recovery state stays on one Mac")
-        expect(Defaults.registeredDefaults[DefaultsKey.displaysSwitchedOff] == nil,
-               "a display switched off is a repair note for this machine, not a setting")
         expect(Defaults.registeredDefaults[DefaultsKey.startupDidNotFinish] == nil,
                "a start that did not finish is a note for this machine, not a setting")
 

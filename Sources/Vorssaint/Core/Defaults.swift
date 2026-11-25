@@ -12,13 +12,9 @@ enum DefaultsKey {
     static let liquidGlassEnabled = "liquidGlassEnabled"  // Liquid Glass visual styling on macOS 26+
     static let onboardingStep = "onboardingStep"          // resume point if onboarding is interrupted
     static let featuresOnboardingVersion = "featuresOnboardingVersion" // last feature-tour marker handled
-    static let updateShowcaseMediaOverride = "updateShowcaseMediaOverride"
-    static let showCountdown = "showCountdownInMenuBar"
     static let statusItemPlacementGeneration = "statusItemPlacementGeneration"
     static let hasOnboarded = "hasOnboarded"
     static let launchAtLoginWanted = "launchAtLoginWanted"  // the user's choice; the system record can be lost
-    static let mouseClickDebounceWindowMs = "mouseClickDebounceWindowMs" // legacy sanitizer default, kept for storage compatibility
-    static let switcherEnabled = "switcherEnabled" // legacy key, kept only for feature-shortcut silencing reads
     static let previewSize = "previewSize"                // app switcher + dock preview thumbnail size
     static let appVolumes = "appVolumes"                  // [bundle id: 0...2]
     static let appOutputDevices = "appOutputDevices"      // [bundle id: audio device UID]
@@ -40,7 +36,6 @@ enum DefaultsKey {
     static let notchMediaControlsShowIdlePill = "notchMediaControlsShowIdlePill"
     // Displays this app switched off, so a run that ends without putting them
     // back can be repaired on the next start instead of needing a replug.
-    static let displaysSwitchedOff = "displaysSwitchedOff"
     // Set while a start is under way and cleared once the app has run
     // healthily for a while, or when it is quit properly. Found still set at
     // the next start, it means the previous one died on the way up.
@@ -58,33 +53,16 @@ enum DefaultsKey {
     static let cleanerExcludedBundleIDs = "cleanerExcludedBundleIDs"
     static let settingsWindowWidth = "settingsWindowWidth"     // last user-chosen content size (0 = unset)
     static let settingsWindowHeight = "settingsWindowHeight"
-    static let panelUtilityCleaning = "panelUtilityCleaning"
-    static let panelUtilityURLCleaner = "panelUtilityURLCleaner" // legacy row id, kept so an old panelUtilityOrder is filtered cleanly
     static let panelUtilityUninstaller = "panelUtilityUninstaller"
     static let panelUtilityConverter = "panelUtilityConverter"
     static let panelUtilityCleaner = "panelUtilityCleaner"
-    static let panelUtilityMedia = "panelUtilityMedia" // legacy row id, kept so an old panelUtilityOrder is filtered cleanly
     static let panelUtilityClipboard = "panelUtilityClipboard"
     static let panelUtilityWindowLayout = "panelUtilityWindowLayout"
-    static let panelControlAutoQuit = "panelControlAutoQuit"
     // Quick-control categories start collapsed and remember being opened.
-    static let panelControlWindowsExpanded = "panelControlWindowsExpanded"
-    static let panelControlInputExpanded = "panelControlInputExpanded"
-    static let panelControlFilesExpanded = "panelControlFilesExpanded"
     // Show/hide whole panel sections that have no monitorShow* key of their own.
     static let panelShowUtilities = "panelShowUtilities"
     static let panelShowControls = "panelShowControls"
-    static let panelShowToggles = "panelShowToggles"
     // Quick toggles tab: per-action visibility (the order lives in panelToggleOrder).
-    static let panelToggleDarkMode = "panelToggleDarkMode"
-    static let panelToggleKeyboardLight = "panelToggleKeyboardLight"
-    static let panelToggleEmptyTrash = "panelToggleEmptyTrash"
-    static let panelToggleEjectDisks = "panelToggleEjectDisks"
-    static let panelToggleHiddenFiles = "panelToggleHiddenFiles"
-    static let panelToggleDesktopIcons = "panelToggleDesktopIcons"
-    static let panelToggleLockScreen = "panelToggleLockScreen"
-    static let panelToggleDisplayOff = "panelToggleDisplayOff"
-    static let panelToggleScreenSaver = "panelToggleScreenSaver"
 
     // System monitor — live metrics shown next to the menu bar icon (opt-in).
     static let menuBarCPU = "menuBarCPU"
@@ -184,14 +162,10 @@ enum DefaultsKey {
     // mean the canonical order and nothing collapsed, so no defaults registration.
     static let panelSectionOrder = "panelSectionOrder"
     static let panelUtilityOrder = "panelUtilityOrder"
-    static let panelControlOrder = "panelControlOrder"
-    static let panelToggleOrder = "panelToggleOrder"
     static let panelSystemOrder = "panelSystemOrder"
     static let panelNetworkOrder = "panelNetworkOrder"
     static let panelDiskOrder = "panelDiskOrder"
     static let panelPowerOrder = "panelPowerOrder"
-    static let panelNavigationEnabled = "panelNavigationEnabled" // legacy: the panel always navigates by sections since 3.1.8
-    static let updateLastInstallFailure = "updateLastInstallFailure" // last installer step that failed (fail-copy etc.)
     static let windowLayoutHiddenActions = "windowLayoutHiddenActions" // comma-separated action ids hidden from the grid
     static let windowLayoutWindowGap = "windowLayoutWindowGap" // px between adjacent snapped windows
     static let windowLayoutScreenGap = "windowLayoutScreenGap" // px between a snapped window and the visible frame edge
@@ -238,7 +212,6 @@ enum DefaultsKey {
     static let panelUtilityScreenRecorder = "panelUtilityScreenRecorder"
     // Developer-only endpoint for an isolated test tunnel. The official app
     // ignores it, and settings backups must never carry it to another Mac.
-    static let screenshotSharingDeveloperEndpoint = "screenshotSharingDeveloperEndpoint"
     // The unified capture chooser's own screen-selection surface, shared with
     // the (now removed) screenshot tool's freeze/pointer/hide-Chikit-windows
     // preferences, so the recorder's region picker keeps the same behavior.
@@ -352,10 +325,8 @@ enum Defaults {
     static let registeredDefaults: [String: Any] = [
         DefaultsKey.appearance: AppAppearance.fallback.rawValue,
         DefaultsKey.liquidGlassEnabled: false,
-        DefaultsKey.showCountdown: false,
         DefaultsKey.launchAtLoginWanted: false,
         DefaultsKey.previewSize: "normal",
-        DefaultsKey.updateShowcaseMediaOverride: "",
         DefaultsKey.mixerShowFinder: true,
         DefaultsKey.mixerHideInactiveApps: false,
         DefaultsKey.mixerLowerVolumeOnHeadphonesDisconnect: false,
@@ -375,30 +346,13 @@ enum Defaults {
         DefaultsKey.cleanerScheduleNotify: true,
         DefaultsKey.cleanerLastAutoRun: 0.0,
         DefaultsKey.cleanerLastAutoFreed: 0,
-        DefaultsKey.panelUtilityCleaning: true,
-        DefaultsKey.panelUtilityURLCleaner: true,
         DefaultsKey.panelUtilityUninstaller: true,
         DefaultsKey.panelUtilityConverter: true,
         DefaultsKey.panelUtilityCleaner: true,
-        DefaultsKey.panelUtilityMedia: true,
         DefaultsKey.panelUtilityClipboard: true,
         DefaultsKey.panelUtilityWindowLayout: true,
-        DefaultsKey.panelControlAutoQuit: true,
-        DefaultsKey.panelControlWindowsExpanded: false,
-        DefaultsKey.panelControlInputExpanded: false,
-        DefaultsKey.panelControlFilesExpanded: false,
         DefaultsKey.panelShowUtilities: true,
         DefaultsKey.panelShowControls: true,
-        DefaultsKey.panelShowToggles: true,
-        DefaultsKey.panelToggleDarkMode: true,
-        DefaultsKey.panelToggleKeyboardLight: true,
-        DefaultsKey.panelToggleEmptyTrash: true,
-        DefaultsKey.panelToggleEjectDisks: true,
-        DefaultsKey.panelToggleHiddenFiles: true,
-        DefaultsKey.panelToggleDesktopIcons: true,
-        DefaultsKey.panelToggleLockScreen: true,
-        DefaultsKey.panelToggleDisplayOff: true,
-        DefaultsKey.panelToggleScreenSaver: true,
         // Menu bar metrics start off (the icon stays clean) and are opt-in.
         // The panel shows every monitoring block by default; users hide what
         // they don't want.
@@ -442,7 +396,6 @@ enum Defaults {
         DefaultsKey.fanControlCurves: FanControlConfiguration.defaultCurvesStorage,
         DefaultsKey.fanControlRecoveryNeeded: false,
         DefaultsKey.fanControlHelperVersion: "",
-        DefaultsKey.panelNavigationEnabled: true,
         DefaultsKey.monitorGraphCPU: true,
         DefaultsKey.monitorGraphGPU: true,
         DefaultsKey.monitorGraphMemory: true,
