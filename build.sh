@@ -225,7 +225,6 @@ if (( TEST )); then
         Sources/Vorssaint/Core/RecorderStrings.swift \
         Sources/Vorssaint/Core/RecorderShareStrings.swift \
         Sources/Vorssaint/Core/FinderRenameStrings.swift \
-        Sources/Vorssaint/Core/FeedbackStrings.swift \
         Sources/Vorssaint/Core/MenuBarAppearanceStrings.swift \
         Sources/Vorssaint/Core/AppAppearance.swift \
         Sources/Vorssaint/Core/AppearanceStrings.swift \

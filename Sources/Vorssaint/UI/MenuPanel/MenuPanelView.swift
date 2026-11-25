@@ -432,32 +432,6 @@ private struct MenuPanelHeader: View {
             BrandMark(width: 48, tint: markTint)
                 .frame(height: 28)
                 .accessibilityHidden(true)
-
-            if AppInfo.isBeta {
-                HStack {
-                    Text(l10n.s.betaBadgeLabel.uppercased())
-                        .font(.system(size: 9, weight: .bold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.orange.opacity(0.18))
-                        .foregroundStyle(.orange)
-                        .clipShape(Capsule())
-
-                    Spacer()
-
-                    Button {
-                        appDelegate()?.openFeedbackWindow()
-                    } label: {
-                        Image(systemName: "bubble.left.and.text.bubble.right")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                            .padding(4)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .help(FeatureStrings.feedback(l10n.language).openButton)
-                }
-            }
         }
         .frame(height: 28)
         .padding(.vertical, 4)
