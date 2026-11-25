@@ -5,12 +5,11 @@ import SwiftUI
 
 /// Shared look & feel: brand colors, card styling and the brand mark.
 enum Theme {
-    /// Near-black background behind the brand mark. Neutral greys into black, no
-    /// colour cast, with just a hint of depth so the badge does not read as flat.
-    static let spaceGradient = LinearGradient(
-        colors: [Color(white: 0.10),
-                 Color(white: 0.04),
-                 Color.black],
+    /// The brand gradient behind the mark: the same indigo-to-teal as the app
+    /// icon, so tiles, badges and hero backgrounds read as one identity.
+    static let brandGradient = LinearGradient(
+        colors: [Color(red: 0.404, green: 0.286, blue: 0.965),
+                 Color(red: 0.043, green: 0.702, blue: 0.788)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -60,14 +59,13 @@ enum PanelSurface {
     }
 
     static func border(for scheme: ColorScheme) -> Color {
-        scheme == .light ? Color.black.opacity(0.09) : Color.white.opacity(0.11)
+        Color.chikitAccent.opacity(scheme == .light ? 0.16 : 0.22)
     }
 }
 
 func sectionTitle(_ text: String) -> some View {
-    Text(text.uppercased())
-        .font(.system(size: 10, weight: .semibold))
-        .kerning(0.5)
+    Text(text)
+        .font(.system(size: 12, weight: .semibold, design: .rounded))
         .foregroundStyle(.secondary)
 }
 
@@ -89,14 +87,14 @@ private struct PanelCardModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .padding(10)
+            .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(PanelSurface.cardFill(for: colorScheme))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(PanelSurface.border(for: colorScheme), lineWidth: 0.7)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(PanelSurface.border(for: colorScheme), lineWidth: 0.8)
             )
     }
 }
@@ -187,7 +185,7 @@ struct BrandBadge: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
-                .fill(Theme.spaceGradient)
+                .fill(Theme.brandGradient)
             BrandMark(width: size * 0.8)
         }
         .frame(width: size, height: size)

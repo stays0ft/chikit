@@ -196,7 +196,7 @@ private struct NotchMediaExpandedView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
         } else {
             RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .fill(Theme.spaceGradient)
+                .fill(Theme.brandGradient)
                 .frame(width: 56, height: 56)
                 .overlay {
                     if let icon = NotchMediaApplication.icon(for: snapshot) {

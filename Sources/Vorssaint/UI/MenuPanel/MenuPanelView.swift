@@ -430,7 +430,7 @@ private struct MenuPanelHeader: View {
     }
 
     private var markTint: Color {
-        colorScheme == .light ? Color(white: 0.03) : .white
+        .chikitAccent
     }
 }
 

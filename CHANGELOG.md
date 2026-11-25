@@ -26,6 +26,8 @@ project.
   (Control Option with the arrow keys, U, I, J, K and Return).
 - The Features page starts from a small set of installed features. Everything else, including the rest of
   the features Vorssaint offers, is gone from the codebase rather than hidden.
+- A new look: tiles, badges and hero backgrounds use the indigo-to-teal brand gradient instead of near-black,
+  section headings are sentence case in a rounded face, and cards are rounder with a soft accent edge.
 - Versioning restarts at 1.0.0 with its own bundle identifier (`com.chikit.utils`), signing identity and
   settings.
 

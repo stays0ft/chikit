@@ -143,7 +143,7 @@ private struct WelcomeStep: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                Theme.spaceGradient
+                Theme.brandGradient
                 VStack(spacing: 10) {
                     BrandMark(width: 130)
                     Text(AppInfo.name)
@@ -187,7 +187,7 @@ private struct WelcomeStep: View {
         HStack(alignment: .top, spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Theme.spaceGradient)
+                    .fill(Theme.brandGradient)
                     .frame(width: 30, height: 30)
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .semibold))
@@ -347,7 +347,7 @@ private struct PurposeStep: View {
             HStack(spacing: 10) {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(selected
-                          ? AnyShapeStyle(Theme.spaceGradient)
+                          ? AnyShapeStyle(Theme.brandGradient)
                           : AnyShapeStyle(Color.secondary.opacity(0.16)))
                     .frame(width: 32, height: 32)
                     .overlay {
@@ -504,7 +504,7 @@ private struct DoneStep: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                Theme.spaceGradient
+                Theme.brandGradient
                 VStack(spacing: 14) {
                     BrandMark(width: 150)
                     Text(l10n.s.obStepDoneTitle)
@@ -545,7 +545,7 @@ private struct StepHeader: View {
         VStack(spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Theme.spaceGradient)
+                    .fill(Theme.brandGradient)
                     .frame(width: 56, height: 56)
                 Image(systemName: icon)
                     .font(.system(size: 24, weight: .semibold))
