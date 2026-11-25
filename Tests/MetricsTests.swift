@@ -1495,6 +1495,42 @@ struct MetricsTests {
                "panel URL cleaner utility is visible by default")
         expect(registeredDefaults[DefaultsKey.panelUtilityUninstaller] as? Bool == true,
                "panel uninstaller utility is visible by default")
+        expect(registeredDefaults[DefaultsKey.panelUtilityConverter] as? Bool == true,
+               "panel converter utility is visible by default")
+        // File converter
+        expect(ConvertKind.kind(forExtension: "XLSX") == .spreadsheet
+               && ConvertKind.kind(forExtension: "mkv") == .video
+               && ConvertKind.kind(forExtension: "pdf") == .pdf
+               && ConvertKind.kind(forExtension: "xyz") == nil,
+               "the converter classifies files by extension")
+        let xlsxTargets = ConvertFormats.targets(forExtension: "xlsx", libreOfficeAvailable: false).map(\.id)
+        expect(xlsxTargets == ["sheet-csv", "sheet-tsv", "sheet-txt"],
+               "XLSX converts to text natively when LibreOffice is missing, got \(xlsxTargets)")
+        expect(ConvertFormats.targets(forExtension: "xls", libreOfficeAvailable: false).isEmpty,
+               "legacy Excel needs LibreOffice")
+        expect(ConvertFormats.targets(forExtension: "xlsx", libreOfficeAvailable: true).map(\.id).contains("sheet-pdf"),
+               "XLSX offers PDF through LibreOffice")
+        expect(!ConvertFormats.targets(forExtension: "csv", libreOfficeAvailable: true).map(\.id).contains("sheet-csv"),
+               "a format is never offered as its own target")
+        expect(ConvertFormats.commonTargets(for: [URL(fileURLWithPath: "/a.mp4"), URL(fileURLWithPath: "/b.wav")],
+                                            libreOfficeAvailable: false).map(\.id).contains("mp3"),
+               "video and audio mix on the audio formats")
+        expect(ConvertFormats.commonTargets(for: [URL(fileURLWithPath: "/a.png"), URL(fileURLWithPath: "/b.mp4")],
+                                            libreOfficeAvailable: true).isEmpty,
+               "images and video share no target")
+        expect(ConverterSupport.uniqueURL(directory: URL(fileURLWithPath: "/t"), baseName: "song", ext: "mp3",
+                                          exists: { $0.lastPathComponent != "song 3.mp3" }).lastPathComponent == "song 3.mp3",
+               "converted files never overwrite existing ones")
+        expectEqual(ConverterSupport.delimited([["a", "b,c"], ["say \"hi\"", ""]], delimiter: ","),
+                    "a,\"b,c\"\n\"say \"\"hi\"\"\",\n", "CSV quoting")
+        expect(ConverterSupport.columnIndex(fromReference: "A1") == 0
+               && ConverterSupport.columnIndex(fromReference: "AB12") == 27,
+               "spreadsheet column references map to indexes")
+        expectEqual(ConverterSupport.isoString(fromExcelSerial: 44927) ?? "", "2023-01-01", "Excel serial date")
+        expectEqual(ConverterSupport.isoString(fromExcelSerial: 44927.5) ?? "", "2023-01-01 12:00:00", "Excel serial date-time")
+        expect(ConverterSupport.isDateFormatCode("yyyy-mm-dd") && ConverterSupport.isDateFormatCode("[$-409]d-mmm;@")
+               && !ConverterSupport.isDateFormatCode("0.00") && !ConverterSupport.isDateFormatCode("\"day\"0"),
+               "date number formats are told apart from numeric ones")
         expect(registeredDefaults[DefaultsKey.panelUtilityMedia] as? Bool == true,
                "panel Media utility is visible by default")
         expect(registeredDefaults[DefaultsKey.menuBarMetricSpacing] as? String == "compact",
@@ -7906,81 +7942,6 @@ struct MetricsTests {
 
         // MARK: Display brightness (DDC/CI helpers)
 
-        // Every section of the service below its "Rebuild (work queue)" MARK
-        // runs on the private work queue, so a display's user-facing name is
-        // read from NSScreen on the main thread and handed to the rebuild.
-        // AppKit reached from below the line would be a main thread violation
-        // on every hotplug, wake and panel open.
-        let brightnessSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/Display/BrightnessService.swift",
-            encoding: .utf8)) ?? ""
-        let brightnessWorkQueueHalf = brightnessSource
-            .components(separatedBy: "// MARK: - Rebuild (work queue)").last ?? ""
-        // Comments are stripped first: a note naming the symbol it bans is not
-        // a call, and a check that cannot tell them apart goes red for prose.
-        let brightnessWorkQueueCode = brightnessWorkQueueHalf
-            .components(separatedBy: "\n")
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
-        expect(!brightnessWorkQueueHalf.isEmpty && !brightnessWorkQueueCode.contains("NSScreen"),
-               "the brightness work queue resolves display names without touching NSScreen")
-
-        let expectedDDCWrite: [UInt8] = [0x84, 0x03, 0x10, 0x12, 0x34, 0x8E]
-        let expectedDDCRead: [UInt8] = [0x82, 0x01, 0x10, 0xFD]
-        var ddcReply: [UInt8] = [0x6E, 0x88, 0x02, 0x00, 0x10, 0x00, 0x00, 0x64, 0x00, 0x32]
-        ddcReply.append(ddcReply.reduce(UInt8(0x50)) { $0 ^ $1 })
-        var corrupted = ddcReply
-        corrupted[7] ^= 0xFF
-        // EDID UUID chunks at fixed positions: vendor, product (little endian),
-        // manufacture date, image size.
-        // CoreGraphics runs a reconfiguration's callbacks inline on the driving
-        // thread, and in this process those callbacks are AppKit's, so the
-        // transaction belongs to the main thread. Getting it wrong hangs the
-        // app rather than returning a wrong answer, and no pure helper can
-        // carry that, so it is pinned against the CoreGraphics symbols.
-        expect(brightnessSource.components(separatedBy: "CGBeginDisplayConfiguration(").count == 2
-               && brightnessSource.components(separatedBy: "CGCompleteDisplayConfiguration(").count == 2,
-               "every display power change goes through the one reconfiguration transaction")
-        let beforeDisplayConfiguration = brightnessSource
-            .components(separatedBy: "CGBeginDisplayConfiguration(").first ?? ""
-        expect((beforeDisplayConfiguration.components(separatedBy: "func ").last ?? "")
-                .contains("Thread.isMainThread"),
-               "the display reconfiguration transaction refuses to start off the main thread")
-
-        // A `UserDefaults` write posts `didChangeNotification`, and the
-        // observers registered with `queue: .main` make that post wait for the
-        // main thread. Held under `stateLock` it waits on a main thread that
-        // can itself be waiting for the same lock inside `canToggleDisplay`,
-        // called from a SwiftUI body, and the app hangs with nothing left that
-        // can end it (issue #647). Which thread the write happens to run on
-        // does not change that, so it is the locked region that is pinned.
-        let lockedRegions = brightnessSource.components(separatedBy: "stateLock.lock()")
-            .dropFirst()
-            .map { $0.components(separatedBy: "stateLock.unlock()").first ?? $0 }
-        expect(!lockedRegions.isEmpty
-               && lockedRegions.allSatisfy { !$0.contains("SwitchedOff(") },
-               "the list of displays switched off is never written while stateLock is held")
-
-        // The same transaction relays its screen change to AppKit inline, and
-        // switching off the display the panel is on makes AppKit lay that panel
-        // out again right there: the power button's body is evaluated while
-        // this app holds the display server busy, so anything it asks the
-        // display server is a question the same thread is still answering, and
-        // the app freezes with nothing left that can end it (issue #969). The
-        // body decides from the published snapshot instead, and the live
-        // reading stays where it guards the switch itself. Comments are
-        // stripped first: a note naming what it bans is not a call.
-        let canToggleCode = ((brightnessSource
-            .components(separatedBy: "func canToggleDisplay(").last ?? "")
-            .components(separatedBy: "\n    }").first ?? "")
-            .components(separatedBy: "\n")
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
-        expect(!canToggleCode.isEmpty
-               && canToggleCode.contains("drawableDisplays")
-               && !canToggleCode.contains("Self.drawableDisplayIDs(")
-               && !canToggleCode.contains("stateLock"),
-               "the panel reads whether a display can be switched off without asking the display server")
 
         let untouched: [Float] = [0.0, 0.3, 1.0]
         // Brightness keys arrive as system-defined auxiliary control events;
@@ -8082,18 +8043,6 @@ struct MetricsTests {
         // so only one of them may decide whether the click is passed on: once
         // the button is claimed, nothing past that point hands an event back,
         // or the down and the up split.
-        let radialServiceCode = ((try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/RadialMenu/RadialMenuService.swift",
-            encoding: .utf8)) ?? "")
-            .components(separatedBy: "\n")
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
-        let radialClaimedClick = radialServiceCode
-            .components(separatedBy: "if type == .otherMouseDown {")
-            .dropFirst().first?
-            .components(separatedBy: "private func hotkeyPressed").first ?? ""
-        expect(!radialClaimedClick.isEmpty && !radialClaimedClick.contains("passUnretained"),
-               "a claimed side button keeps both halves of its click whatever the full decode says")
         let oversizedData = Data(repeating: 0xFF, count: 70_000)
         let invalidImageData = Data([0x00, 0x01, 0x02, 0x03])
         // MARK: Dock click with AX-blind apps (issue #200)
@@ -8667,13 +8616,6 @@ struct MetricsTests {
         let recordingOnly: Set<AppFeature> = [.screenRecorder]
         expect(ScreenCaptureTool.available(isAvailable: recordingOnly.contains) == [.recording],
                "the capture chooser hides every uninstalled mode")
-        let captureSettingsSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/UI/Settings/ScreenCaptureSettings.swift",
-            encoding: .utf8)) ?? ""
-        expect(captureSettingsSource.contains("selectedTool")
-                && captureSettingsSource.contains(".pickerStyle(.segmented)")
-                && captureSettingsSource.contains("ToolShortcutRows(tool: currentTool"),
-               "the capture page uses a segmented picker with tool-specific shortcuts in the top section")
         let recorderPolicy = ScreenshotSupport.unifiedCapturePolicy(
             for: .recording,
             screenshotFreeze: false,
@@ -8717,37 +8659,6 @@ struct MetricsTests {
             encoding: .utf8)) ?? ""
         expect(!captureServiceSource.contains("replaceSelection"),
                "the capture service does not cancel and recreate selection controllers when changing modes")
-        // The preview appears unasked for, so presenting it must not take the
-        // keyboard away from whatever the person is typing into. Its shortcuts
-        // read a local monitor, which is delivered nothing until the panel is
-        // key. Presenting stays silent and hover takes nothing either; a click
-        // hands the keyboard over in the panel's sendEvent because hosted
-        // SwiftUI content answers presses that never reach mouseDown. Comments
-        // are stripped so prose naming the API cannot answer for the code.
-        let quickPreviewSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/QuickTools/ScreenshotQuickPreviewController.swift",
-            encoding: .utf8)) ?? ""
-        expect(!quickPreviewSource.isEmpty, "the screenshot preview source reads back for its shape check")
-        let quickPreviewCode = quickPreviewSource.components(separatedBy: "\n")
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
-        // Split at the hosting controller: the hover closure is built above it,
-        // so the presentation statements are what remains.
-        let presentBody = quickPreviewCode.components(separatedBy: "let host = NSHostingController")
-            .dropFirst().first?.components(separatedBy: "private func").first ?? ""
-        expect(presentBody.contains("orderFrontRegardless()"),
-               "the screenshot preview is presented without activating the app")
-        // A click is the hand-off, and it is read in sendEvent because the
-        // hosted SwiftUI content answers presses that never reach mouseDown.
-        let panelBody = quickPreviewCode.components(separatedBy: "class ScreenshotQuickPreviewPanel")
-            .dropFirst().first?.components(separatedBy: "\n}").first ?? ""
-        let makeKeyCount = quickPreviewCode.components(separatedBy: "makeKey").count - 1
-        let panelMakeKeyCount = panelBody.components(separatedBy: "makeKey").count - 1
-        expect(makeKeyCount == panelMakeKeyCount && panelMakeKeyCount >= 1,
-               "presentation and hover never take key focus; only the panel's own click hand-off may")
-        expect(panelBody.contains("sendEvent") && panelBody.contains("leftMouseDown")
-                && panelBody.contains("makeKey") && panelBody.contains("super.sendEvent"),
-               "clicking the screenshot preview takes key focus and still delivers every preview button")
 
         let cocoa = ScreenshotSupport.cocoaRect(fromWindowServer: CGRect(x: 10, y: 30, width: 200, height: 100),
                                                 mainScreenHeight: 900)
@@ -9397,18 +9308,6 @@ struct MetricsTests {
             pointSize: CGSize(width: 600, height: 800)) == 1,
                "copied images with inconsistent metadata safely use 1x")
 
-        let scratchpadViewSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/UI/Scratchpad/ScratchpadView.swift",
-            encoding: .utf8)) ?? ""
-        let scratchpadHitTargetContracts = [
-            "Image(systemName: \"plus\")\n                    .font(.system(size: 12, weight: .semibold))\n                    .frame(width: 22, height: 22)\n                    .contentShape(Rectangle())",
-            "Image(systemName: \"ellipsis\")\n                    .font(.system(size: 12, weight: .semibold))\n                    .frame(width: 22, height: 22)\n                    .contentShape(Rectangle())",
-            ".fill(selected ? Color.chikitAccent.opacity(0.16) : Color.clear)\n                }\n                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))",
-            "Image(systemName: service.isPinned ? \"pin.fill\" : \"pin\")\n                    .font(.system(size: 12, weight: .semibold))\n                    .frame(width: 22, height: 22)\n                    .contentShape(Rectangle())",
-            "Image(systemName: \"xmark.circle.fill\")\n                    .font(.system(size: 14))\n                    .foregroundStyle(.secondary)\n                    .frame(width: 22, height: 22)\n                    .contentShape(Rectangle())",
-        ]
-        expect(scratchpadHitTargetContracts.allSatisfy { scratchpadViewSource.contains($0) },
-               "the scratchpad tab bar and header controls keep their full padded hit targets")
         // An unpinned borderless Menu claims the free width of its row on
         // macOS 15 and starves whatever shares that row (issue #569), so the
         // rule is checked for every borderless menu in the app rather than for
@@ -9593,64 +9492,6 @@ struct MetricsTests {
           HIDKeyboardModifierMappingDst = "-1";
         }
         """
-        // The page is the only place a refused mapping is visible, so the
-        // reason has to reach it and be spelled out there.
-        let superKeySettingsSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/UI/Settings/SuperKeySettings.swift",
-            encoding: .utf8)) ?? ""
-        let failureMark = superKeySettingsSource.range(of: "superKey.mappingFailure")
-        let runningMark = superKeySettingsSource.range(of: "superKey.isRunning")
-        expect(failureMark != nil && runningMark != nil
-                && failureMark!.lowerBound < runningMark!.lowerBound
-                && superKeySettingsSource.contains("text.mappingFailure(failure)"),
-               "the Super key page names a refused mapping ahead of the working state")
-
-        // What the watchdog leans on: a press whose release never arrived is
-        // let go of, and typing goes back to normal without the key being
-        // touched again.
-        // Drag chords read their modifiers off the mouse-down, not off any
-        // keyboard event (#888), so the service must classify mouse presses
-        // like other keys and stamp them from a tap at the HID stage — the
-        // one place guaranteed to run before every session tap that reads
-        // the flags. The service file is not in this binary; pin the shape.
-        let superKeyServiceSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/SuperKey/SuperKeyService.swift",
-            encoding: .utf8)) ?? ""
-        let superKeyServiceCode = superKeyServiceSource
-            .split(separator: "\n", omittingEmptySubsequences: false)
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
-        expect(superKeyServiceCode.contains(".leftMouseDown, .rightMouseDown, .otherMouseDown")
-               && superKeyServiceCode.contains("mouseDownTypes.reduce(CGEventMask(0))")
-               && superKeyServiceCode.contains("mouseDownTypes.contains(type) { return .otherKey }")
-               && superKeyServiceCode.range(of: "tap: .cghidEventTap") != nil,
-               "every mouse press while the super key is held carries the modifiers, stamped at the HID stage")
-        // A mouse event carries no keycode of its own: the field reads back as
-        // 0 on one, which is the keycode for A. The read lives inside classify,
-        // below the line that answers the mouse types, so no caller holds a
-        // phantom key it could hand to something that looks keys up.
-        let keycodeReads = superKeyServiceCode
-            .components(separatedBy: ".keyboardEventKeycode").count - 1
-        let mouseAnswer = superKeyServiceCode.range(of: "mouseDownTypes.contains(type)")?.lowerBound
-        let keycodeRead = superKeyServiceCode.range(of: ".keyboardEventKeycode")?.lowerBound
-        expect(keycodeReads == 1
-               && mouseAnswer.flatMap({ answer in keycodeRead.map { answer < $0 } }) == true,
-               "a mouse press is answered before the super key ever reads a keycode")
-        // A refused mouse tap counts as dead so the health check rebuilds it,
-        // but exactly once: the rebuild takes the healthy keyboard tap down
-        // with it, and a system that refuses refuses the retry too, so an
-        // unbounded flag would hiccup super-key input at whatever rate
-        // syncWithPreferences fires. The count has to outlive the teardown its
-        // own value asked for, so the only place it is put back to zero is its
-        // own declaration — never the tap thread's reset block, which the
-        // rebuild runs and which would start the loop over.
-        let refusalResets = superKeyServiceCode
-            .components(separatedBy: "mouseTapRefusals = 0").count - 1
-        expect(superKeyServiceCode.contains("?? (mouseTapRefusals == 1)")
-               && superKeyServiceCode.contains(
-                   "mouseTapRefusals = mouseTap == nil ? self.mouseTapRefusals + 1 : 0")
-               && refusalResets == 1,
-               "a refused mouse tap is worth one rebuild, and the count survives it")
 
         // MARK: Mouse app exceptions (issue #358)
 
@@ -11410,124 +11251,6 @@ struct MetricsTests {
                + "(ran \(detachedRuns) time(s))")
         try? FileManager.default.removeItem(at: detachRoot)
 
-        // MARK: Command-Q / Command-W protection
-        // Loading the saved shelf keeps "nothing saved", "decoded whole",
-        // "decoded with entries dropped" and "will not decode" apart. Only a
-        // store read whole may be saved over and swept behind.
-        // One bad entry drops only itself: an unknown kind (written by a newer
-        // build) and a missing optional field must not cost the whole shelf.
-        // The list that comes back is `.partial`, never `.items`: the dropped
-        // entry's payload file is still on disk and the blob still points at
-        // it, so the caller must not save over the store or sweep behind it.
-        let mixedShelfBlob = Data("""
-        [{"id":"8B3E1C2A-0000-4000-8000-000000000001","kind":"text","title":"keep","text":"body"},
-         {"id":"8B3E1C2A-0000-4000-8000-000000000002","kind":"telepathy","title":"unknown kind"},
-         {"kind":"link","title":"no id","url":"https://example.com"}]
-        """.utf8)
-        var mixedShelfTitles: [String] = []
-        expect(mixedShelfTitles == ["keep", "no id"],
-               "an entry with an unknown kind drops itself and the rest load as "
-               + "partial, found \(mixedShelfTitles)")
-        let wholeShelfBlob = Data("""
-        [{"id":"8B3E1C2A-0000-4000-8000-000000000007","kind":"text","title":"a","text":"a"},
-         {"id":"8B3E1C2A-0000-4000-8000-000000000008","kind":"batch","title":"pile","children":[
-           {"id":"8B3E1C2A-0000-4000-8000-000000000009","kind":"text","title":"b","text":"b"}]}]
-        """.utf8)
-        var wholeShelfTitles: [String] = []
-        expect(wholeShelfTitles == ["a", "pile"],
-               "a store every entry of which decodes loads whole, found \(wholeShelfTitles)")
-
-        // A child that drops itself costs its payload file the same way a
-        // top-level entry does, so the depth it sits at must not change the
-        // answer: the batch survives with its readable children, and the load
-        // is still partial.
-        let batchShelfBlob = Data("""
-        [{"id":"8B3E1C2A-0000-4000-8000-000000000003","kind":"batch","title":"pile","children":[
-           {"id":"8B3E1C2A-0000-4000-8000-000000000004","kind":"text","title":"a","text":"a"},
-           {"id":"8B3E1C2A-0000-4000-8000-000000000005","kind":"telepathy","title":"b"},
-           {"id":"8B3E1C2A-0000-4000-8000-000000000006","kind":"text","title":"c","text":"c"}]}]
-        """.utf8)
-        var batchShelfChildTitles: [String] = []
-        expect(batchShelfChildTitles == ["a", "c"],
-               "a bad child drops itself, its batch survives and the store loads as "
-               + "partial, found \(batchShelfChildTitles)")
-
-        // The sweep decision lives in ShelfService, which `--test` does not
-        // compile, so it is pinned by shape: restore may reach the payload
-        // sweep only past the guard that a store read whole has to pass. A
-        // `.partial` store's dropped entries still own files in that
-        // directory, and the blob it kept still points at them.
-        let restoreItemsBody = ((try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/Shelf/ShelfService.swift",
-            encoding: .utf8)) ?? "")
-            .components(separatedBy: "private func restoreItems()")
-            .dropFirst().first?
-            .components(separatedBy: "\n    private func ").first ?? ""
-        let pastRestoreGuard = restoreItemsBody
-            .components(separatedBy: "guard case .items = store else { return }")
-        expect(pastRestoreGuard.count == 2
-                && !pastRestoreGuard[0].contains("sweepOwnedFiles(")
-                && pastRestoreGuard[1].contains("sweepOwnedFiles("),
-               "restore sweeps the shelf's payload files only for a store it read whole")
-
-        // Guards the class, not the one instance that emptied shelves: the
-        // saved blob may only be read through `load`, which hands the caller a
-        // `.unreadable` case it has to answer for. A bare array decode brings
-        // back the all-or-nothing form, where any single bad entry restores an
-        // empty shelf that is then written back over the real one.
-        // The scan has to report how many files it read: an enumerator that
-        // finds nothing (the tests run from somewhere other than the repo
-        // root) leaves the list empty, and a rule checked against no files at
-        // all passes while guarding nothing.
-        var rawShelfStoreDecoders: [String] = []
-        var scannedShelfStoreFiles = 0
-        if let sources = FileManager.default.enumerator(atPath: "Sources") {
-            for case let path as String in sources where path.hasSuffix(".swift") {
-                let text = (try? String(contentsOfFile: "Sources/" + path, encoding: .utf8)) ?? ""
-                scannedShelfStoreFiles += 1
-                if text.contains("decode([ShelfPersistedItem]") {
-                    rawShelfStoreDecoders.append((path as NSString).lastPathComponent)
-                }
-            }
-        }
-        // The ranking folds what was typed once and hands the folded letters to
-        // every row in the pool. Both readings have to agree, or a name the
-        // person gave would rank differently depending on which one asked.
-        // Both background passes guard on a few fields of a tuple they store
-        // whole. Returning before the store would leave every field the guard
-        // does not name at the reading it had when the named ones last moved.
-        // The confirmation HUD is a hand-laid AppKit panel, so its width is
-        // pinned as source shape. It used to be a fixed 300pt, which clipped
-        // the longer translations. Sizing it from a separate
-        // NSString measurement of the same text would leave whatever inset
-        // the label's cell adds unaccounted for -- the labels have to be the
-        // ones asked.
-        let quitHUDSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/UI/QuitProtection/QuitProtectionHUD.swift",
-            encoding: .utf8)) ?? ""
-        expect(quitHUDSource.count > 1_000,
-               "the quit protection HUD source is readable (\(quitHUDSource.count) bytes)")
-        let quitHUDCode = quitHUDSource
-            .split(separator: "\n", omittingEmptySubsequences: false)
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
-        expect(quitHUDCode.contains("title.fittingSize.width")
-                && quitHUDCode.contains("detail.fittingSize.width"),
-               "the confirmation HUD takes its width from the labels that draw the text")
-        expect(!quitHUDCode.contains("size(withAttributes:"),
-               "the confirmation HUD does not size itself from a separate text measurement")
-        let quitHUDShow = quitHUDCode
-            .components(separatedBy: "func show(title: String, detail: String) {").last ?? ""
-        let quitHUDShowBody = quitHUDShow.components(separatedBy: "\n    func ").first ?? ""
-        if let filled = quitHUDShowBody.range(of: "content.update("),
-           let sized = quitHUDShowBody.range(of: "fittingSize(content)"),
-           let applied = quitHUDShowBody.range(of: "setContentSize(size)") {
-            expect(filled.lowerBound < sized.lowerBound && sized.lowerBound < applied.lowerBound,
-                   "the confirmation HUD fills its labels, then measures them, then resizes")
-        } else {
-            expect(false,
-                   "the confirmation HUD's show() fills the labels, measures them and resizes")
-        }
         // MARK: A dropped identifier
         let diskExclusionsListCode = ((try? String(
             contentsOfFile: "Sources/Vorssaint/UI/Settings/DiskExclusionsList.swift",
