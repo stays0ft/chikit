@@ -6,16 +6,14 @@
 # the fan helper daemon, the login item, TCC permissions, preferences, saved
 # state, the app's own data folder and (if present) the password-free
 # closed-lid sudoers rule. Leaves no dead entries behind.
-# Also clears the pre-rename "Vorssaint Utils.app" if it is still around.
+# Only ever touches Chikit's own files.
 set -uo pipefail
 
 BUNDLE="com.chikit.utils"
 APP="/Applications/Chikit.app"
-LEGACY_APP="/Applications/Vorssaint Utils.app"
 
 echo "▸ Quitting…"
 pkill -x Chikit 2>/dev/null || true
-pkill -x VorssaintUtils 2>/dev/null || true
 sleep 0.5
 
 # Detach from the system from inside whichever bundle still exists: unregisters
@@ -24,7 +22,7 @@ sleep 0.5
 # deleting the app below cannot reach it. Only the binary can drop it, and the
 # check after the loop settles what its absence or failure left behind.
 detached=1
-for candidate in "$APP/Contents/MacOS/Chikit" "$LEGACY_APP/Contents/MacOS/VorssaintUtils"; do
+for candidate in "$APP/Contents/MacOS/Chikit"; do
     if [[ -x "$candidate" ]]; then
         echo "▸ Detaching the fan helper and login item, restoring sleep…"
         if "$candidate" --uninstall; then detached=0; fi
@@ -55,7 +53,7 @@ echo "▸ Resetting permissions (Accessibility, Screen Recording)…"
 tccutil reset All "$BUNDLE" >/dev/null 2>&1 || true
 
 echo "▸ Removing app, preferences, saved state and stored data (clipboard history, shelf files, share links)…"
-rm -rf "$APP" "$LEGACY_APP"
+rm -rf "$APP"
 defaults delete "$BUNDLE" >/dev/null 2>&1 || true
 rm -f "$HOME/Library/Preferences/$BUNDLE.plist"
 rm -rf "$HOME/Library/Saved Application State/$BUNDLE.savedState"
@@ -71,7 +69,7 @@ rm -rf "$HOME/Library/HTTPStorages/$BUNDLE" "$HOME/Library/HTTPStorages/$BUNDLE.
 # ordinary case, and prints an error over a successful uninstall.
 rm -f "$HOME/Library/Preferences/ByHost/$BUNDLE".*.plist(N)
 
-RULES="/etc/sudoers.d/chikit-clamshell /etc/sudoers.d/vorssaint-clamshell /etc/sudoers.d/vorssaint-utils-clamshell /etc/sudoers.d/vorss-clamshell"
+RULES="/etc/sudoers.d/chikit-clamshell"
 if ls $RULES >/dev/null 2>&1; then
     echo "▸ Removing closed-lid sudoers rule (asks for your admin password)…"
     osascript -e "do shell script \"rm -f $RULES\" with administrator privileges with prompt \"Chikit uninstaller\"" || true
