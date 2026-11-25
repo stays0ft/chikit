@@ -27,8 +27,10 @@ enum SelfUninstall {
             _ = suspendInputInterceptors()
             DispatchQueue.global(qos: .userInitiated).async {
                 detachFromSystem()
-                resetTCC()
-                DispatchQueue.main.async(execute: completion)
+                removeSudoersRuleIfPresent {           // may show one admin prompt
+                    resetTCC()
+                    DispatchQueue.main.async(execute: completion)
+                }
             }
         }
     }
@@ -46,9 +48,11 @@ enum SelfUninstall {
                     DispatchQueue.main.async(execute: onFailure)
                     return
                 }
-                resetTCC()
-                removePreferences()
-                DispatchQueue.main.async { trashOwnBundleAndQuit() }
+                removeSudoersRuleIfPresent {
+                    resetTCC()
+                    removePreferences()
+                    DispatchQueue.main.async { trashOwnBundleAndQuit() }
+                }
             }
         }
     }
@@ -73,6 +77,10 @@ enum SelfUninstall {
 
     @discardableResult
     private static func detachFromSystem() -> Bool {
+        if UserDefaults.standard.bool(forKey: DefaultsKey.sleepDisabledFlag),
+           !restoreSleepBeforeRemoval() {
+            return false
+        }
         guard FanControlService.restoreAndUnregisterForRemoval() else { return false }
         // Unregister the login item (scoped to our bundle id). The stored
         // intent goes with it, or the startup repair would quietly register
@@ -80,6 +88,40 @@ enum SelfUninstall {
         UserDefaults.standard.set(false, forKey: DefaultsKey.launchAtLoginWanted)
         try? SMAppService.mainApp.unregister()
         return true
+    }
+
+    /// Puts normal sleep back before the app goes.
+    ///
+    /// `KeepAwakeManager` is allowed to give up on a failed revert when the app
+    /// is merely quitting, because "the next start repairs a revert that was
+    /// missed". Removal is the one exit with no next start, and the flag that
+    /// would trigger that repair is deleted with the rest of the preferences a
+    /// moment later — so a reinstall does not fix it either, since recovery
+    /// reads the flag before it reads the setting. This is the last chance
+    /// anything has, which is why it may ask for the password the launch-time
+    /// recovery would have asked for.
+    private static func restoreSleepBeforeRemoval() -> Bool {
+        // The flag can outlive the setting, so a stale one must not put a
+        // password dialog in front of someone uninstalling. Only a reading that
+        // answered, and answered "off", is allowed to skip the rest: a probe
+        // that failed says nothing. Going on then costs a no-op call, and a
+        // dialog only if that call fails too — the case where sleep really may
+        // still be off with nothing else left to put it back.
+        let probe = Shell.run("/usr/bin/pmset", ["-g"])
+        if probe.status == 0, !SudoersSupport.sleepDisabled(inPmsetOutput: probe.output) {
+            return true
+        }
+        if Sudoers.pmsetDisableSleep(false) { return true }
+        guard AdminShell.runSync("pmset disablesleep 0",
+                                 prompt: L10n.shared.s.adminPromptRecover) else { return false }
+        let verification = Shell.run("/usr/bin/pmset", ["-g"])
+        return verification.status == 0
+            && !SudoersSupport.sleepDisabled(inPmsetOutput: verification.output)
+    }
+
+    private static func removeSudoersRuleIfPresent(then: @escaping () -> Void) {
+        guard Sudoers.ruleFilesPresent || Sudoers.isConfigured() else { then(); return }
+        Sudoers.remove { _ in then() }            // shows the admin password prompt
     }
 
     /// `tccutil reset All <bundle id>` clears Accessibility, Screen Recording,
