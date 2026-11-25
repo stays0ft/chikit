@@ -7139,87 +7139,6 @@ struct MetricsTests {
         single.push(6)
         expect(single.values == [6], "capacity 1 keeps only newest")
 
-        // MARK: Cleaning-mode unlock gesture
-
-        let escapeKeyCode: Int64 = 53
-
-        // Five deliberate Escape taps unlock, on the fifth.
-        var tapUnlock = false
-        expect(tapUnlock, "five Escape taps unlock")
-        // Wiping other keys cannot make progress toward unlock.
-        var wipeUnlock = false
-        expect(!wipeUnlock, "wiping other keys never unlocks")
-        // A different key mid-streak resets the count completely.
-        // Auto-repeat (holding Escape) is ignored, so resting on it can't unlock.
-        var heldUnlock = false
-        expect(!heldUnlock, "auto-repeat never unlocks")
-        // A pause longer than the window restarts the count.
-        // reset() clears everything.
-        // Modifiers are the keys nearest Escape, so a cloth reaches them first.
-        // They arrive as flags-changed events, which the tap feeds here too, and
-        // one physical press reports twice — once down, once up. Both are resets.
-        let leftShiftKeyCode: Int64 = 56
-        var smearedUnlock = false
-        // The counters above build their own windows, so nothing else here
-        // fails if the shipped constant regresses. Pin it at the source: the
-        // 2s window made the gesture impossible for anyone pressing Escape
-        // slower than once per two seconds (#697).
-        let cleaningSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/CleaningMode/CleaningModeManager.swift",
-            encoding: .utf8)) ?? ""
-        let cleaningCode = cleaningSource
-            .components(separatedBy: "\n")
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
-        expect(!cleaningCode.isEmpty && cleaningCode.contains("pressWindow: 6.0"),
-               "the shipped unlock counter keeps the forgiving 6s press window")
-
-        // The counter above cannot see how events reach it, and the real HID
-        // gesture is not reproducible headlessly. Pin the two properties of the
-        // tap's handler the counter depends on: modifiers reach it (they arrive
-        // as .flagsChanged, never as key-downs, and are the keys nearest
-        // Escape), and every ordinary event is still swallowed. The sole
-        // fail-open return belongs to a disabled tap in an inactive or
-        // untrusted session, where keeping input locked would strand the user.
-        let cleaningLines = cleaningSource.components(separatedBy: "\n")
-        let handlerStart = cleaningLines.firstIndex { $0.contains("private func handle(type:") }
-        let handlerEnd = handlerStart.flatMap { start in
-            cleaningLines[(start + 1)...].firstIndex { $0.hasPrefix("    private func ") }
-        } ?? cleaningLines.count
-        var modifiersReachCounter = false
-        var leakedEvents: [String] = []
-        var failOpenReturns = 0
-        for (index, line) in cleaningLines[(handlerStart ?? handlerEnd)..<handlerEnd].enumerated()
-        where !line.trimmingCharacters(in: .whitespaces).hasPrefix("//") {
-            let number = (handlerStart ?? 0) + index + 1
-            if line.contains("type == .flagsChanged") {
-                // Read to the end of that branch: the call has to be inside it.
-                var cursor = (handlerStart ?? 0) + index + 1
-                while cursor < handlerEnd, !cleaningLines[cursor].trimmingCharacters(in: .whitespaces).hasPrefix("}") {
-                    if cleaningLines[cursor].contains("registerUnlockKeyDown(") { modifiersReachCounter = true }
-                    cursor += 1
-                }
-            }
-            if line.contains("return Unmanaged.passUnretained(event)") {
-                failOpenReturns += 1
-            } else if line.contains("return"), !line.contains("return nil") {
-                leakedEvents.append("CleaningModeManager.swift:\(number)")
-            }
-        }
-        expect(modifiersReachCounter,
-               "flags-changed events feed the unlock counter, so modifiers reset the Escape count")
-        expect(handlerStart != nil && leakedEvents.isEmpty && failOpenReturns == 1,
-               "the cleaning tap swallows normal input and keeps one disabled-session fail-open path: \(leakedEvents)")
-        expect(cleaningCode.contains("self.deactivate(restoreSuspendedFeatures: false)")
-                && cleaningCode.contains("shouldRestoreSuspendedFeaturesOnSessionReturn = true")
-                && cleaningCode.contains("self.resumeSuspendedFeatures()")
-                && cleaningCode.contains("guard restoreSuspendedFeatures else {"),
-               "Cleaning Mode restores suspended taps only after its login session returns")
-
-        func systemKeyData(keyCode: Int, state: Int, repeatFlag: Bool = false) -> Int {
-            Int((UInt32(keyCode) << 16) | (UInt32(state) << 8) | (repeatFlag ? 1 : 0))
-        }
-
         // MARK: Music launch blocker
 
         func musicKeyData(keyCode: Int, state: Int = 10, repeatFlag: Bool = false) -> Int {
@@ -7274,20 +7193,14 @@ struct MetricsTests {
 
         // MARK: Features hub catalog
 
-        expect(AppFeature.allCases.count == 58, "feature catalog has 58 features")
+        expect(AppFeature.allCases.count == 17, "feature catalog has 17 features")
         expect(Set(AppFeature.allCases.map(\.rawValue)).count == AppFeature.allCases.count,
                "feature ids are unique")
         expect(AppFeature.allCases.map(\.rawValue) == [
-            "switcher", "dockPreview", "dockClick", "windowMaximizer", "windowLayout", "autoQuit",
-            "scrollInverter", "focusFollowsMouse", "smoothScroll", "mouseAcceleration", "mouseNavigation", "mouseButtonShortcuts", "middleClick",
-            "mouseClickDebounce", "keyboardDebounce", "textSnippets", "superKey", "quitWindowProtection",
-            "clipboardHistory", "pastePlain", "finderCutPaste", "finderRename", "shelf", "urlCleaner",
-            "diskImageInstaller",
-            "mixer", "soundOutputSwitcher", "micMute", "musicBlock",
-            "keepAwake", "brightness", "extraBrightness", "bluetoothSleep",
-            "quickLauncher", "quickToggles", "colorPicker", "screenOCR", "cleaningMode", "mediaTools",
-            "cleaner", "uninstaller", "homebrew", "appUpdates", "screenshot", "cameraPreview",
-            "radialMenu", "scratchpad", "commandBar", "screenRecorder", "killProcess", "notchMediaControls",
+            "windowLayout", "autoQuit",
+            "clipboardHistory", "finderRename",
+            "mixer", "soundOutputSwitcher",
+            "cleaner", "uninstaller", "screenRecorder", "notchMediaControls",
             "monitorCPU", "monitorGPU", "monitorMemory", "monitorNetwork", "monitorDisk", "monitorPower",
             "fanControl",
         ], "feature ids are stable (they persist inside availability keys)")
@@ -7298,8 +7211,7 @@ struct MetricsTests {
                "no hub group is empty")
         expect(AppPermission.allCases.map(\.rawValue) == [
             "accessibility", "screenRecording", "fullDiskAccess", "filesAndFolders", "notifications",
-            "automationFinder", "automationTerminal", "audioCapture", "microphone", "camera",
-            "appManagement",
+            "automationFinder", "audioCapture", "microphone",
         ], "permission portal contains every supported permission")
         let onboardingViewSource = (try? String(
             contentsOfFile: "Sources/Vorssaint/UI/Onboarding/OnboardingView.swift",
@@ -7837,8 +7749,8 @@ struct MetricsTests {
         ]
         // MARK: Hub presets and energy badges
 
-        expect(FeaturePreset.allCases.count == 3,
-               "three starting points, not another wall of decisions")
+        expect(FeaturePreset.allCases.count == 2,
+               "two starting points, not another wall of decisions")
         expect(FeaturePreset.allCases.allSatisfy { !$0.features.isEmpty },
                "every preset installs something")
         expect(FeaturePreset.essential.features.contains(.mixer)
@@ -11456,11 +11368,6 @@ struct MetricsTests {
         expect(sessionActivitySource.contains("sessionDidResignActiveNotification")
                 && sessionActivitySource.contains("sessionDidBecomeActiveNotification"),
                "the session watcher follows both halves of a fast user switch")
-        let mouseAccelerationSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/MouseAcceleration/MouseAccelerationService.swift",
-            encoding: .utf8)) ?? ""
-        expect(mouseAccelerationSource.contains("SessionActivitySupport.isOnConsole("),
-               "mouse acceleration shares the safe initial session-state fallback")
         // Disabling a tap and dropping the last Swift reference does not hand
         // the port back: CGGetEventTapList still reports the tap against this
         // process, one more per start/stop cycle, for the life of the process.
@@ -11495,29 +11402,6 @@ struct MetricsTests {
         expect(tapOwners > 0 && tapOwnersWithoutInvalidate.isEmpty,
                "every event tap owner invalidates its port on teardown, across "
                + "\(tapOwners) scanned owners: \(tapOwnersWithoutInvalidate)")
-
-        let mouseTapAppDelegateSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/App/AppDelegate.swift",
-            encoding: .utf8)) ?? ""
-        expect(mouseTapAppDelegateSource.contains("MouseButtonShortcutService.shared.suspend()"),
-               "normal termination releases mouse-button tap state instead of waiting for a future Up")
-        let accessibilitySink = mouseTapAppDelegateSource
-            .components(separatedBy: "Permissions.shared.$accessibility")
-            .dropFirst().first?.components(separatedBy: "Permissions.shared.$screenRecording").first ?? ""
-        expect(accessibilitySink.contains(".quitWindowProtection"),
-               "granting Accessibility starts quit protection without a relaunch")
-        let scrollInverterSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/ScrollInverter.swift",
-            encoding: .utf8)) ?? ""
-        let cleaningModeSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/CleaningMode/CleaningModeManager.swift",
-            encoding: .utf8)) ?? ""
-        expect(cleaningModeSource.contains("SessionActivity.shared.onChange")
-                && cleaningModeSource.contains("deactivate(restoreSuspendedFeatures: false)")
-                && cleaningModeSource.contains("SessionActivity.shared.isActive")
-                && cleaningModeSource.contains("AXIsProcessTrusted()")
-                && cleaningModeSource.contains("CFMachPortInvalidate"),
-               "Cleaning Mode ends and releases its filter tap when the login session leaves the screen")
 
         // MARK: Uninstallation paths stay aligned across SelfUninstall and Tools/uninstall.sh
         let selfUninstallSource = (try? String(contentsOfFile: "Sources/Vorssaint/Services/SelfUninstall.swift",
