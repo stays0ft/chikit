@@ -287,15 +287,6 @@ enum SettingsSearchSupport {
         builder.suggestions.append(suggestion)
     }
 
-    /// Keeps only the sections that still have items for the query, so an
-    /// empty section never renders just its header.
-    static func filteredIndices(query: String,
-                                sections: [[String]]) -> [[Int]] {
-        sections.map { titles in
-            titles.indices.filter { matches(query: query, title: titles[$0]) }
-        }
-    }
-
     private static func fold(_ value: String) -> String {
         value
             .folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],

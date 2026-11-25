@@ -79,17 +79,6 @@ struct ClipboardHistoryEntry: Codable, Equatable, Identifiable {
         }
     }
 
-    /// Same clipboard content, regardless of when it was copied: re-copying
-    /// refreshes the existing entry instead of duplicating it.
-    func matchesContent(of other: ClipboardHistoryEntry) -> Bool {
-        guard kind == other.kind else { return false }
-        switch kind {
-        case .text: return text == other.text
-        case .image: return imageHash != nil && imageHash == other.imageHash
-        case .files: return filePaths == other.filePaths
-        }
-    }
-
     /// What the search box can match. Image entries carry the localized label
     /// plus dimensions so typing "image"/"imagem" finds them.
     func searchableText(imageLabel: String) -> String {

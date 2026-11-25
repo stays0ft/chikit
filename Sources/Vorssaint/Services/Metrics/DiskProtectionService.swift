@@ -31,22 +31,6 @@ final class DiskProtectionService: ObservableObject {
         excludedVolumes = sanitized
     }
 
-    func addExcludedVolume(_ name: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        guard !excludedVolumes.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else { return }
-        let updated = Defaults.sanitizedDiskExclusionList(excludedVolumes + [trimmed])
-        UserDefaults.standard.set(updated, forKey: DefaultsKey.diskEjectExcludedVolumes)
-        excludedVolumes = updated
-    }
-
-    func removeExcludedVolume(_ name: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let updated = excludedVolumes.filter { $0.caseInsensitiveCompare(trimmed) != .orderedSame }
-        UserDefaults.standard.set(updated, forKey: DefaultsKey.diskEjectExcludedVolumes)
-        excludedVolumes = updated
-    }
-
     func isExcluded(disk: DiskDeviceReading) -> Bool {
         guard !excludedVolumes.isEmpty else { return false }
         let set = Set(excludedVolumes.map { $0.lowercased() })
@@ -54,28 +38,6 @@ final class DiskProtectionService: ObservableObject {
                                volumeUUID: disk.volumeUUID,
                                mountPath: disk.mountPath,
                                excludedVolumes: set)
-    }
-
-    /// Whether a volume is even worth offering for eject: local, not the
-    /// root filesystem, and either removable/ejectable or genuinely external.
-    /// A volume already in the exclusion list is never offered again.
-    static func shouldOfferEject(isInternal: Bool,
-                                 isRemovable: Bool,
-                                 isEjectable: Bool,
-                                 isLocal: Bool,
-                                 isRootFileSystem: Bool,
-                                 volumeName: String? = nil,
-                                 volumeUUID: String? = nil,
-                                 mountPath: String? = nil,
-                                 excludedVolumes: Set<String> = []) -> Bool {
-        guard isLocal && !isRootFileSystem && (!isInternal || isRemovable || isEjectable) else {
-            return false
-        }
-        guard !excludedVolumes.isEmpty else { return true }
-        return !isExcluded(volumeName: volumeName,
-                           volumeUUID: volumeUUID,
-                           mountPath: mountPath,
-                           excludedVolumes: excludedVolumes)
     }
 
     /// Whether a volume matches any entry in the user's exclusion list by

@@ -73,19 +73,6 @@ final class WindowUseTracker {
         stateLock.withLock { appHistory.firstIndex(of: pid) ?? Int.max }
     }
 
-    /// Records a switch the switcher itself performed. `previous` becomes the
-    /// second-most-recent window, so a quick repeat toggles straight back.
-    /// Applied immediately because the window server's order lags an
-    /// activation by a frame or two, and a flick is faster than that.
-    func recordSwitch(to windowID: CGWindowID?, from previous: CGWindowID?) {
-        stateLock.withLock {
-            guard recording else { return }
-            windowHistory = WindowUseOrder.promoting(target: windowID,
-                                                     previous: previous,
-                                                     in: windowHistory)
-        }
-    }
-
     /// Drops what no longer exists and files windows that were never focused,
     /// using the window server's front-to-back order. Called by the enumerator,
     /// which already has both lists in hand.

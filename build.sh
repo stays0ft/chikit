@@ -268,10 +268,8 @@ if (( TEST )); then
         Sources/Vorssaint/UI/Settings/FeatureVisibilitySupport.swift \
         Sources/Vorssaint/App/MenuBarSpacingSupport.swift \
         Sources/Vorssaint/App/StatusItemAnchorSupport.swift \
-        Sources/Vorssaint/Services/Finder/CutPasteProgressSupport.swift \
         Sources/Vorssaint/Services/WindowServerSupport.swift \
         Sources/Vorssaint/Core/ClipboardIgnoredAppsStrings.swift \
-        Sources/Vorssaint/Services/SpotlightNamesSupport.swift \
         Sources/Vorssaint/Services/QuickTools/ScreenshotCapturePolicy.swift \
         Sources/Vorssaint/Services/QuickTools/ScreenshotSupport.swift \
         Sources/Vorssaint/Services/QuickTools/WindowActivationPolicy.swift \

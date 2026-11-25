@@ -297,33 +297,6 @@ final class HomebrewManager: ObservableObject {
         openTerminal(command: command)
     }
 
-    func openHomebrewInstaller() {
-        errorMessage = nil
-        if openTerminal(command: HomebrewCommandBuilder.installerCommand) {
-            didOpenInstaller = true
-        }
-    }
-
-    func openShellConfiguration() {
-        guard let brewPath = brewPath ?? detectBrewPath() else { return }
-        self.brewPath = brewPath
-        errorMessage = nil
-        let command = HomebrewCommandBuilder.shellConfigCommand(brewPath: brewPath)
-        if openTerminal(command: command) {
-            didOpenShellConfig = true
-        }
-    }
-
-    func refreshShellConfigurationStatus() {
-        guard let brewPath = brewPath ?? detectBrewPath() else {
-            isShellConfigured = true
-            shellConfigProfilePath = nil
-            didOpenShellConfig = false
-            return
-        }
-        updateShellConfigStatus(brewPath: brewPath)
-    }
-
     @discardableResult
     private func openTerminal(command: String) -> Bool {
         let source = """

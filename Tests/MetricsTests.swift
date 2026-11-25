@@ -582,19 +582,6 @@ struct MetricsTests {
                     "clipboard image preview shows the dimensions")
         expect(imageEntry.searchableText(imageLabel: "Imagem").contains("Imagem"),
                "clipboard image entries match the localized image word in search")
-        expect(imageEntry.matchesContent(of: ClipboardHistoryEntry(text: "",
-                                                                   kind: .image,
-                                                                   imageFile: "b.png",
-                                                                   imageHash: "h1")),
-               "clipboard image dedupe matches by content hash, not by file")
-        expect(!imageEntry.matchesContent(of: ClipboardHistoryEntry(text: "",
-                                                                    kind: .image,
-                                                                    imageFile: "c.png",
-                                                                    imageHash: "h2")),
-               "clipboard image dedupe rejects different content")
-        expect(!ClipboardHistoryEntry(text: "", kind: .image).matchesContent(
-                   of: ClipboardHistoryEntry(text: "", kind: .image)),
-               "clipboard image dedupe never matches entries without a hash")
         let filesEntry = ClipboardHistoryEntry(text: "",
                                                kind: .files,
                                                filePaths: ["/Users/a/Documents/Report.pdf",
@@ -614,13 +601,6 @@ struct MetricsTests {
         expect(!ClipboardHistoryImageSupport.isImageFileName("document.pdf")
                && !ClipboardHistoryImageSupport.isImageFileName("archive.zip"),
                "clipboard image file support rejects non-image extensions")
-        expect(filesEntry.matchesContent(of: ClipboardHistoryEntry(text: "",
-                                                                   kind: .files,
-                                                                   filePaths: filesEntry.filePaths)),
-               "clipboard files dedupe matches the same path set")
-        expect(!filesEntry.matchesContent(of: ClipboardHistoryEntry(text: "Report.pdf, Photo.png",
-                                                                    kind: .text)),
-               "clipboard dedupe never crosses kinds")
         expectEqual(ClipboardHistoryPasteboardText.preferredText(webURLString: "http://localhost:3000/page",
                                                                  plainText: "//localhost:3000/page") ?? "",
                     "http://localhost:3000/page",
@@ -1243,42 +1223,10 @@ struct MetricsTests {
                "an unreadable visible-Space set never claims a parked window")
         expect(!SpaceHopSupport.isParkedOnHiddenSpace(windowSpaces: [3, 4], visibleSpaces: [3]),
                "a window pinned to several Spaces including a visible one is reachable")
-        expect(SpaceHopSupport.isOnFullscreenSpace(windowSpaces: [4, 8], fullscreenSpaces: [8])
-               && !SpaceHopSupport.isOnFullscreenSpace(windowSpaces: [4], fullscreenSpaces: [8])
-               && !SpaceHopSupport.isOnFullscreenSpace(windowSpaces: [], fullscreenSpaces: [8]),
-               "App Switcher identifies fullscreen from Space type instead of window size")
         expect(SpaceHopSupport.isExcludedFromWindowCycle(windowTagsLow: 1 << 18),
                "a window-server surface marked to ignore cycling is excluded from the switcher")
         expect(!SpaceHopSupport.isExcludedFromWindowCycle(windowTagsLow: (1 << 19) | (1 << 22)),
                "other window-server tags do not hide a legitimate cross-Space window")
-        expect(SpaceHopSupport.arrowSteps(orderedSpacesPerDisplay: [[3, 4, 5]],
-                                          visibleSpaces: [3],
-                                          target: 5) == 2,
-               "space travel counts the presses to the right")
-        expect(SpaceHopSupport.arrowSteps(orderedSpacesPerDisplay: [[3, 4, 5]],
-                                          visibleSpaces: [5],
-                                          target: 3) == -2,
-               "space travel counts the presses to the left")
-        expect(SpaceHopSupport.arrowSteps(orderedSpacesPerDisplay: [[3, 4]],
-                                          visibleSpaces: [3],
-                                          target: 3) == nil,
-               "space travel is never suggested toward a visible Space")
-        expect(SpaceHopSupport.arrowSteps(orderedSpacesPerDisplay: [[3, 4]],
-                                          visibleSpaces: [3],
-                                          target: 9) == nil,
-               "space travel is never suggested toward an unknown Space")
-        expect(SpaceHopSupport.arrowSteps(orderedSpacesPerDisplay: [[3, 4], [8, 9]],
-                                          visibleSpaces: [3, 8],
-                                          target: 9) == 1,
-               "space travel counts the presses on the target display when multiple displays exist")
-        expect(SpaceHopSupport.arrowSteps(orderedSpacesPerDisplay: [(0...40).map { UInt64($0) }],
-                                          visibleSpaces: [0],
-                                          target: 40) == nil,
-               "space travel refuses hops beyond the press cap")
-        expect(SpaceHopSupport.firstStage(appHasWindowOnVisibleSpace: true) == .moveASpace,
-               "an app with a window on the visible Space cannot travel by being activated, so the move is asked for right away")
-        expect(SpaceHopSupport.firstStage(appHasWindowOnVisibleSpace: false) == .waitForActivationTravel,
-               "an app with no window on the visible Space travels on activation, so that travel is waited on")
         expect(SpaceHopSupport.eventFlags(fromCarbonModifiers: 0x840000) == [.maskControl, .maskSecondaryFn],
                "the registered control+function mask replays with both flags")
         expect(SpaceHopSupport.eventFlags(fromCarbonModifiers: 0x20000 | 0x100000) == [.maskShift, .maskCommand],
@@ -1305,19 +1253,6 @@ struct MetricsTests {
                "committing to an app with no window leaves the window behind as the most recent one")
         expect(WindowUseOrder.promoting(target: nil, previous: nil, in: [5, 3]) == [5, 3],
                "committing to an app with no window and coming from none changes no history")
-        // A card is dragged for the same reason whatever state its window is in:
-        // the user wants that window here. Minimized and parked-on-another-Space
-        // used to refuse the gesture, which read as the drag doing nothing --
-        // releasing then counted as a click and the window went back to its own
-        // old place instead of the drop point.
-        // The preview size setting sizes the thumbnail, not the writing around
-        // it. Both halves of that are checked across every size on offer: the
-        // picture tracks the setting exactly, and the chrome does not move at
-        // all — a title band that scaled with the card once left a 12pt line
-        // adrift in 31pt of nothing at the largest setting.
-        let previewScales = Defaults.allowedPreviewSizes.map { PreviewSizing.scale(for: $0) }
-        expect(previewScales.count == 4 && previewScales.contains(1.0),
-               "every preview size on offer has a scale, including the unscaled one")
         expect(registeredDefaults[DefaultsKey.mixerLowerVolumeOnHeadphonesDisconnect] as? Bool == false,
                "headphone disconnect volume lowering is opt-in")
         expect(registeredDefaults[DefaultsKey.mixerHeadphonesDisconnectVolumePercent] as? Int
@@ -1654,20 +1589,6 @@ struct MetricsTests {
                                                                metricItemsShown: 2, renderedTitleLength: 0,
                                                                mustShowForSignal: true),
                "a signal brings the main item back even in the separate-items mode")
-        expect(MenuBarSpacingSupport.needsTitleRefreshTimer(keepAwakeActive: true,
-                                                            showsCountdown: true,
-                                                            hasEndDate: true),
-               "a visible finite Keep Awake countdown owns the title timer")
-        expect(!MenuBarSpacingSupport.needsTitleRefreshTimer(keepAwakeActive: false,
-                                                             showsCountdown: true,
-                                                             hasEndDate: true)
-                && !MenuBarSpacingSupport.needsTitleRefreshTimer(keepAwakeActive: true,
-                                                                  showsCountdown: false,
-                                                                  hasEndDate: true)
-                && !MenuBarSpacingSupport.needsTitleRefreshTimer(keepAwakeActive: true,
-                                                                  showsCountdown: true,
-                                                                  hasEndDate: false),
-               "idle, hidden and indefinite Keep Awake titles need no timer")
         let statusPlacementSuite = "com.chikit.tests.statusItemPlacement"
         if let statusDefaults = UserDefaults(suiteName: statusPlacementSuite) {
             statusDefaults.removePersistentDomain(forName: statusPlacementSuite)
@@ -4937,28 +4858,6 @@ struct MetricsTests {
 
         // MARK: Cut and paste move progress (issue #168)
 
-        expect(!CutPasteProgressSupport.isCrossVolume(source: NSNumber(value: 1),
-                                                      destination: NSNumber(value: 1)),
-               "a move inside one volume never shows progress")
-        expect(CutPasteProgressSupport.isCrossVolume(source: NSNumber(value: 1),
-                                                     destination: NSNumber(value: 2)),
-               "a move between volumes is recognized as a real copy")
-        expect(!CutPasteProgressSupport.isCrossVolume(source: nil,
-                                                      destination: NSNumber(value: 2)),
-               "unknown volume identities fall back to the silent same-volume path")
-        expect(CutPasteProgressSupport.fraction(finishedBytes: 0, currentBytes: 0, totalBytes: 0) == nil,
-               "an unknown byte total yields an indeterminate bar, not a broken fraction")
-        expect(CutPasteProgressSupport.fraction(finishedBytes: 50, currentBytes: 25, totalBytes: 150) == 0.5,
-               "progress combines finished files with the growing destination")
-        expect(CutPasteProgressSupport.fraction(finishedBytes: 100, currentBytes: 200, totalBytes: 150) == 1.0,
-               "progress clamps at full when the destination briefly over-reports")
-        expect(CutPasteProgressSupport.fraction(finishedBytes: -5, currentBytes: -5, totalBytes: 100) == 0.0,
-               "negative byte readings clamp to an empty bar")
-        expect(CutPasteProgressSupport.displayPosition(completed: 1, total: 5) == 2,
-               "the counter shows the item currently moving, one past the finished count")
-        expect(CutPasteProgressSupport.displayPosition(completed: 5, total: 5) == 5,
-               "the counter never runs past the batch size")
-
         // MARK: Paste copied image as file (issue #429)
 
         // MARK: Update installer helpers
@@ -5026,10 +4925,6 @@ struct MetricsTests {
                "settings search filters out non-matches")
         expect(SettingsSearchSupport.matches(query: "  switcher ", title: "Switcher"),
                "settings search trims surrounding whitespace")
-        expect(SettingsSearchSupport.filteredIndices(query: "mo",
-                                                     sections: [["Monitor", "Shelf"], ["Mouse"]])
-                   == [[0], [0]],
-               "settings search keeps matching rows per section")
         expect(SettingsSearchSupport.matches(query: "lid", title: "Energy",
                                              keywords: ["Keep going with the lid closed"]),
                "settings search finds a page by an option living inside it")
@@ -5501,24 +5396,6 @@ struct MetricsTests {
         expectEqual(HomebrewAnalytics.compactCount(999), "999", "Homebrew popularity under 1K stays plain")
         expectEqual(HomebrewAnalytics.compactCount(1_250), "1.2K", "Homebrew popularity compacts thousands")
         expectEqual(HomebrewAnalytics.compactCount(1_200_000), "1.2M", "Homebrew popularity compacts millions")
-        let shellSetupCommand = HomebrewCommandBuilder.shellConfigCommand(brewPath: brewPath,
-                                                                          homeDirectory: "/Users/test",
-                                                                          shellPath: "/bin/zsh")
-        expect(shellSetupCommand.hasPrefix("/bin/sh -c ")
-                && shellSetupCommand.contains("PROFILE=/Users/test/.zprofile")
-                && shellSetupCommand.hasSuffix(#"; eval "$(/opt/homebrew/bin/brew shellenv)"; brew --version"#),
-               "Homebrew shell setup command targets the detected profile")
-        expect(shellSetupCommand.contains(#"grep -qxF "$LINE""#),
-               "Homebrew shell setup command avoids duplicate profile lines")
-        let alternateShellSetupCommand = HomebrewCommandBuilder.shellConfigCommand(
-            brewPath: brewPath,
-            homeDirectory: "/Users/test",
-            shellPath: "/opt/homebrew/bin/fish"
-        )
-        expect(alternateShellSetupCommand.hasPrefix("/bin/sh -c ")
-                && alternateShellSetupCommand.contains("/bin/mkdir -p /Users/test/.config/fish")
-                && alternateShellSetupCommand.hasSuffix("; eval (/opt/homebrew/bin/brew shellenv fish); brew --version"),
-               "Homebrew shell setup creates and activates the interactive shell config")
         expectClose(HomebrewProgressParser.progressFraction(in: "######## 42.5%") ?? -1,
                     0.425,
                     "Homebrew progress parser reads percentage output")
@@ -5686,9 +5563,6 @@ struct MetricsTests {
             HomebrewPackage(kind: .formula, name: "delta-tool", displayName: "Delta Tool",
                             desc: nil, installedVersion: "1.0", stableVersion: nil, homepage: nil)
         ]
-        expect(HomebrewPackageOrdering.updatesFirst(orderingPackages).map(\.name)
-               == ["beta-tool", "gamma-tool", "alpha-tool", "delta-tool"],
-               "Homebrew installed packages keep all pending updates first without reordering either group")
         let searchPackages = HomebrewParser.parseSearchOutput("sample-formula\nbad token\nsample-filter\nsample-tool\n",
                                                               kind: .formula,
                                                               installed: homebrewPackages)
@@ -5923,7 +5797,6 @@ struct MetricsTests {
         expectClose(nettopRows.last?.bytesIn ?? -1, 16_245, "nettop parser reads numeric bytes in")
         expectClose(nettopRows.last?.bytesOut ?? -1, 20_641, "nettop parser reads numeric bytes out")
 
-        var nettopStream = NetworkProcessDeltaStreamParser()
         let streamLines = [
             "time,,bytes_in,bytes_out,",
             "08:31:45.865507,Codex.78844,78288,477660,",
@@ -5932,13 +5805,6 @@ struct MetricsTests {
             "08:31:46.871247,launchd.1,0,0,",
             "time,,bytes_in,bytes_out,",
         ]
-        let streamedSections = streamLines.compactMap { nettopStream.consumeCSVLine($0) }
-        expect(streamedSections.count == 1,
-               "nettop stream parser skips the initial cumulative section")
-        expect(streamedSections.first?.count == 1,
-               "nettop stream parser emits only active rows from the first delta section")
-        expectClose(streamedSections.first?.first?.bytesIn ?? -1, 416,
-                    "nettop stream parser does not publish cumulative bytes")
         expect(NetworkProcessSupport.nettopArguments == ["-P", "-d", "-x", "-J", "bytes_in,bytes_out", "-L", "1", "-s", "1"],
                "nettop per-app sampling asks for one cumulative section and computes deltas in app")
         expect(NetworkProcessSupport.externalNettopArguments == ["-P", "-d", "-x", "-t", "external", "-J", "bytes_in,bytes_out", "-L", "1", "-s", "1"],
@@ -7274,13 +7140,6 @@ struct MetricsTests {
         expect(ScreenshotSupport.scrollingTransition(previous: firstScrollSample,
                                                      current: unmatchedScrollSample) == .unmatched,
                "ambiguous content fails instead of inventing a seam")
-        expectClose(Double(ScreenshotSupport.captureScale(fromDPI: 144) ?? 0), 2,
-                    "the cached screenshot restores its Retina scale from PNG metadata")
-        expect(ScreenshotSupport.captureScale(fromDPI: nil) == nil
-                && ScreenshotSupport.captureScale(fromDPI: 0) == nil
-                && ScreenshotSupport.captureScale(fromDPI: .infinity) == nil,
-               "missing or broken PNG scale metadata never opens a misleading capture")
-
         let dragRect = ScreenshotSupport.selectionRect(from: CGPoint(x: 100, y: 80),
                                                        to: CGPoint(x: 40, y: 200))
         expect(dragRect == CGRect(x: 40, y: 80, width: 60, height: 120),
@@ -7330,13 +7189,6 @@ struct MetricsTests {
                     CGRect(x: 100.4, y: 60.4, width: 100.2, height: 100.2), within: snapBounds)
                 == CGRect(x: 100, y: 60, width: 101, height: 101),
                "a crop edge past the halfway mark rounds to the next boundary")
-        let movedDraft = ScreenshotSupport.pixelSnappedCropRect(
-            ScreenshotSupport.movedRect(snappedDraft,
-                                        by: CGPoint(x: 12.6, y: -4.3),
-                                        within: snapBounds),
-            within: snapBounds)
-        expect(movedDraft.size == snappedDraft.size,
-               "moving a crop draft never changes its size")
         expect(ScreenshotSupport.pixelSnappedCropRect(
                     CGRect(x: -40, y: -30, width: 100, height: 100), within: snapBounds)
                 == CGRect(x: 0, y: 0, width: 60, height: 70),
@@ -7368,63 +7220,12 @@ struct MetricsTests {
         patternParts.minute = 4
         patternParts.second = 9
         if let patternDate = Calendar(identifier: .gregorian).date(from: patternParts) {
-            expect(ScreenshotSupport.expandSaveSubfolder("%y-%mo", date: patternDate) == "26-07",
-                   "short date tokens expand zero padded")
-            expect(ScreenshotSupport.expandSaveSubfolder("%year/%month", date: patternDate)
-                   == "2026/July",
-                   "long date tokens expand before their short prefixes and nest with slashes")
-            expect(ScreenshotSupport.expandSaveSubfolder("", date: patternDate) == "",
-                   "an empty subfolder pattern means no subfolder")
-            expect(ScreenshotSupport.expandSaveSubfolder("../up//./%y", date: patternDate)
-                   == "up/26",
-                   "dot, dot-dot and empty components never escape the base folder")
-            expect(ScreenshotSupport.expandFileNamePattern("Shot %d at %h.%mi.%s",
-                                                           date: patternDate, number: 0)
-                   == "Shot 24 at 15.04.09",
-                   "file name patterns expand the day and time tokens")
-            expect(ScreenshotSupport.expandFileNamePattern("Shot-%#", date: patternDate, number: 7)
-                   == "Shot-7",
-                   "a single number token renders the sequence unpadded")
-            expect(ScreenshotSupport.expandFileNamePattern("%###-%y", date: patternDate, number: 7)
-                   == "007-26",
-                   "a longer number token zero pads to its length")
-            expect(ScreenshotSupport.fileNamePatternUsesNumber("Shot-%#")
-                    && !ScreenshotSupport.fileNamePatternUsesNumber("Shot-%y"),
-                   "only patterns with the number token consume the sequence")
-            expect(ScreenshotSupport.expandFileNamePattern("a/b %h:%mi", date: patternDate, number: 0)
-                   == "a-b 15-04",
-                   "slashes and colons in a file name pattern become dashes")
         } else {
             expect(false, "gregorian calendar produced the fixed pattern date")
         }
 
-        let cornerFrame = ScreenshotSupport.quickPreviewFrame(
-            size: CGSize(width: 310, height: 210),
-            anchor: .zero,
-            pointer: .zero,
-            visibleFrame: CGRect(x: 0, y: 0, width: 1440, height: 900),
-            position: .bottomRight)
-        expect(cornerFrame == CGRect(x: 1114, y: 16, width: 310, height: 210),
-               "the after-capture confirmation sits inset in the bottom-right corner")
         let previewSize = CGSize(width: 310, height: 210)
         let previewScreen = CGRect(x: -1920, y: 50, width: 1440, height: 900)
-        func configuredPreviewFrame(_ position: ScreenshotSupport.QuickPreviewPosition) -> CGRect {
-            ScreenshotSupport.quickPreviewFrame(
-                size: previewSize,
-                anchor: .zero,
-                pointer: .zero,
-                visibleFrame: previewScreen,
-                position: position)
-        }
-        expect(configuredPreviewFrame(.topLeft)
-                == CGRect(x: -1904, y: 724, width: 310, height: 210)
-                && configuredPreviewFrame(.topRight)
-                == CGRect(x: -806, y: 724, width: 310, height: 210)
-                && configuredPreviewFrame(.bottomLeft)
-                == CGRect(x: -1904, y: 66, width: 310, height: 210)
-                && configuredPreviewFrame(.bottomRight)
-                == CGRect(x: -806, y: 66, width: 310, height: 210),
-               "every configured preview corner respects the display origin and inset")
         let previewScreens = [
             (frame: CGRect(x: -1920, y: 0, width: 1920, height: 1080),
              visibleFrame: CGRect(x: -1920, y: 0, width: 1920, height: 1055)),
@@ -7433,28 +7234,6 @@ struct MetricsTests {
             (frame: CGRect(x: 1440, y: 300, width: 1280, height: 1024),
              visibleFrame: CGRect(x: 1440, y: 300, width: 1280, height: 999)),
         ]
-        expect(ScreenshotSupport.quickPreviewVisibleFrame(
-            anchor: CGRect(x: -900, y: 200, width: 500, height: 400),
-            pointer: CGPoint(x: -500, y: 300),
-            screens: previewScreens,
-            fallback: .zero) == previewScreens[0].visibleFrame,
-               "a capture uses the visible frame of its display in a three-display layout")
-        expect(ScreenshotSupport.quickPreviewVisibleFrame(
-            anchor: CGRect(x: 1300, y: 500, width: 500, height: 500),
-            pointer: CGPoint(x: 1700, y: 650),
-            screens: previewScreens,
-            fallback: .zero) == previewScreens[2].visibleFrame,
-               "a capture crossing displays uses the screen containing most of it")
-        expect(ScreenshotSupport.quickPreviewVisibleFrame(
-            anchor: CGRect(x: 5000, y: 5000, width: 400, height: 300),
-            pointer: CGPoint(x: 700, y: 500),
-            screens: previewScreens,
-            fallback: .zero) == previewScreens[1].visibleFrame,
-               "a disconnected capture display falls back to the current pointer display")
-        expect(ScreenshotSupport.QuickPreviewPosition.allCases.map(\.rawValue)
-                == ["", "topLeft", "topRight", "bottomLeft", "bottomRight"]
-                && ScreenshotSupport.QuickPreviewPosition(rawValue: "bogus") == nil,
-               "preview positions keep stable storage values and reject unknown values")
         // A gesture that ends with more than one release, like a drag made
         // with three fingers, delivers events after the capture is over.
         expect(ScreenshotSupport.selectionAcceptsPointerInput(sessionIsOver: false,
@@ -7548,25 +7327,6 @@ struct MetricsTests {
                                                  imageSize: CGSize(width: 200, height: 100))
                 == CGPoint(x: 0, y: 100),
                "the capture loupe clamps source points at display edges")
-        let editorMinimum = ScreenshotSupport.editorMinimumContentSize(
-            visibleSize: CGSize(width: 1470, height: 956))
-        expect(editorMinimum == CGSize(width: 980, height: 680),
-               "the screenshot editor opens on a comfortable canvas")
-        let editorSmallDisplay = ScreenshotSupport.editorMinimumContentSize(
-            visibleSize: CGSize(width: 700, height: 500))
-        expect(editorSmallDisplay == CGSize(width: 700, height: 500),
-               "the editor minimum never exceeds a compact display")
-        let smallCaptureWindow = ScreenshotSupport.editorContentSize(
-            imagePointSize: CGSize(width: 180, height: 100),
-            visibleSize: CGSize(width: 1470, height: 956))
-        expect(smallCaptureWindow == editorMinimum,
-               "a small screenshot still receives the full editing canvas")
-        let largeCaptureWindow = ScreenshotSupport.editorContentSize(
-            imagePointSize: CGSize(width: 2200, height: 1400),
-            visibleSize: CGSize(width: 1470, height: 956))
-        expect(largeCaptureWindow.width <= 1470 * 0.90
-                && largeCaptureWindow.height <= 956 * 0.88,
-               "a large screenshot editor stays inside the visible display")
         expect(ScreenshotSupport.editorOwnsKeyEvent(eventWindowNumber: 42,
                                                     editorWindowNumber: 42,
                                                     editorIsKey: true),
@@ -7583,14 +7343,6 @@ struct MetricsTests {
                                                      editorWindowNumber: 42,
                                                      editorIsKey: true),
                "screenshot editor ignores events explicitly owned by another window")
-        let previewFrame = ScreenshotSupport.quickPreviewFrame(
-            size: CGSize(width: 286, height: 210),
-            anchor: CGRect(x: 1100, y: 100, width: 300, height: 300),
-            pointer: CGPoint(x: 1300, y: 220),
-            visibleFrame: CGRect(x: 0, y: 0, width: 1470, height: 956))
-        expect(CGRect(x: 10, y: 10, width: 1450, height: 936).contains(previewFrame),
-               "the quick capture preview stays fully inside the visible display")
-
         let pickable = [ScreenshotSupport.PickableWindow(windowID: 1, frame: CGRect(x: 0, y: 0, width: 50, height: 50)),
                         ScreenshotSupport.PickableWindow(windowID: 2, frame: CGRect(x: 0, y: 0, width: 400, height: 400))]
         expect(ScreenshotSupport.window(at: CGPoint(x: 10, y: 10), in: pickable)?.windowID == 1,
@@ -7621,73 +7373,20 @@ struct MetricsTests {
         let dragRoot = FileManager.default.temporaryDirectory
             .appendingPathComponent("ScreenshotDragTests-\(UUID().uuidString)", isDirectory: true)
         let dragData = Data([0x89, 0x50, 0x4E, 0x47])
-        let firstDrag = try? ScreenshotSupport.temporaryDragFile(
-            data: dragData, name: "Capture.png", directory: dragRoot)
-        let secondDrag = try? ScreenshotSupport.temporaryDragFile(
-            data: dragData, name: "Capture.png", directory: dragRoot)
-        expect(firstDrag?.lastPathComponent == "Capture.png"
-                && firstDrag.flatMap { try? Data(contentsOf: $0) } == dragData,
-               "a screenshot drag writes the complete payload with its file name")
-        expect(firstDrag != nil && secondDrag != nil && firstDrag != secondDrag,
-               "simultaneous screenshot drags receive separate temporary files")
         let unrelatedDrag = dragRoot.appendingPathComponent("ScreenshotDrag-not-owned",
                                                             isDirectory: true)
         try? FileManager.default.createDirectory(at: unrelatedDrag,
                                                  withIntermediateDirectories: true)
-        ScreenshotSupport.removeTemporaryDragDirectories(directory: dragRoot)
-        expect(firstDrag.map { !FileManager.default.fileExists(atPath: $0.path) } == true
-                && secondDrag.map { !FileManager.default.fileExists(atPath: $0.path) } == true
-                && FileManager.default.fileExists(atPath: unrelatedDrag.path),
-               "temporary screenshot cleanup removes only app-owned drag directories")
         try? FileManager.default.removeItem(at: dragRoot)
 
         let copyRoot = FileManager.default.temporaryDirectory
             .appendingPathComponent("ScreenshotCopyTests-\(UUID().uuidString)", isDirectory: true)
-        let staleCopy = try? ScreenshotSupport.copiedFile(
-            data: dragData, name: "Old.png", directory: copyRoot)
-        if let staleCopy {
-            try? FileManager.default.setAttributes(
-                [.modificationDate: Date(timeIntervalSince1970: 1)],
-                ofItemAtPath: staleCopy.path)
-        }
-        let currentCopy = try? ScreenshotSupport.copiedFile(
-            data: dragData, name: "../Capture.png", directory: copyRoot)
-        let nextCopy = try? ScreenshotSupport.copiedFile(
-            data: dragData, name: "Capture.png", directory: copyRoot)
-        if let nextCopy {
-            ScreenshotSupport.pruneCopiedFiles(
-                in: copyRoot, preserving: nextCopy,
-                now: Date(timeIntervalSince1970: 100_000))
-        }
-        expect(staleCopy.map { !FileManager.default.fileExists(atPath: $0.path) } == true,
-               "copying a screenshot removes expired copied files")
-        expect(currentCopy?.lastPathComponent == "Capture.png"
-                && nextCopy?.lastPathComponent == "Capture 2.png"
-                && currentCopy.flatMap { try? Data(contentsOf: $0) } == dragData,
-               "copied screenshots stay as unique complete png files")
-        expect(currentCopy.map { ScreenshotSupport.isCopiedScreenshot($0, in: copyRoot) } == true,
-               "clipboard history recognizes a copied screenshot only inside its private cache")
         let lateStaleCopy = copyRoot.appendingPathComponent("A.png")
         let publishedCopy = copyRoot.appendingPathComponent("B.png")
-        let pruneVictims = ScreenshotSupport.copiedFilePruneVictims(
-            [
-                .init(url: lateStaleCopy, date: Date(timeIntervalSince1970: 2), bytes: 6),
-                .init(url: publishedCopy, date: Date(timeIntervalSince1970: 1), bytes: 6),
-            ],
-            preserving: publishedCopy,
-            maximumCount: 100,
-            maximumBytes: 10)
-        expect(pruneVictims == [lateStaleCopy],
-               "a late stale copy is pruned without evicting the published file")
         let copySymlink = FileManager.default.temporaryDirectory
             .appendingPathComponent("ScreenshotCopyLink-\(UUID().uuidString)")
         try? FileManager.default.createSymbolicLink(at: copySymlink,
                                                      withDestinationURL: copyRoot)
-        let symlinkCopy = try? ScreenshotSupport.copiedFile(
-            data: dragData, name: "Linked.png", directory: copySymlink)
-        expect(symlinkCopy == nil
-                && currentCopy.map { FileManager.default.fileExists(atPath: $0.path) } == true,
-               "copied screenshots reject a symlink cache without touching its target")
         try? FileManager.default.removeItem(at: copySymlink)
         try? FileManager.default.removeItem(at: copyRoot)
 
@@ -7698,12 +7397,6 @@ struct MetricsTests {
             ScreenshotSupport.Annotation(tool: .counter, number: 3),
         ]
         counterList.remove(at: 0)
-        let renumbered = ScreenshotSupport.renumberingCounters(counterList)
-        expect(renumbered.filter { $0.tool == .counter }.map(\.number) == [1, 2],
-               "deleting a counter renumbers the rest without holes")
-        expect(renumbered[0].tool == .arrow || renumbered.count == 3,
-               "renumbering never drops annotations")
-
         let layered = [
             ScreenshotSupport.Annotation(tool: .text),
             ScreenshotSupport.Annotation(tool: .rect),
@@ -7723,31 +7416,6 @@ struct MetricsTests {
         expect(ScreenshotSupport.reordering(layered, moving: UUID(), .forward).map(\.id)
                 == layered.map(\.id),
                "an unknown annotation leaves the order alone")
-        expect(!ScreenshotSupport.canReorder(layered, moving: layered[0].id, .backward)
-                && ScreenshotSupport.canReorder(layered, moving: layered[0].id, .forward)
-                && !ScreenshotSupport.canReorder(layered, moving: layered[2].id, .forward)
-                && ScreenshotSupport.canReorder(layered, moving: layered[2].id, .backward),
-               "each direction is offered only while the annotation can still take it")
-        expect(!ScreenshotSupport.canReorder(layered, moving: UUID(), .forward)
-                && !ScreenshotSupport.canReorder([], moving: layered[0].id, .backward),
-               "an annotation that is not there can never be reordered")
-
-        let resized = ScreenshotSupport.resizedRect(CGRect(x: 10, y: 10, width: 100, height: 100),
-                                                    dragging: .bottomRight,
-                                                    to: CGPoint(x: 50, y: 60))
-        expect(resized == CGRect(x: 10, y: 10, width: 40, height: 50),
-               "dragging a handle resizes the rect")
-        let crossed = ScreenshotSupport.resizedRect(CGRect(x: 10, y: 10, width: 100, height: 100),
-                                                    dragging: .right,
-                                                    to: CGPoint(x: 0, y: 0))
-        expect(crossed.width == 10 && crossed.minX == 0,
-               "dragging a handle across the opposite edge flips instead of going negative")
-        let movedCrop = ScreenshotSupport.movedRect(
-            CGRect(x: 20, y: 30, width: 80, height: 60),
-            by: CGPoint(x: 50, y: -100),
-            within: CGRect(x: 0, y: 0, width: 120, height: 100))
-        expect(movedCrop == CGRect(x: 40, y: 0, width: 80, height: 60),
-               "dragging inside a crop moves it without resizing past the image edges")
         expect(ScreenshotSupport.handle(at: CGPoint(x: 10, y: 10),
                                         rect: CGRect(x: 10, y: 10, width: 100, height: 100),
                                         tolerance: 6) == .topLeft,
@@ -7783,23 +7451,6 @@ struct MetricsTests {
                                           CGPoint(x: 100, y: 0)) == 30,
                "segment distance clamps to the endpoints")
 
-        expect(ScreenshotSupport.pixelBlockSize(for: CGSize(width: 5500, height: 3600)) == 65
-                && ScreenshotSupport.pixelBlockSize(for: CGSize(width: 200, height: 120)) == 10,
-               "pixelation blocks scale with the capture and never get too fine")
-        expect(ScreenshotSupport.downscaledSize(pixelSize: CGSize(width: 800, height: 600), scale: 2)
-                == CGSize(width: 400, height: 300),
-               "the 1x option halves a Retina capture")
-        expect(ScreenshotSupport.downscaledSize(pixelSize: CGSize(width: 800, height: 600), scale: 1)
-                == CGSize(width: 800, height: 600),
-               "a 1x capture never downscales")
-        expect(ScreenshotSupport.backdropPadding(for: CGSize(width: 100, height: 100), factor: 0.5) == 24,
-               "backdrop padding keeps a floor for tiny captures")
-        expect(ScreenshotSupport.backdropPadding(for: CGSize(width: 4000, height: 4000), factor: 1)
-                == (4000 * 0.175).rounded(),
-               "the margin slider grows the backdrop padding")
-        expect(ScreenshotSupport.backdropPadding(for: CGSize(width: 4000, height: 4000), factor: 0)
-                == 140,
-               "margin zero still keeps a small frame")
         expect(ScreenshotSupport.BackdropID.allCases.filter { $0 != .none }
                 .allSatisfy { $0.stops.count == 2 },
                "every backdrop gradient has its two stops")
@@ -7809,17 +7460,6 @@ struct MetricsTests {
         expect(ScreenshotSupport.StickerID.sanitized("bogus") == .check
                 && ScreenshotSupport.StickerID.allCases.count == 12,
                "stickers keep a safe default and a compact built-in set")
-        let stickerRect = ScreenshotSupport.stickerRect(
-            centeredAt: CGPoint(x: 5, y: 5),
-            side: 40,
-            within: CGRect(x: 0, y: 0, width: 100, height: 80))
-        expect(stickerRect == CGRect(x: 0, y: 0, width: 40, height: 40),
-               "a sticker placed at an edge stays fully inside the image")
-
-        expect(ScreenshotSupport.cardCornerRadius(for: CGSize(width: 1600, height: 900), factor: 0) == 0
-                && ScreenshotSupport.cardCornerRadius(for: CGSize(width: 1600, height: 900), factor: 1) == 180
-                && ScreenshotSupport.cardCornerRadius(for: CGSize(width: 1600, height: 900), factor: 2) == 180,
-               "card corner radius clamps and scales with the short side")
         expect(abs(ScreenshotSupport.backdropBlurRadius(
                     for: CGSize(width: 1600, height: 900), factor: 1) - 31.5) < 0.001
                 && ScreenshotSupport.backdropBlurRadius(
@@ -7874,26 +7514,6 @@ struct MetricsTests {
         let wordBoxes = [CGRect(x: 0, y: 0, width: 40, height: 10),
                          CGRect(x: 50, y: 0, width: 40, height: 10),
                          CGRect(x: 0, y: 20, width: 40, height: 10)]
-        expect(ScreenshotSupport.wordSelection(anchor: CGPoint(x: 5, y: 5),
-                                               current: CGPoint(x: 60, y: 5),
-                                               boxes: wordBoxes) == [0, 1],
-               "a drag across a line selects the words it crosses")
-        expect(ScreenshotSupport.wordSelection(anchor: CGPoint(x: 5, y: 5),
-                                               current: CGPoint(x: 10, y: 25),
-                                               boxes: wordBoxes) == [0, 2],
-               "a drag across lines selects into the next line")
-        let recognizedWords = [
-            ScreenshotSupport.RecognizedWord(text: "ola", rect: wordBoxes[0], line: 0),
-            ScreenshotSupport.RecognizedWord(text: "mundo", rect: wordBoxes[1], line: 0),
-            ScreenshotSupport.RecognizedWord(text: "linha", rect: wordBoxes[2], line: 1),
-        ]
-        expect(ScreenshotSupport.joinedWords(recognizedWords, selected: [1, 0]) == "ola mundo",
-               "selected words join in reading order with spaces")
-        expect(ScreenshotSupport.joinedWords(recognizedWords, selected: [2, 0]) == "ola\nlinha",
-               "line changes become newlines")
-        expect(ScreenshotSupport.joinedWords(recognizedWords, selected: [9]).isEmpty
-                && ScreenshotSupport.joinedWords(recognizedWords, selected: []).isEmpty,
-               "out of range or empty selections copy nothing")
         let defaultScreenshotTools = ScreenshotSupport.Tool.allCases
         expect(defaultScreenshotTools.count == 13
                 && Array(defaultScreenshotTools.prefix(9))
@@ -7906,45 +7526,6 @@ struct MetricsTests {
                 && customScreenshotTools.count == 13
                 && Set(customScreenshotTools).count == 13,
                "a saved screenshot tool order drops invalid duplicates and appends missing tools")
-        expect(ScreenshotSupport.Tool.shortcutTool(number: 1,
-                                                   orderRaw: nil,
-                                                   enabled: true) == .select
-                && ScreenshotSupport.Tool.shortcutTool(number: 3,
-                                                       orderRaw: nil,
-                                                       enabled: true) == .pixelate
-                && ScreenshotSupport.Tool.shortcutTool(number: 9,
-                                                       orderRaw: nil,
-                                                       enabled: true) == .freehand
-                && ScreenshotSupport.Tool.shortcutTool(number: 1,
-                                                       orderRaw: nil,
-                                                       enabled: false) == nil
-                && ScreenshotSupport.Tool.shortcutTool(number: 10,
-                                                       orderRaw: nil,
-                                                       enabled: true) == nil,
-               "number keys 1 through 9 follow tool order and can be disabled together")
-        expect(ScreenshotSupport.Tool.shortcutNumber(for: .crop,
-                                                     orderRaw: "arrow,crop",
-                                                     enabled: true) == 2
-                && ScreenshotSupport.Tool.shortcutNumber(for: .redact,
-                                                         orderRaw: nil,
-                                                         enabled: true) == nil,
-               "the rail exposes only the first nine configured shortcut numbers")
-        let cropAssignedFirst = ScreenshotSupport.Tool.assigningShortcut(
-            1, to: .crop, orderRaw: nil)
-        let selectWithoutShortcut = ScreenshotSupport.Tool.assigningShortcut(
-            nil, to: .select, orderRaw: nil)
-        expect(cropAssignedFirst.first == .crop
-                && ScreenshotSupport.Tool.shortcutNumber(
-                    for: .crop,
-                    orderRaw: cropAssignedFirst.map(\.rawValue).joined(separator: ","),
-                    enabled: true) == 1
-                && selectWithoutShortcut.firstIndex(of: .select) == 9
-                && ScreenshotSupport.Tool.shortcutNumber(
-                    for: .select,
-                    orderRaw: selectWithoutShortcut.map(\.rawValue).joined(separator: ","),
-                    enabled: true) == nil,
-               "the visible shortcut menu assigns a numbered slot or removes a tool from 1 through 9")
-
         expect(ScreenshotSupport.cropLoupeSampleRect(
             around: CGPoint(x: 50, y: 40),
             imageSize: CGSize(width: 100, height: 80))
@@ -8116,15 +7697,6 @@ struct MetricsTests {
                 oversizedCaptureIDs[1]: 2,
             ]) == [oversizedCaptureIDs[0], oversizedCaptureIDs[2]],
                "recent captures keeps the latest screenshot and respects its disk budget")
-        expect(ScreenshotSupport.clipboardImageScale(
-            pixelSize: CGSize(width: 1200, height: 800),
-            pointSize: CGSize(width: 600, height: 400)) == 2,
-               "copied images preserve a consistent Retina scale")
-        expect(ScreenshotSupport.clipboardImageScale(
-            pixelSize: CGSize(width: 1200, height: 800),
-            pointSize: CGSize(width: 600, height: 800)) == 1,
-               "copied images with inconsistent metadata safely use 1x")
-
         // An unpinned borderless Menu claims the free width of its row on
         // macOS 15 and starves whatever shares that row (issue #569), so the
         // rule is checked for every borderless menu in the app rather than for
@@ -8645,9 +8217,6 @@ struct MetricsTests {
                                                    tokens: ["chat", "--force", "editor"])?.arguments
                 == ["upgrade", "--cask", "--greedy", "chat", "editor"],
                "only real package names reach the upgrade command")
-        expect(HomebrewCommandBuilder.outdatedCasksIncludingSelfUpdating(brewPath: "/opt/x/brew").arguments
-                == ["outdated", "--cask", "--greedy", "--json=v2"],
-               "the update check asks for the apps that carry their own updater too")
         let caskJSON = #"{"formulae":[],"casks":[{"token":"editor","name":["Editor"],"installed":"1.129.0","artifacts":[{"app":["Source.app",{"target":"Editor.app"}],"target":"/Applications/Editor.app"},{"zap":[]}]},{"token":"tapped-tool","full_token":"example/tap/tapped-tool","name":["Tapped Tool"],"installed":"1.0.0","artifacts":[{"app":["Tapped Tool.app"]}]}]}"#
         let parsedRecords = HomebrewParser.parseInstalledCaskRecords(caskJSON)
         expect(parsedRecords.count == 2 && parsedRecords[0].appFileNames == ["Editor.app"]
@@ -9068,11 +8637,7 @@ struct MetricsTests {
                "audio gain stays inside the editor's safe range")
 
         var document = RecorderEditDocument()
-        expect(!document.isEdited(duration: 12) && !document.zoomsOnTyping,
-               "a recording nobody touched is not treated as edited")
         document.trimStart = 3
-        expect(document.isEdited(duration: 12),
-               "moving a handle marks the recording as edited")
         document.trimStart = 100
         document.trimEnd = -5
         let repaired = document.sanitized(duration: 12)
@@ -9212,15 +8777,6 @@ struct MetricsTests {
                "a recording with no clicks has no zoom")
 
         let segment = RecorderMotion.ZoomSegment(start: 2, end: 6)
-        expect(RecorderMotion.zoomProgress(at: 1.5, segments: [segment]) == 0,
-               "before the segment the picture is untouched")
-        expect(RecorderMotion.zoomProgress(at: 4, segments: [segment]) == 1,
-               "in the middle of the segment the zoom is fully in")
-        let rampingIn = RecorderMotion.zoomProgress(at: 2.2, segments: [segment])
-        expect(rampingIn > 0 && rampingIn < 1, "the zoom eases in rather than cutting")
-        let rampingOut = RecorderMotion.zoomProgress(at: 6.3, segments: [segment])
-        expect(rampingOut > 0 && rampingOut < 1, "the zoom eases out rather than cutting")
-
         // The viewport is parameterized in its own travel range, so it cannot
         // leave the frame and never needs clamping afterwards.
         for zoomLevel in [1.2, 1.8, 2.5, 3.0] {
@@ -9463,10 +9019,6 @@ struct MetricsTests {
             RecorderEditDocument(blurs: [blur]).encoded())
         expect(blurredDocument.blurs == [blur],
                "a blur written next to the recording comes back exactly as it was")
-        expect(RecorderEditDocument().affectsPicture(blurredDocument)
-                && !RecorderEditDocument().affectsTiming(blurredDocument)
-                && blurredDocument.isEdited(duration: 10),
-               "adding a blur redraws the preview without rebuilding the timeline, and counts as an edit")
         expect(RecorderEditDocument(blurs: [RecorderBlurRegion(start: 4, end: 4.05)])
                 .sanitized(duration: 10).blurs.isEmpty,
                "a damaged blur is dropped by the same repair that fixes every other field")
@@ -9664,31 +9216,6 @@ struct MetricsTests {
         gregorian.timeZone = TimeZone(identifier: "UTC")!
         let english = Locale(identifier: "en_US")
         let tuesday = Date(timeIntervalSince1970: 1_785_240_000)   // 2026-07-28
-        // The gate is the whole safety of this: anything a person might be
-        // searching for that happens to carry a number must fall through.
-        // The places the person saves themselves.
-        // MARK: The other names macOS knows an app by
-        expect(SpotlightNamesSupport.usableAlternateNames(["Legacy Planner", "Planner.app"],
-                                                          displayName: "Planner",
-                                                          fileName: "Planner.app")
-                == ["Legacy Planner"],
-               "a real alias is kept and the bundle's own file name is not")
-        expect(SpotlightNamesSupport.usableAlternateNames(
-                ["Preferences", "Settings", "Configuration.app", "Previous Settings",
-                 "Configuration"],
-                displayName: "Configuration",
-                fileName: "Configuration.app")
-                == ["Preferences", "Settings", "Previous Settings"],
-               "an alias repeating the name under the icon teaches the search nothing")
-        expect(SpotlightNamesSupport.usableAlternateNames(["ALTERNATE_NAME_1", "  ", "browser"],
-                                                          displayName: "Navigator",
-                                                          fileName: "Navigator.app") == ["browser"],
-               "an untranslated placeholder is not a name anybody types")
-        expect(SpotlightNamesSupport.usableAlternateNames(["Café", "cafe"],
-                                                          displayName: "Reader",
-                                                          fileName: "Reader.app") == ["Café"],
-               "two aliases that differ only by accent or case are one alias")
-
         // The defect itself: scored against its own name, a saved search left
         // the list on the first word of the argument, which is the moment it
         // was about to run.

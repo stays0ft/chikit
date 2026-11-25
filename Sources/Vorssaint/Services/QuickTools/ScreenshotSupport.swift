@@ -535,28 +535,6 @@ enum ScreenshotSupport {
         return lower..<upper
     }
 
-    /// Restores the pixels-per-point scale stored as standard PNG DPI.
-    static func captureScale(fromDPI dpi: Double?) -> CGFloat? {
-        guard let dpi, dpi.isFinite else { return nil }
-        let scale = dpi / 72
-        guard (0.5...4).contains(scale) else { return nil }
-        return CGFloat(scale)
-    }
-
-    /// Uses the logical size carried by a copied image when it describes one
-    /// consistent display scale. Imported files without that metadata edit at 1x.
-    static func clipboardImageScale(pixelSize: CGSize, pointSize: CGSize) -> CGFloat {
-        guard pixelSize.width > 0, pixelSize.height > 0,
-              pointSize.width > 0, pointSize.height > 0
-        else { return 1 }
-        let horizontal = pixelSize.width / pointSize.width
-        let vertical = pixelSize.height / pointSize.height
-        guard horizontal.isFinite, vertical.isFinite,
-              abs(horizontal - vertical) <= max(horizontal, vertical) * 0.05
-        else { return 1 }
-        return captureScale(fromDPI: Double((horizontal + vertical) / 2) * 72) ?? 1
-    }
-
     // MARK: - Selection geometry
 
     /// Rectangle between two drag points. `square` constrains to the largest
@@ -675,125 +653,7 @@ enum ScreenshotSupport {
 
     // MARK: - Quick preview placement
 
-    enum QuickPreviewPosition: String, CaseIterable {
-        case automatic = ""
-        case topLeft
-        case topRight
-        case bottomLeft
-        case bottomRight
-    }
-
-    /// Picks the display containing most of the capture. The pointer breaks
-    /// an exact tie and is also the fallback when a display was disconnected
-    /// or rearranged before the preview appears.
-    static func quickPreviewVisibleFrame(
-        anchor: CGRect,
-        pointer: CGPoint,
-        screens: [(frame: CGRect, visibleFrame: CGRect)],
-        fallback: CGRect
-    ) -> CGRect {
-        var selected: (frame: CGRect, visibleFrame: CGRect)?
-        var selectedArea: CGFloat = 0
-        for screen in screens {
-            let overlap = anchor.intersection(screen.frame)
-            let area = overlap.isNull ? 0 : max(0, overlap.width) * max(0, overlap.height)
-            let winsTie = area == selectedArea
-                && area > 0
-                && screen.frame.contains(pointer)
-                && !(selected?.frame.contains(pointer) ?? false)
-            if area > selectedArea || winsTie {
-                selected = screen
-                selectedArea = area
-            }
-        }
-        if let selected { return selected.visibleFrame }
-        return screens.first { $0.frame.contains(pointer) }?.visibleFrame ?? fallback
-    }
-
-    /// Places the capture preview beside the selection in automatic mode, or
-    /// in the selected display corner, and clamps it to the visible frame.
-    static func quickPreviewFrame(size: CGSize,
-                                  anchor: CGRect,
-                                  pointer: CGPoint,
-                                  visibleFrame: CGRect,
-                                  position: QuickPreviewPosition = .automatic) -> CGRect {
-        let inset: CGFloat = position == .automatic ? 10 : 16
-        let usable = visibleFrame.insetBy(dx: inset, dy: inset)
-
-        if position != .automatic {
-            let x: CGFloat
-            let y: CGFloat
-            switch position {
-            case .automatic, .bottomRight:
-                x = max(usable.minX, usable.maxX - size.width)
-                y = usable.minY
-            case .topLeft:
-                x = usable.minX
-                y = max(usable.minY, usable.maxY - size.height)
-            case .topRight:
-                x = max(usable.minX, usable.maxX - size.width)
-                y = max(usable.minY, usable.maxY - size.height)
-            case .bottomLeft:
-                x = usable.minX
-                y = usable.minY
-            }
-            return CGRect(origin: CGPoint(x: x, y: y), size: size)
-        }
-
-        let gap: CGFloat = 14
-        var x = anchor.maxX + gap
-        if x + size.width > usable.maxX {
-            x = anchor.minX - size.width - gap
-        }
-        if x < usable.minX || x + size.width > usable.maxX {
-            x = pointer.x + gap
-        }
-
-        var y = anchor.midY - size.height / 2
-        if y < usable.minY || y + size.height > usable.maxY {
-            let below = anchor.minY - size.height - gap
-            let above = anchor.maxY + gap
-            if below >= usable.minY {
-                y = below
-            } else if above + size.height <= usable.maxY {
-                y = above
-            } else {
-                y = pointer.y - size.height / 2
-            }
-        }
-
-        x = min(max(x, usable.minX), max(usable.minX, usable.maxX - size.width))
-        y = min(max(y, usable.minY), max(usable.minY, usable.maxY - size.height))
-        return CGRect(origin: CGPoint(x: x, y: y), size: size)
-    }
-
     // MARK: - Editor layout
-
-    /// A fresh editor should be large enough for its controls and canvas,
-    /// while still fitting compact or rotated displays.
-    static func editorMinimumContentSize(visibleSize: CGSize) -> CGSize {
-        CGSize(width: min(visibleSize.width,
-                          min(980, max(760, visibleSize.width * 0.76))),
-               height: min(visibleSize.height,
-                           min(680, max(560, visibleSize.height * 0.72))))
-    }
-
-    /// Initial content size for an editor window. Large captures fit inside
-    /// the display and small captures still open on a comfortable canvas.
-    static func editorContentSize(imagePointSize: CGSize,
-                                  visibleSize: CGSize) -> CGSize {
-        let chrome = CGSize(width: 96, height: 140)
-        let minimum = editorMinimumContentSize(visibleSize: visibleSize)
-        let maximum = CGSize(width: max(minimum.width, visibleSize.width * 0.90),
-                             height: max(minimum.height, visibleSize.height * 0.88))
-        let fit = min(1,
-                      min((maximum.width - chrome.width) / max(imagePointSize.width, 1),
-                          (maximum.height - chrome.height) / max(imagePointSize.height, 1)))
-        let preferred = CGSize(width: imagePointSize.width * fit + chrome.width,
-                               height: imagePointSize.height * fit + chrome.height)
-        return CGSize(width: min(maximum.width, max(minimum.width, preferred.width)),
-                      height: min(maximum.height, max(minimum.height, preferred.height)))
-    }
 
     /// Local key monitors normally receive the editor's window number, but
     /// AppKit can clear it while resolving a main-menu key equivalent such as
@@ -831,255 +691,9 @@ enum ScreenshotSupport {
         return "\(prefix) \(formatter.string(from: date)).\(fileExtension)"
     }
 
-    /// Writes one drag payload into its own temporary directory. Separate
-    /// directories keep captures made in the same second from replacing each
-    /// other while either drag is still in flight.
-    static func temporaryDragFile(data: Data, name: String,
-                                  directory: URL = FileManager.default.temporaryDirectory) throws -> URL {
-        let folder = directory.appendingPathComponent("ScreenshotDrag-\(UUID().uuidString)",
-                                                       isDirectory: true)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let url = folder.appendingPathComponent((name as NSString).lastPathComponent)
-        try data.write(to: url, options: .atomic)
-        return url
-    }
-
-    /// Keeps copied captures available long enough for paste targets that read
-    /// the file after accepting its URL from the pasteboard.
-    static func copiedFile(data: Data, name: String, directory: URL) throws -> URL {
-        guard Int64(data.count) <= copiedFileMaximumBytes else {
-            throw CocoaError(.fileWriteOutOfSpace)
-        }
-        return try copiedFileLock.withLock {
-            let manager = FileManager.default
-            try preparePrivateCacheDirectory(directory, manager: manager)
-            let safeName = (name as NSString).lastPathComponent
-            let uniqueName = uniqueFileName(safeName) { candidate in
-                manager.fileExists(atPath: directory.appendingPathComponent(candidate).path)
-            }
-            let url = directory.appendingPathComponent(uniqueName)
-            try data.write(to: url, options: .atomic)
-            try manager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
-            return url
-        }
-    }
-
-    static func copiedFilesDirectory(fileManager: FileManager = .default,
-                                     bundle: Bundle = .main) -> URL? {
-        guard let base = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first,
-              let bundleID = bundle.bundleIdentifier else { return nil }
-        return base.appendingPathComponent(bundleID, isDirectory: true)
-            .appendingPathComponent("Copied Screenshots", isDirectory: true)
-    }
-
-    static func isCopiedScreenshot(_ url: URL, in directory: URL) -> Bool {
-        let file = url.standardizedFileURL
-        let root = directory.standardizedFileURL
-        guard file.deletingLastPathComponent().path == root.path,
-              file.pathExtension.lowercased() == "png",
-              let rootValues = try? root.resourceValues(
-                forKeys: [.isDirectoryKey, .isSymbolicLinkKey]),
-              rootValues.isDirectory == true,
-              rootValues.isSymbolicLink != true,
-              let values = try? file.resourceValues(
-                forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
-        else { return false }
-        return values.isRegularFile == true && values.isSymbolicLink != true
-    }
-
-    struct CopiedFilePruneCandidate: Equatable {
-        let url: URL
-        let date: Date
-        let bytes: Int64
-    }
-
     private static let copiedFileLock = NSLock()
     private static let copiedFileMaximumCount = 100
     private static let copiedFileMaximumBytes: Int64 = 256 * 1024 * 1024
-
-    private static func preparePrivateCacheDirectory(_ directory: URL,
-                                                     manager: FileManager) throws {
-        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
-        let values = try directory.resourceValues(
-            forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-        guard values.isDirectory == true, values.isSymbolicLink != true else {
-            throw CocoaError(.fileWriteInvalidFileName)
-        }
-        try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
-    }
-
-    static func copiedFilePruneVictims(_ files: [CopiedFilePruneCandidate],
-                                       preserving current: URL,
-                                       maximumCount: Int,
-                                       maximumBytes: Int64) -> [URL] {
-        let currentPath = current.standardizedFileURL.path
-        guard let currentFile = files.first(where: {
-            $0.url.standardizedFileURL.path == currentPath
-        }) else { return [] }
-        var count = 1
-        var bytes = max(0, currentFile.bytes)
-        var victims: [URL] = []
-        for file in files.sorted(by: {
-            $0.date == $1.date
-                ? $0.url.standardizedFileURL.path < $1.url.standardizedFileURL.path
-                : $0.date > $1.date
-        })
-            where file.url.standardizedFileURL.path != currentPath {
-            if count < maximumCount
-                && file.bytes >= 0
-                && bytes <= maximumBytes
-                && file.bytes <= maximumBytes - bytes {
-                count += 1
-                bytes += file.bytes
-            } else {
-                victims.append(file.url)
-            }
-        }
-        return victims
-    }
-
-    /// Applies the cache bounds only after `current` has reached the pasteboard.
-    /// A stale render may finish later, but it can never evict the published URL.
-    static func pruneCopiedFiles(in directory: URL, preserving current: URL,
-                                 now: Date = Date()) {
-        copiedFileLock.withLock {
-            let manager = FileManager.default
-            guard isCopiedScreenshot(current, in: directory) else { return }
-            let keys: Set<URLResourceKey> = [
-                .contentModificationDateKey, .fileSizeKey, .isRegularFileKey, .isSymbolicLinkKey,
-            ]
-            guard let children = try? manager.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: Array(keys)) else { return }
-            let files = children.compactMap { url -> CopiedFilePruneCandidate? in
-                guard url.pathExtension.lowercased() == "png",
-                      let values = try? url.resourceValues(forKeys: keys),
-                      values.isRegularFile == true,
-                      values.isSymbolicLink != true else { return nil }
-                return CopiedFilePruneCandidate(
-                    url: url,
-                    date: values.contentModificationDate ?? .distantPast,
-                    bytes: Int64(values.fileSize ?? 0))
-            }
-            let currentPath = current.standardizedFileURL.path
-            let cutoff = now.addingTimeInterval(-24 * 3600)
-            let expired = files.filter {
-                $0.url.standardizedFileURL.path != currentPath && $0.date < cutoff
-            }
-            let expiredURLs = Set(expired.map(\.url))
-            let currentFiles = files.filter { !expiredURLs.contains($0.url) }
-            let budgetVictims = copiedFilePruneVictims(
-                currentFiles,
-                preserving: current,
-                maximumCount: copiedFileMaximumCount,
-                maximumBytes: copiedFileMaximumBytes
-            )
-            for victim in expired.map(\.url) + budgetVictims {
-                try? manager.removeItem(at: victim)
-            }
-        }
-    }
-
-    static func removeTemporaryDragDirectories(
-        directory: URL = FileManager.default.temporaryDirectory
-    ) {
-        let manager = FileManager.default
-        guard let children = try? manager.contentsOfDirectory(
-            at: directory,
-            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
-            options: [.skipsHiddenFiles]
-        ) else { return }
-        let prefix = "ScreenshotDrag-"
-        for child in children {
-            let name = child.lastPathComponent
-            guard name.hasPrefix(prefix),
-                  UUID(uuidString: String(name.dropFirst(prefix.count))) != nil,
-                  let values = try? child.resourceValues(
-                    forKeys: [.isDirectoryKey, .isSymbolicLinkKey]),
-                  values.isDirectory == true,
-                  values.isSymbolicLink != true else { continue }
-            try? manager.removeItem(at: child)
-        }
-    }
-
-    /// Expands a date-token pattern into a relative subfolder path, e.g.
-    /// "%y-%mo" becomes "24-03" and "%year/%month" becomes "2024/March".
-    /// Slashes in the pattern become nested folders. The result never
-    /// escapes the base folder: empty, "." and ".." components are dropped.
-    /// An empty pattern expands to an empty string, meaning no subfolder.
-    static func expandSaveSubfolder(_ pattern: String, date: Date) -> String {
-        guard !pattern.isEmpty else { return "" }
-        return applyingDateTokens(pattern, date: date)
-            .split(separator: "/")
-            .map(String.init)
-            .filter { !$0.isEmpty && $0 != "." && $0 != ".." }
-            .joined(separator: "/")
-    }
-    /// Expands a non-empty file name pattern with the same date tokens as
-    /// `expandSaveSubfolder`, plus "%#" (and "%##", "%###", …) for an
-    /// auto-incrementing, zero-padded number. Slashes and colons would nest
-    /// folders or fail the write, so they become dashes. Callers are
-    /// responsible for falling back to the default name when the pattern is
-    /// blank, and for appending the file extension.
-    static func expandFileNamePattern(_ pattern: String, date: Date, number: Int) -> String {
-        let withDate = applyingDateTokens(pattern, date: date)
-        return applyingNumberTokens(withDate, number: number)
-            .replacingOccurrences(of: "/", with: "-")
-            .replacingOccurrences(of: ":", with: "-")
-    }
-    /// Whether a file name pattern actually uses the number sequence, so
-    /// callers know whether to advance and persist it.
-    static func fileNamePatternUsesNumber(_ pattern: String) -> Bool {
-        pattern.contains("%#")
-    }
-    private static func applyingDateTokens(_ pattern: String, date: Date) -> String {
-        let calendar = Calendar(identifier: .gregorian)
-        let parts = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
-        let year = parts.year ?? 0
-        // Longer tokens are substituted first so "%year"/"%month" don't get
-        // clobbered by their short prefixes "%y"/"%mo" during replacement.
-        let tokens: [(String, String)] = [
-            ("%year", String(format: "%04d", year)),
-            ("%month", monthName(parts.month ?? 1)),
-            ("%y", String(format: "%02d", year % 100)),
-            ("%mo", String(format: "%02d", parts.month ?? 0)),
-            ("%d", String(format: "%02d", parts.day ?? 0)),
-            ("%h", String(format: "%02d", parts.hour ?? 0)),
-            ("%mi", String(format: "%02d", parts.minute ?? 0)),
-            ("%s", String(format: "%02d", parts.second ?? 0))
-        ]
-        var result = pattern
-        for (token, value) in tokens {
-            result = result.replacingOccurrences(of: token, with: value)
-        }
-        return result
-    }
-    /// Replaces runs like "%#", "%##", "%###" with `number`, zero-padded to
-    /// the run's length (minus the leading "%"). Matches are expanded from
-    /// the end of the string backwards so earlier ranges stay valid.
-    private static func applyingNumberTokens(_ pattern: String, number: Int) -> String {
-        guard let regex = try? NSRegularExpression(pattern: "%#+") else { return pattern }
-        let fullRange = NSRange(pattern.startIndex..<pattern.endIndex, in: pattern)
-        var result = pattern
-        let matches = regex.matches(in: pattern, range: fullRange)
-        for match in matches.reversed() {
-            guard let range = Range(match.range, in: result) else { continue }
-            let padding = max(match.range.length - 1, 1)
-            result.replaceSubrange(range, with: String(format: "%0\(padding)d", number))
-        }
-        return result
-    }
-
-    private static func monthName(_ month: Int) -> String {
-        var components = DateComponents()
-        components.year = 2000
-        components.month = month
-        components.day = 1
-        guard let date = Calendar(identifier: .gregorian).date(from: components) else { return "" }
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "LLLL"
-        return formatter.string(from: date)
-    }
 
     /// First free variant of a file name: "name.png", "name 2.png", ….
     static func uniqueFileName(_ name: String, exists: (String) -> Bool) -> String {
@@ -1138,44 +752,6 @@ enum ScreenshotSupport {
             return result
         }
 
-        static func shortcutTool(number: Int,
-                                 orderRaw: String?,
-                                 enabled: Bool) -> Tool? {
-            guard enabled, (1...shortcutLimit).contains(number) else { return nil }
-            let order = ordered(from: orderRaw)
-            let index = number - 1
-            return order.indices.contains(index) ? order[index] : nil
-        }
-
-        static func shortcutNumber(for tool: Tool,
-                                   orderRaw: String?,
-                                   enabled: Bool) -> Int? {
-            guard enabled,
-                  let index = ordered(from: orderRaw).firstIndex(of: tool),
-                  index < shortcutLimit
-            else { return nil }
-            return index + 1
-        }
-
-        /// Assigning a number is the same operation as moving the tool into
-        /// that numbered rail slot. Choosing no shortcut moves it just below
-        /// the first nine, where it remains available without a key.
-        static func assigningShortcut(_ number: Int?,
-                                      to tool: Tool,
-                                      orderRaw: String?) -> [Tool] {
-            var order = ordered(from: orderRaw)
-            guard let current = order.firstIndex(of: tool) else { return order }
-            if number == nil, current >= shortcutLimit { return order }
-            order.remove(at: current)
-            let destination: Int
-            if let number, (1...shortcutLimit).contains(number) {
-                destination = min(number - 1, order.count)
-            } else {
-                destination = min(shortcutLimit, order.count)
-            }
-            order.insert(tool, at: destination)
-            return order
-        }
     }
 
     enum ColorID: String, CaseIterable {
@@ -1244,23 +820,6 @@ enum ScreenshotSupport {
         }
     }
 
-    static func stickerSide(for imageSize: CGSize, scale: CGFloat) -> CGFloat {
-        let shortSide = min(imageSize.width, imageSize.height)
-        let minimum = min(52 * scale, shortSide * 0.45)
-        return max(1, max(minimum, min(shortSide * 0.16, 128 * scale)))
-    }
-
-    static func stickerRect(centeredAt point: CGPoint,
-                            side: CGFloat,
-                            within bounds: CGRect) -> CGRect {
-        let fittedSide = min(max(1, side), min(bounds.width, bounds.height))
-        let rect = CGRect(x: point.x - fittedSide / 2,
-                          y: point.y - fittedSide / 2,
-                          width: fittedSide,
-                          height: fittedSide)
-        return movedRect(rect, by: .zero, within: bounds)
-    }
-
     /// One annotation on the canvas. Geometry lives in image-point
     /// coordinates (top-left origin), so export is resolution-exact and the
     /// view only scales for display.
@@ -1298,15 +857,6 @@ enum ScreenshotSupport {
         case forward, backward
     }
 
-    /// Whether the annotation has somewhere to go: false at the end it is
-    /// already heading for, and for an id that is not in the array.
-    static func canReorder(_ annotations: [Annotation],
-                           moving id: UUID,
-                           _ move: LayerMove) -> Bool {
-        guard let index = annotations.firstIndex(where: { $0.id == id }) else { return false }
-        return annotations.indices.contains(move == .forward ? index + 1 : index - 1)
-    }
-
     /// Moves one annotation a single step through the array the renderer draws
     /// in order, so a shape can go behind text that was written first. An
     /// annotation already at the end it is heading for stays put, and an
@@ -1320,19 +870,6 @@ enum ScreenshotSupport {
         var reordered = annotations
         reordered.swapAt(index, target)
         return reordered
-    }
-
-    /// Counters stay 1…n in creation order; deleting one renumbers the rest
-    /// so a sequence never shows a hole.
-    static func renumberingCounters(_ annotations: [Annotation]) -> [Annotation] {
-        var next = 1
-        return annotations.map { annotation in
-            guard annotation.tool == .counter else { return annotation }
-            var updated = annotation
-            updated.number = next
-            next += 1
-            return updated
-        }
     }
 
     /// Counter badge diameter for an image, scaling with capture resolution
@@ -1365,37 +902,6 @@ enum ScreenshotSupport {
             let position = handle.position(in: rect)
             return abs(position.x - point.x) <= tolerance && abs(position.y - point.y) <= tolerance
         }
-    }
-
-    /// The rectangle after dragging `handle` to `point`. Width and height are
-    /// kept non-negative by swapping edges when a drag crosses over.
-    static func resizedRect(_ rect: CGRect, dragging handle: Handle, to point: CGPoint) -> CGRect {
-        var minX = rect.minX, minY = rect.minY, maxX = rect.maxX, maxY = rect.maxY
-        switch handle {
-        case .topLeft: minX = point.x; minY = point.y
-        case .top: minY = point.y
-        case .topRight: maxX = point.x; minY = point.y
-        case .right: maxX = point.x
-        case .bottomRight: maxX = point.x; maxY = point.y
-        case .bottom: maxY = point.y
-        case .bottomLeft: minX = point.x; maxY = point.y
-        case .left: minX = point.x
-        }
-        return CGRect(x: min(minX, maxX), y: min(minY, maxY),
-                      width: abs(maxX - minX), height: abs(maxY - minY))
-    }
-
-    /// Moves an existing crop without resizing it, stopping cleanly at the
-    /// image edges instead of shrinking the rectangle through intersection.
-    static func movedRect(_ rect: CGRect,
-                          by delta: CGPoint,
-                          within bounds: CGRect) -> CGRect {
-        guard rect.width <= bounds.width, rect.height <= bounds.height else {
-            return rect.intersection(bounds)
-        }
-        let x = min(max(rect.minX + delta.x, bounds.minX), bounds.maxX - rect.width)
-        let y = min(max(rect.minY + delta.y, bounds.minY), bounds.maxY - rect.height)
-        return CGRect(x: x, y: y, width: rect.width, height: rect.height)
     }
 
     /// The pixel rectangle a crop draft stands for. A crop cuts on pixel
@@ -1585,21 +1091,7 @@ enum ScreenshotSupport {
 
     // MARK: - Redaction
 
-    /// Pixelation block size in image pixels: coarse enough that the mosaic
-    /// carries no legible detail, scaled to the capture so small crops and
-    /// full screens redact equally well.
-    static func pixelBlockSize(for imageSize: CGSize) -> Int {
-        max(10, Int(min(imageSize.width, imageSize.height) / 55))
-    }
-
     // MARK: - Export
-
-    /// Pixel size after the optional 1x downscale of a Retina capture.
-    static func downscaledSize(pixelSize: CGSize, scale: CGFloat) -> CGSize {
-        guard scale > 1 else { return pixelSize }
-        return CGSize(width: (pixelSize.width / scale).rounded(),
-                      height: (pixelSize.height / scale).rounded())
-    }
 
     // MARK: - Backdrop
 
@@ -1619,23 +1111,6 @@ enum ScreenshotSupport {
             }
         }
 
-    }
-
-    /// Padding around the image for a backdrop. `factor` is the user's margin
-    /// slider (0…1); even 0 keeps a small frame so the gradient always shows,
-    /// and a floor keeps a visible margin around small captures.
-    static func backdropPadding(for imageSize: CGSize, factor: CGFloat) -> CGFloat {
-        let clamped = max(0, min(1, factor))
-        let side = min(imageSize.width, imageSize.height)
-        let proportional = side * (0.035 + 0.14 * clamped)
-        return max(24, proportional).rounded()
-    }
-
-    /// Corner rounding of the capture card in image pixels. Factor 0 keeps
-    /// the capture square; 1 is a generous fifth of the short side.
-    static func cardCornerRadius(for imageSize: CGSize, factor: CGFloat) -> CGFloat {
-        let clamped = max(0, min(1, factor))
-        return (clamped * min(imageSize.width, imageSize.height) * 0.2).rounded()
     }
 
     /// Gaussian blur radius in output pixels. Keeping it proportional makes
@@ -1763,44 +1238,6 @@ enum ScreenshotSupport {
     }
 
     // MARK: - Recognized text (selectable on the canvas)
-
-    /// One word of recognized text, in image-pixel coordinates.
-    struct RecognizedWord: Equatable {
-        let text: String
-        let rect: CGRect
-        /// Line index, so copied selections keep their line breaks.
-        let line: Int
-    }
-
-    /// Words a selection drag touches, in reading order. A hairline drag
-    /// still selects what it crosses.
-    static func wordSelection(anchor: CGPoint,
-                              current: CGPoint,
-                              boxes: [CGRect]) -> [Int] {
-        let rect = selectionRect(from: anchor, to: current)
-            .insetBy(dx: -1, dy: -1)
-        return boxes.indices.filter { boxes[$0].intersects(rect) }
-    }
-
-    /// Joins selected words with spaces inside a line and newlines between
-    /// lines, whatever order the indexes arrive in.
-    static func joinedWords(_ words: [RecognizedWord], selected: [Int]) -> String {
-        let picked = selected.sorted().compactMap { words.indices.contains($0) ? words[$0] : nil }
-        guard !picked.isEmpty else { return "" }
-        var lines: [String] = []
-        var currentLine = picked[0].line
-        var currentWords: [String] = []
-        for word in picked {
-            if word.line != currentLine {
-                lines.append(currentWords.joined(separator: " "))
-                currentWords = []
-                currentLine = word.line
-            }
-            currentWords.append(word.text)
-        }
-        lines.append(currentWords.joined(separator: " "))
-        return lines.joined(separator: "\n")
-    }
 
     /// Saved custom backdrops, capped at the configured limit.
     static let backdropPresetLimit = 12

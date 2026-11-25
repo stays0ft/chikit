@@ -99,12 +99,6 @@ enum HomebrewOwnershipSupport {
     }
 }
 
-enum HomebrewPackageOrdering {
-    static func updatesFirst(_ packages: [HomebrewPackage]) -> [HomebrewPackage] {
-        packages.filter(\.hasUpdateAvailable) + packages.filter { !$0.hasUpdateAvailable }
-    }
-}
-
 struct HomebrewPopularity: Hashable {
     let count: Int
     let rank: Int?
@@ -196,16 +190,6 @@ struct HomebrewOperationStatus: Equatable {
     }
 }
 
-struct HomebrewPendingAction {
-    let action: HomebrewOperation.Action
-    let package: HomebrewPackage?
-
-    init(action: HomebrewOperation.Action, package: HomebrewPackage? = nil) {
-        self.action = action
-        self.package = package
-    }
-}
-
 enum HomebrewCommandBuilder {
     static let candidatePaths = ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
     static let installerCommand = #"/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)""#
@@ -222,15 +206,6 @@ enum HomebrewCommandBuilder {
 
     static func outdated(brewPath: String) -> HomebrewCommand {
         HomebrewCommand(executable: brewPath, arguments: ["outdated", "--json=v2"])
-    }
-
-    /// Casks the plain listing hides because they carry their own updater.
-    /// Those are exactly the apps the update check is for, so it asks for
-    /// them explicitly and then checks each app bundle before believing the
-    /// answer (see `AppUpdatesSupport.packageUpdates`).
-    static func outdatedCasksIncludingSelfUpdating(brewPath: String) -> HomebrewCommand {
-        HomebrewCommand(executable: brewPath,
-                        arguments: ["outdated", "--cask", "--greedy", "--json=v2"])
     }
 
     static func upgradeCasks(brewPath: String, tokens: [String]) -> HomebrewCommand? {
@@ -366,25 +341,6 @@ enum HomebrewCommandBuilder {
         }
     }
 
-    static func shellConfigCommand(brewPath: String,
-                                   homeDirectory: String = NSHomeDirectory(),
-                                   shellPath: String = HomebrewCommandBuilder.currentShellPath) -> String {
-        let profile = shellProfilePath(homeDirectory: homeDirectory, shellPath: shellPath)
-        let profileDirectory = URL(fileURLWithPath: profile).deletingLastPathComponent().path
-        let line = shellEnvLine(brewPath: brewPath, shellPath: shellPath)
-        let setup = [
-            "PROFILE=\(shellQuote(profile))",
-            "LINE=\(shellQuote(line))",
-            "/bin/mkdir -p \(shellQuote(profileDirectory))",
-            #"/usr/bin/touch "$PROFILE""#,
-            #"if /usr/bin/grep -qxF "$LINE" "$PROFILE" 2>/dev/null; then echo "Homebrew shell setup already exists in $PROFILE"; else { echo; echo "$LINE"; } >> "$PROFILE"; echo "Added Homebrew shell setup to $PROFILE"; fi"#,
-        ].joined(separator: "; ")
-        return [
-            "/bin/sh -c \(shellQuote(setup))",
-            line,
-            "brew --version",
-        ].joined(separator: "; ")
-    }
 }
 
 enum HomebrewAnalytics {

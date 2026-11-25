@@ -152,34 +152,6 @@ enum SpaceWindowBridge {
         return unsafeBitCast(symbol, to: MoveWindowsToSpaceFunction.self)
     }()
 
-    /// The Space showing on the display under `pointer`, an AppKit screen
-    /// point. Nil when the Space queries are unavailable, so callers can carry
-    /// on without moving anything rather than guessing at a destination.
-    static func visibleSpace(near pointer: CGPoint) -> UInt64? {
-        guard let topology = topology() else { return nil }
-        let screen = NSScreen.screens.first { $0.frame.contains(pointer) } ?? NSScreen.main
-        if let number = (screen?.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?
-            .uint32Value,
-           let display = topology.displays.first(where: { $0.displayID == number }) {
-            return display.currentSpace
-        }
-        return topology.displays.first?.currentSpace
-    }
-
-    /// Brings one window onto the Space the pointer's display is showing. A
-    /// window dropped from another desktop otherwise takes the position it was
-    /// given and stays where nobody can see it.
-    @discardableResult
-    static func moveToVisibleSpace(_ windowID: CGWindowID, near pointer: CGPoint) -> Bool {
-        guard connection != 0,
-              let moveWindowsToManagedSpace,
-              let destination = visibleSpace(near: pointer)
-        else { return false }
-        guard !spaces(of: windowID).contains(destination) else { return true }
-        moveWindowsToManagedSpace(connection, [NSNumber(value: windowID)] as CFArray, destination)
-        return true
-    }
-
     /// Whether the window sits on at least one Space and none of them is
     /// visible. False when the Space queries are unavailable, so every caller
     /// falls back to the pre-existing behavior.
@@ -226,32 +198,6 @@ enum SpaceWindowBridge {
         return unsafeBitCast(symbol, to: ProcessForPIDFunction.self)
     }()
 
-    /// Asks the window server to bring the process forward with this exact
-    /// window as the one that comes up front, marked as user-initiated. Older
-    /// macOS also travels to the window's Space; current macOS ignores the
-    /// Space part, which is why SpaceHop verifies the outcome and escalates.
-    /// The follow-up record pair makes the window key without clicking any of
-    /// its content (the synthetic click points just outside the frame).
-    static func frontWindow(_ windowID: CGWindowID, ownerPID: pid_t) {
-        guard let setFrontProcess, let processForPID else { return }
-        var psn = ProcessSerialNumber()
-        guard processForPID(ownerPID, &psn) == noErr else { return }
-        let userGenerated: UInt32 = 0x200
-        guard setFrontProcess(&psn, windowID, userGenerated) == .success else { return }
-        guard let postEventRecord else { return }
-        var targetID = windowID
-        var clickPoint = CGPoint(x: -1, y: -1)
-        var record = [UInt8](repeating: 0, count: 0x100)
-        record[0x04] = 0xf8 // declared record length
-        record[0x3a] = 0x10
-        withUnsafeBytes(of: &targetID) { record.replaceSubrange(0x3c..<0x3c + $0.count, with: $0) }
-        withUnsafeBytes(of: &clickPoint) { record.replaceSubrange(0x20..<0x20 + $0.count, with: $0) }
-        record[0x08] = 0x01 // left mouse down…
-        _ = postEventRecord(&psn, &record)
-        record[0x08] = 0x02 // …then up: the pair makes the window key
-        _ = postEventRecord(&psn, &record)
-    }
-
     // MARK: - The user's "move a space" shortcut
 
     private typealias HotKeyValueFunction =
@@ -267,42 +213,9 @@ enum SpaceWindowBridge {
         return unsafeBitCast(symbol, to: HotKeyEnabledFunction.self)
     }()
 
-    enum SpaceDirection {
-        case left
-        case right
-
-        /// System symbolic hotkey ids for "Move left/right a space".
-        fileprivate var hotKeyID: Int32 { self == .left ? 79 : 81 }
-    }
-
-    /// The two Mission Control overviews, by their system symbolic hotkey ids
-    /// (32 is "Mission Control", 33 is "Application windows"). The window
-    /// server refuses software-simulated touch gestures, so an overview is
-    /// opened the same way the keyboard opens it (issue #1012).
-    enum SpaceOverview {
-        case missionControl
-        case appExpose
-
-        fileprivate var hotKeyID: Int32 { self == .missionControl ? 32 : 33 }
-    }
-
     struct SpaceShortcut {
         let keyCode: CGKeyCode
         let flags: CGEventFlags
-    }
-
-    /// The key combination the system itself has registered for moving one
-    /// Space over, honoring user remaps. Nil when the shortcut is disabled or
-    /// unreadable, in which case no synthetic travel is attempted.
-    static func spaceShortcut(_ direction: SpaceDirection) -> SpaceShortcut? {
-        registeredShortcut(direction.hotKeyID)
-    }
-
-    /// The same lookup for the overviews. Nil when the user switched that
-    /// shortcut off in System Settings, which is the one honest answer: with
-    /// no registered combination there is nothing to press.
-    static func overviewShortcut(_ overview: SpaceOverview) -> SpaceShortcut? {
-        registeredShortcut(overview.hotKeyID)
     }
 
     private static func registeredShortcut(_ hotKeyID: Int32) -> SpaceShortcut? {
@@ -318,15 +231,4 @@ enum SpaceWindowBridge {
                              flags: SpaceHopSupport.eventFlags(fromCarbonModifiers: modifiers))
     }
 
-    /// Replays one press of a Spaces shortcut. The modifiers must match the
-    /// registered combination exactly or the system ignores the press.
-    static func pressSpaceShortcut(_ shortcut: SpaceShortcut) {
-        guard let down = CGEvent(keyboardEventSource: nil, virtualKey: shortcut.keyCode, keyDown: true),
-              let up = CGEvent(keyboardEventSource: nil, virtualKey: shortcut.keyCode, keyDown: false)
-        else { return }
-        down.flags = shortcut.flags
-        up.flags = shortcut.flags
-        down.post(tap: .cghidEventTap)
-        up.post(tap: .cghidEventTap)
-    }
 }

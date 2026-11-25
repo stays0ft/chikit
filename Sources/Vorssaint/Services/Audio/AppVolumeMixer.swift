@@ -1687,19 +1687,6 @@ final class AppVolumeMixer: ObservableObject {
         return applied
     }
 
-    /// Whether the sound is currently cut, or nil when this output has no
-    /// mute switch of its own.
-    static func systemOutputIsMuted() -> Bool? {
-        guard let device = defaultOutputDeviceID() else { return nil }
-        return outputMuted(for: device)
-    }
-
-    @discardableResult
-    static func setSystemOutputMuted(_ muted: Bool) -> Bool {
-        guard let device = defaultOutputDeviceID() else { return false }
-        return setOutputMuted(muted, for: device)
-    }
-
     private static func defaultOutputDeviceID() -> AudioObjectID? {
         var device = AudioObjectID(0)
         guard read(AudioObjectID(kAudioObjectSystemObject),

@@ -132,10 +132,6 @@ enum PanelLayout {
         defaults.object(forKey: id.visibilityKey) as? Bool ?? id.shownByDefault
     }
 
-    static func setShown(_ shown: Bool, for id: PanelSectionID) {
-        defaults.set(shown, forKey: id.visibilityKey)
-    }
-
     static func isCollapsed(_ id: PanelSectionID) -> Bool {
         collapsedSet().contains(id.rawValue)
     }

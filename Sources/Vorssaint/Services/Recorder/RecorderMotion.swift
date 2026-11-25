@@ -344,19 +344,6 @@ enum RecorderMotion {
     static let zoomRampIn: Double = 0.42
     static let zoomRampOut: Double = 0.65
 
-    static func zoomProgress(at time: Double, segments: [ZoomSegment]) -> Double {
-        for segment in segments where time >= segment.start - 0.001 && time <= segment.end + zoomRampOut {
-            if time <= segment.start + zoomRampIn {
-                return smootherstep((time - segment.start) / zoomRampIn)
-            }
-            if time >= segment.end {
-                return smootherstep(1 - (time - segment.end) / zoomRampOut)
-            }
-            return 1
-        }
-        return 0
-    }
-
     // MARK: - Viewport
 
     /// The zoomed viewport is parameterized by where it sits in its OWN travel

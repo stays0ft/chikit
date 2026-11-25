@@ -284,15 +284,6 @@ struct RecorderEditDocument: Codable, Equatable {
             || microphoneGain != other.microphoneGain
     }
 
-    /// True once the person has actually changed something worth warning about
-    /// before the window closes.
-    func isEdited(duration: Double) -> Bool {
-        let trim = trim(duration: duration)
-        return trim.start > 0.01 || trim.end < duration - 0.01 || !keepsSystemAudio
-            || !keepsMicrophone || systemAudioGain != 1 || microphoneGain != 1
-            || !cuts.isEmpty || !zoomSegments.isEmpty || !texts.isEmpty || !blurs.isEmpty
-    }
-
     /// A damaged or hand-edited document can never wedge the editor: every
     /// field falls back to something usable.
     func sanitized(duration: Double) -> RecorderEditDocument {

@@ -111,32 +111,6 @@ enum SelfTest {
         }
     }
 
-    /// Whether any visible pixel of `image` sits on its outermost row or column.
-    /// Every menu bar glyph is drawn with a margin, so touching an edge means
-    /// the artwork outgrew its canvas and is being cropped.
-    private static func inkTouchesEdge(of image: NSImage) -> Bool {
-        let sampling = 2
-        let wide = Int(image.size.width) * sampling
-        let high = Int(image.size.height) * sampling
-        guard wide > 0, high > 0,
-              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: wide, pixelsHigh: high,
-                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
-                                         isPlanar: false, colorSpaceName: .deviceRGB,
-                                         bytesPerRow: 0, bitsPerPixel: 0),
-              let context = NSGraphicsContext(bitmapImageRep: rep) else { return false }
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = context
-        // The context draws in pixels, so fill the whole bitmap.
-        image.draw(in: NSRect(x: 0, y: 0, width: CGFloat(wide), height: CGFloat(high)))
-        NSGraphicsContext.restoreGraphicsState()
-
-        func visible(_ x: Int, _ y: Int) -> Bool {
-            (rep.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.05
-        }
-        for x in 0..<wide where visible(x, 0) || visible(x, high - 1) { return true }
-        for y in 0..<high where visible(0, y) || visible(wide - 1, y) { return true }
-        return false
-    }
 }
 
 /// Prints every temperature sensor the monitor would consider, with its

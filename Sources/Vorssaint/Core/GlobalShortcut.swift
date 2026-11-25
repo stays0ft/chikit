@@ -279,36 +279,6 @@ struct GlobalShortcut: Equatable, Hashable {
         keyCode == self.keyCode && actual == modifiers
     }
 
-    /// Layout-tolerant match: true when the pressed key would type the same
-    /// character this shortcut displays. Key codes are positions on a US
-    /// keyboard, so a default like ⌘` lands on a different position for ABNT2
-    /// or German layouts, sometimes behind Shift or Option; the user goes by
-    /// the character shown in Settings, not by the invisible ANSI position
-    /// (issue #187). The character comes from the event itself, the same
-    /// signal the switcher's search uses, so dead keys resolve identically.
-    func matchesByCharacter(event: CGEvent,
-                            tolerating extra: GlobalShortcutModifiers = []) -> Bool {
-        let actual = GlobalShortcutModifiers(cgFlags: event.flags)
-        // The shortcut's own modifiers must be down; Shift or Option on top is
-        // tolerated because many layouts need them to produce the character,
-        // and the caller may tolerate more (a session's held modifiers). Asked
-        // before the label, since this runs for every key the tap sees.
-        guard actual.intersection(modifiers) == modifiers,
-              actual.subtracting(modifiers).subtracting([.shift, .option])
-                  .subtracting(extra).isEmpty
-        else { return false }
-        guard let label = keyLabel, label.count == 1 else { return false }
-        var length = 0
-        var chars = [UniChar](repeating: 0, count: 4)
-        event.keyboardGetUnicodeString(maxStringLength: chars.count,
-                                       actualStringLength: &length,
-                                       unicodeString: &chars)
-        guard length > 0 else { return false }
-        let typed = String(utf16CodeUnits: chars, count: length)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return !typed.isEmpty && typed.uppercased() == label.uppercased()
-    }
-
     private func modifiersMatch(event: CGEvent,
                                 allowingExtraShift: Bool,
                                 tolerating extra: GlobalShortcutModifiers = []) -> Bool {

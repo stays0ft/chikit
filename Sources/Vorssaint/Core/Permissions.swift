@@ -328,14 +328,6 @@ final class Permissions: ObservableObject {
         }
     }
 
-    /// Shows the system camera prompt on first use; afterwards the state can
-    /// only change in System Settings.
-    func requestCamera() {
-        AVCaptureDevice.requestAccess(for: .video) { [weak self] _ in
-            DispatchQueue.main.async { self?.refresh() }
-        }
-    }
-
     func requestMicrophone(completion: ((Bool) -> Void)? = nil) {
         AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
             DispatchQueue.main.async {
@@ -343,10 +335,6 @@ final class Permissions: ObservableObject {
                 completion?(granted)
             }
         }
-    }
-
-    func openCameraSettings() {
-        open(pane: "Privacy_Camera")
     }
 
     func openMicrophoneSettings() {
@@ -364,17 +352,6 @@ final class Permissions: ObservableObject {
 
     func openAudioCaptureSettings() {
         open(pane: "Privacy_AudioCapture")
-    }
-
-    func openAppManagementSettings() {
-        let pane = URL(string:
-            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AppBundles")!
-        if NSWorkspace.shared.open(pane) { return }
-
-        // A general Privacy & Security page is still useful if a future macOS
-        // version stops accepting the pane identifier.
-        let fallback = URL(string: "x-apple.systempreferences:com.apple.preference.security")!
-        NSWorkspace.shared.open(fallback)
     }
 
     private func open(pane: String) {

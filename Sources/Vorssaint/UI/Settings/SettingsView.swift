@@ -481,38 +481,6 @@ struct AboutSettings: View {
 
 // MARK: - Shared settings rows
 
-private struct SettingsCaptionText: View {
-    let text: String
-
-    init(_ text: String) {
-        self.text = text
-    }
-
-    var body: some View {
-        Text(text)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(nil)
-            .fixedSize(horizontal: false, vertical: true)
-    }
-}
-
-private struct SettingsToggleWithCaption: View {
-    let title: String
-    let caption: String
-    @Binding var isOn: Bool
-
-    var body: some View {
-        Toggle(isOn: $isOn) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                SettingsCaptionText(caption)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
-
 // MARK: - Shared permission row
 
 enum PermissionKind {
