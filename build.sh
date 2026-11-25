@@ -418,14 +418,6 @@ cp build/MenuBarIcon.png build/MenuBarIcon@2x.png build/BrandMark.png "$STAGE/Co
 if [[ -f build/Assets.car ]]; then
     cp build/Assets.car "$STAGE/Contents/Resources/Assets.car"
 fi
-if [[ -d Resources/Gifs ]]; then
-    mkdir -p "$STAGE/Contents/Resources/Gifs"
-    cp Resources/Gifs/*.gif "$STAGE/Contents/Resources/Gifs/"
-fi
-if [[ -d Resources/Images ]]; then
-    mkdir -p "$STAGE/Contents/Resources/Images"
-    cp Resources/Images/* "$STAGE/Contents/Resources/Images/"
-fi
 xattr -c -r "$STAGE" 2>/dev/null || true
 
 # Signing, in order of preference:

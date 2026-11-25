@@ -13,10 +13,11 @@ dist/
 *.mobileprovision
 *.keychain-db
 
-# Local-only working notes
+# Local-only working notes and tool state
 AGENTS.md
 CLAUDE.md
 E2E/
+.claude/
 
 # macOS noise
 .DS_Store

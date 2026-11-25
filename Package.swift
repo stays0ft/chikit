@@ -5,8 +5,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "Vorssaint",
+    name: "Chikit",
     platforms: [.macOS(.v14)],
+    products: [
+        .executable(name: "Chikit", targets: ["Vorssaint"]),
+    ],
     targets: [
         .systemLibrary(
             name: "HIDEventSystem",

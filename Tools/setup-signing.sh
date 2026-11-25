@@ -4,21 +4,13 @@
 
 # Creates a stable, self-signed code-signing identity named "Chikit Utils
 # Signing" in a dedicated keychain. build.sh uses it automatically, giving every
-# build the same code signature — so macOS keeps granted permissions
-# (Accessibility, Screen Recording) across updates instead of re-prompting.
+# build the same code signature, so macOS keeps granted permissions
+# (Accessibility, Screen Recording) across rebuilds instead of re-prompting.
 #
-# This identity name keeps its original "Chikit Utils Signing" on purpose: it
-# is the lookup key build.sh matches, and the released app's designated
-# requirement is pinned to this exact certificate. Renaming it would change that
-# requirement and drop every user's granted permissions. The name lives only in
-# the keychain and codesign output, never in anything the app shows.
-#
-# Free, offline, and idempotent (re-running is a no-op once the identity exists).
-# It does NOT replace Apple notarization: downloaded builds still show Gatekeeper's
-# "unverified developer" prompt on first launch. It only stabilizes the identity.
-#
-# Maintainers: official releases use the protected release-signing environment.
-# Run this only to get the same permission-preserving behavior for local builds.
+# It is free, offline and idempotent (re-running is a no-op once the identity
+# exists). It does NOT replace Apple notarization: a build copied from another
+# Mac still shows Gatekeeper's "unverified developer" prompt. It only keeps the
+# identity stable on the Mac that builds the app.
 set -euo pipefail
 
 IDENTITY="Chikit Utils Signing"
