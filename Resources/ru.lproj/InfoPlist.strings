@@ -11,7 +11,6 @@
 "NSMicrophoneUsageDescription" = "Chikit записывает микрофон, только когда вы включаете его для записи экрана. Звук остаётся на вашем Mac, если только вы не создадите временную ссылку.";
 
 /* macOS Camera permission prompt. */
-"NSCameraUsageDescription" = "Chikit показывает вашу камеру только в открытом вами окне предпросмотра, чтобы вы могли проверить, как выглядите перед звонком. Ничего не записывается и не покидает ваш Mac.";
 
 /* macOS Downloads folder permission prompt. */
 

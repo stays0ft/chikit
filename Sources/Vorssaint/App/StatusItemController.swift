@@ -84,7 +84,7 @@ final class StatusItemController {
         statusItem.behavior = []
         statusItem.isVisible = true
         if let button = statusItem.button {
-            button.image = BlackHoleGlyph.image()
+            button.image = MenuBarGlyph.image()
             button.font = MenuBarRenderer.statusFont(stacked: false)
             button.alignment = .left
             button.cell?.lineBreakMode = .byClipping
@@ -208,7 +208,7 @@ final class StatusItemController {
             button.image = Self.emptyStatusImage
             return
         }
-        button.image = BlackHoleGlyph.image()
+        button.image = MenuBarGlyph.image()
     }
 
     @objc private func clicked() {
@@ -503,9 +503,9 @@ final class StatusItemController {
     }
 }
 
-/// The official mark, bundled as a template image so the idle state adapts to
+/// The Chikit "C", bundled as a template image so the idle state adapts to
 /// light and dark menu bars.
-enum BlackHoleGlyph {
+enum MenuBarGlyph {
     /// Logical size of the glyph in the menu bar, in points. Wide because the
     /// mark is ~1.97:1 and sized from its height. Tools/MakeIcon.swift writes
     /// the bundled PNGs at this size; `--selftest` checks the two still agree.

@@ -259,7 +259,6 @@ enum DefaultsKey {
     static let windowLayoutShortcutBottomRightSixth = "windowLayoutShortcutBottomRightSixth"
 
     // Dev-build only: force the "update available" UI for local testing.
-    static let simulateBetaUI = "simulateBetaUI"
 
     /// Features hub availability layer, one key per AppFeature raw value.
     /// Registered true: unavailable features vanish from every surface and

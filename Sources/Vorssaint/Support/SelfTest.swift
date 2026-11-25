@@ -83,17 +83,17 @@ enum SelfTest {
         }
         UserDefaults.standard.removeObject(forKey: "selftest")
 
-        // Tools/MakeIcon.swift writes the glyph PNGs at BlackHoleGlyph.pointSize.
+        // Tools/MakeIcon.swift writes the glyph PNGs at MenuBarGlyph.pointSize.
         // Changing the canvas in one and not the other would squash the glyph.
         if Bundle.main.url(forResource: "MenuBarIcon", withExtension: "png") == nil {
             warnings.append("menu bar glyph asset not bundled")
-        } else if let rep = BlackHoleGlyph.image()?
+        } else if let rep = MenuBarGlyph.image()?
             .representations.min(by: { $0.pixelsWide < $1.pixelsWide }) {
-            if rep.pixelsWide != Int(BlackHoleGlyph.pointSize.width)
-                || rep.pixelsHigh != Int(BlackHoleGlyph.pointSize.height) {
+            if rep.pixelsWide != Int(MenuBarGlyph.pointSize.width)
+                || rep.pixelsHigh != Int(MenuBarGlyph.pointSize.height) {
                 failures.append("menu bar glyph is \(rep.pixelsWide)×\(rep.pixelsHigh) px at 1x, "
-                                + "expected \(Int(BlackHoleGlyph.pointSize.width))×"
-                                + "\(Int(BlackHoleGlyph.pointSize.height))")
+                                + "expected \(Int(MenuBarGlyph.pointSize.width))×"
+                                + "\(Int(MenuBarGlyph.pointSize.height))")
             }
         } else {
             failures.append("menu bar glyph representations")
