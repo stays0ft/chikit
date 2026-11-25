@@ -304,7 +304,7 @@ struct MenuBarMetricsPreview: View {
 
     private var glyph: some View {
         Group {
-            if let image = MenuBarGlyph.image() {
+            if let image = MenuBarGlyph.image(active: false) {
                 Image(nsImage: image).renderingMode(.template)
             } else {
                 Image(systemName: "circle.fill")

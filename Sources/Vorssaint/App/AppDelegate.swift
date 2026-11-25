@@ -66,7 +66,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             self?.toggleMainPopover()
         }
         statusController.onRightClick = { [weak self] in
-            self?.showContextMenu()
+            if AppFeature.keepAwake.isAvailable
+                && UserDefaults.standard.bool(forKey: DefaultsKey.keepAwakeRightClickToggle) {
+                KeepAwakeManager.shared.toggle()
+            } else {
+                self?.showContextMenu()
+            }
         }
         statusController.onMetricClick = { [weak self] metric, button in
             self?.captureStatusClick()
@@ -83,7 +88,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         }
 
         setUpPopover()
+        bindManagers()
 
+        HotkeyManager.shared.onActivate = { KeepAwakeManager.shared.toggle() }
+        HotkeyManager.shared.syncWithPreferences()
+
+        KeepAwakeManager.shared.recoverIfNeeded {
+            KeepAwakeManager.shared.activateOnLaunchIfNeeded()
+        }
         FanControlService.recoverIfNeeded()
         // One binding per feature: only available features are touched, so a
         // feature switched off in the hub never even instantiates here.
@@ -192,6 +204,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         if AppFeature.clipboardHistory.isAvailable {
             ClipboardHistoryService.shared.flushBeforeTermination()
         }
+        KeepAwakeManager.shared.deactivate(reason: .quit)
     }
 
     /// The lifeline when the menu bar icon goes missing. Opening the app again
@@ -986,6 +999,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         runPopoverCloseCompletions()
     }
 
+    private func bindManagers() {
+        KeepAwakeManager.shared.onSessionEnded = { reason in
+            let strings = L10n.shared.s
+            switch reason {
+            case .timer:
+                Notifier.post(title: strings.notifySessionEndedTitle, body: strings.notifySessionEndedBody)
+            case .battery:
+                Notifier.post(title: strings.notifyBatteryTitle, body: strings.notifyBatteryBody)
+            default:
+                break
+            }
+        }
+    }
+
     // MARK: - Context menu (right click)
 
     private func showContextMenu() {
@@ -1001,8 +1028,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     }
 
     private func presentContextMenu() {
+        let manager = KeepAwakeManager.shared
         let strings = L10n.shared.s
         let menu = NSMenu()
+
+        if AppFeature.keepAwake.isAvailable {
+            let toggleItem = NSMenuItem(title: manager.isActive ? strings.menuDisableAwake : strings.menuEnableAwake,
+                                        action: #selector(menuToggleAwake),
+                                        keyEquivalent: "")
+            toggleItem.target = self
+            menu.addItem(toggleItem)
+        }
+
+        if AppFeature.keepAwake.isAvailable, !manager.isActive {
+            let durationsItem = NSMenuItem(title: strings.menuActivateFor, action: nil, keyEquivalent: "")
+            let submenu = NSMenu()
+            let options: [(String, Int)] = [(strings.minutes15, 15), (strings.minutes30, 30),
+                                            (strings.hour1, 60), (strings.hours2, 120),
+                                            (strings.hours4, 240), (strings.hours8, 480),
+                                            (strings.indefinitely, 0)]
+            for (label, minutes) in options {
+                let item = NSMenuItem(title: label, action: #selector(menuActivateDuration(_:)), keyEquivalent: "")
+                item.target = self
+                item.tag = minutes
+                submenu.addItem(item)
+            }
+            durationsItem.submenu = submenu
+            menu.addItem(durationsItem)
+        }
+
+        if menu.items.isEmpty == false {
+            menu.addItem(.separator())
+        }
 
         // Rectangle-style window layout actions, applied to the window that was
         // frontmost before the menu opened.
@@ -1052,6 +1109,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         DispatchQueue.main.async { [weak self] in
             self?.statusController.statusItem.menu = nil
         }
+    }
+
+    @objc private func menuToggleAwake() {
+        KeepAwakeManager.shared.toggle()
+    }
+
+    @objc private func menuActivateDuration(_ sender: NSMenuItem) {
+        KeepAwakeManager.shared.activate(minutes: sender.tag)
     }
 
     @objc private func menuApplyWindowLayout(_ sender: NSMenuItem) {

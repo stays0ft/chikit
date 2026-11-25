@@ -116,6 +116,8 @@ struct GlobalShortcut: Equatable, Hashable {
         return !modifiers.hasPrimaryModifier
     }
 
+    static let keepAwakeDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_K),
+                                                 modifiers: [.control, .option, .command])
     static let clipboardDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_V),
                                                  modifiers: [.control, .option, .command])
     static let soundOutputSwitcherDefault = GlobalShortcut(keyCode: Int64(kVK_ANSI_S),
@@ -560,6 +562,7 @@ enum ShortcutRecordingCaption {
 }
 
 enum GlobalShortcutRole: CaseIterable, Identifiable {
+    case keepAwake
     case clipboard
     case soundOutputSwitcher
     case finderRename
@@ -569,6 +572,7 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
 
     var storageKey: String {
         switch self {
+        case .keepAwake: return DefaultsKey.keepAwakeShortcut
         case .clipboard: return DefaultsKey.clipboardHistoryShortcut
         case .soundOutputSwitcher: return DefaultsKey.soundOutputSwitcherShortcut
         case .finderRename: return DefaultsKey.finderRenameShortcut
@@ -578,6 +582,7 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
 
     var defaultShortcut: GlobalShortcut {
         switch self {
+        case .keepAwake: return .keepAwakeDefault
         case .clipboard: return .clipboardDefault
         case .soundOutputSwitcher: return .soundOutputSwitcherDefault
         case .finderRename: return .finderRenameDefault
@@ -591,6 +596,7 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
 
     func title(_ strings: Strings) -> String {
         switch self {
+        case .keepAwake: return strings.keepAwakeTitle
         case .clipboard: return FeatureStrings.clipboard(L10n.shared.language).title
         case .soundOutputSwitcher: return strings.soundOutputSwitcherTitle
         case .finderRename: return FeatureStrings.finderRename(L10n.shared.language).hubTitle
@@ -617,6 +623,7 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
     /// shortcut toggle.
     var requiredEnableKeys: [String] {
         switch self {
+        case .keepAwake: return [DefaultsKey.hotkeyEnabled]
         case .clipboard: return [DefaultsKey.clipboardHistoryEnabled,
                                  DefaultsKey.clipboardHistoryShortcutEnabled]
         case .soundOutputSwitcher: return [DefaultsKey.soundOutputSwitcherEnabled]
@@ -630,6 +637,7 @@ enum GlobalShortcutRole: CaseIterable, Identifiable {
     /// already dead through the service's own availability guard).
     var feature: AppFeature {
         switch self {
+        case .keepAwake: return .keepAwake
         case .clipboard: return .clipboardHistory
         case .soundOutputSwitcher: return .soundOutputSwitcher
         case .finderRename: return .finderRename

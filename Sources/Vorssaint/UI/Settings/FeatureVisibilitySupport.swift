@@ -7,7 +7,7 @@ import Foundation
 /// The Settings pages. Lives here (without SwiftUI) so the visibility rules
 /// below and the unit tests can reason about pages without pulling UI in.
 enum SettingsPage: Hashable {
-    case general, features, monitor
+    case general, features, energy, monitor
     case autoQuit, cleaner, uninstaller, clipboard, windowLayout, finderRename, screenRecorder, notchMedia
     case shortcuts, advanced, about
 }
@@ -17,6 +17,7 @@ enum SettingsPage: Hashable {
 /// be added but should not be renamed.
 enum SettingsSectionAnchor: String, CaseIterable, Hashable {
     case panelConfiguration
+    case keepAwake
     case finderRename
     case clipboardHistory
     case screenRecorder
@@ -27,6 +28,7 @@ enum SettingsSectionAnchor: String, CaseIterable, Hashable {
     var page: SettingsPage {
         switch self {
         case .panelConfiguration: return .general
+        case .keepAwake: return .energy
         case .finderRename: return .finderRename
         case .clipboardHistory: return .clipboard
         case .screenRecorder: return .screenRecorder
@@ -133,6 +135,8 @@ extension AppFeature {
 
         case .mixer:
             return FeatureSettingsDestination(.general, sectionAnchor: .panelConfiguration)
+        case .keepAwake:
+            return FeatureSettingsDestination(.energy, sectionAnchor: .keepAwake)
         case .soundOutputSwitcher:
             return FeatureSettingsDestination(.shortcuts, sectionAnchor: .soundOutputSwitcher)
 
@@ -165,6 +169,7 @@ enum FeatureVisibilitySupport {
     /// always shows (General, Shortcuts, About and friends).
     static func features(for page: SettingsPage) -> [AppFeature] {
         switch page {
+        case .energy: return [.keepAwake]
         case .monitor: return monitorFeatures
         case .windowLayout: return [.windowLayout]
         case .autoQuit: return [.autoQuit]

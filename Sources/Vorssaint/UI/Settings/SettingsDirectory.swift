@@ -73,6 +73,20 @@ enum SettingsDirectory {
                                        featureKeywords: AppFeature.allCases.map {
                                         ($0, [$0.hubTitle(s, hub: FeatureStrings.hub(language))])
                                        }),
+                SettingsDirectoryItem(page: .energy, title: s.tabEnergy, icon: "bolt.fill",
+                                       featureKeywords: [
+                                        (.keepAwake, [s.keepAwakeTitle, s.clamshellTitle,
+                                                      s.defaultDurationLabel, s.showCountdown,
+                                                      s.keepAwakeActiveIconLabel,
+                                                      s.keepAwakeActiveIconCoffee,
+                                                      s.keepAwakeActiveIconEye,
+                                                      FeatureStrings.keepAwakeAutomation(language)
+                                                        .externalDisplayToggle,
+                                                      FeatureStrings.keepAwakeAutomation(language)
+                                                        .powerToggle,
+                                                      FeatureStrings.keepAwakeDisplaySleep(language)
+                                                        .allowDisplaySleep]),
+                                       ]),
                 SettingsDirectoryItem(page: .monitor, title: s.tabMonitor, icon: "chart.line.uptrend.xyaxis",
                                        keywords: [s.menuBarSpacingLabel, s.menuBarHideIconToggle],
                                        featureKeywords: [

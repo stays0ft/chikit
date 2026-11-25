@@ -397,6 +397,7 @@ private struct PurposeStep: View {
         case .windowsDock: return hub.groupWindowsDock
         case .clipboardFiles: return hub.groupClipboardFiles
         case .sound: return hub.groupSound
+        case .energyDisplay: return hub.groupEnergyDisplay
         case .tools: return hub.groupTools
         case .monitor: return hub.groupMonitor
         }

@@ -10,11 +10,27 @@ enum DefaultsKey {
     static let language = "appLanguage"                   // AppLanguage.rawValue
     static let appearance = "appAppearance"               // AppAppearance.rawValue
     static let liquidGlassEnabled = "liquidGlassEnabled"  // Liquid Glass visual styling on macOS 26+
+    static let clamshellPreferred = "clamshellPreferred"  // apply closed-lid mode to every session
     static let onboardingStep = "onboardingStep"          // resume point if onboarding is interrupted
     static let featuresOnboardingVersion = "featuresOnboardingVersion" // last feature-tour marker handled
     static let statusItemPlacementGeneration = "statusItemPlacementGeneration"
     static let hasOnboarded = "hasOnboarded"
+    static let sleepDisabledFlag = "vorssDisabledSleep"   // internal guard for pmset disablesleep
+    static let defaultDuration = "defaultDurationMinutes" // 0 = indefinite
+    static let batteryLimit = "batteryLimitPercent"       // 0 = never
+    static let keepAwakeAutoStart = "keepAwakeAutoStart"  // start Keep Awake when the app launches
+    static let keepAwakeRightClickToggle = "keepAwakeRightClickToggle"
+    static let keepAwakeAllowDisplaySleep = "keepAwakeAllowDisplaySleep"
+    static let keepAwakeExternalDisplay = "keepAwakeExternalDisplay"
+    static let keepAwakeConnectedToPower = "keepAwakeConnectedToPower"
+    static let keepAwakeMouseJiggleEnabled = "keepAwakeMouseJiggleEnabled"
+    static let keepAwakeMouseJiggleInterval = "keepAwakeMouseJiggleIntervalMinutes"
+    static let hotkeyEnabled = "hotkeyEnabled"
     static let launchAtLoginWanted = "launchAtLoginWanted"  // the user's choice; the system record can be lost
+    static let keepAwakeShortcut = "keepAwakeShortcut"    // GlobalShortcut storage value
+    static let keepAwakeIconTint = "keepAwakeIconTint"    // KeepAwakeIconTint.rawValue
+    static let keepAwakeActiveIcon = "keepAwakeActiveIcon" // KeepAwakeActiveIcon.rawValue
+    static let showCountdown = "showCountdownInMenuBar"
     static let appVolumes = "appVolumes"                  // [bundle id: 0...2]
     static let appOutputDevices = "appOutputDevices"      // [bundle id: audio device UID]
     static let mixerShowFinder = "mixerShowFinder"
@@ -59,6 +75,7 @@ enum DefaultsKey {
     static let panelUtilityWindowLayout = "panelUtilityWindowLayout"
     // Quick-control categories start collapsed and remember being opened.
     // Show/hide whole panel sections that have no monitorShow* key of their own.
+    static let panelShowKeepAwake = "panelShowKeepAwake"
     static let panelShowUtilities = "panelShowUtilities"
     static let panelShowControls = "panelShowControls"
     // Quick toggles tab: per-action visibility (the order lives in panelToggleOrder).
@@ -274,10 +291,79 @@ enum OnboardingInfo {
     static let currentFeatureSet = 4
 }
 
+enum KeepAwakeIconTint: String, CaseIterable, Identifiable {
+    case orange, green, blue, purple, pink, none
+
+    var id: String { rawValue }
+
+    static var current: KeepAwakeIconTint {
+        Defaults.sanitizedKeepAwakeIconTint(
+            UserDefaults.standard.string(forKey: DefaultsKey.keepAwakeIconTint)
+        )
+    }
+
+    func title(_ strings: Strings) -> String {
+        switch self {
+        case .orange: return strings.keepAwakeIconTintOrange
+        case .green: return strings.keepAwakeIconTintGreen
+        case .blue: return strings.keepAwakeIconTintBlue
+        case .purple: return strings.keepAwakeIconTintPurple
+        case .pink: return strings.keepAwakeIconTintPink
+        case .none: return strings.keepAwakeIconTintNone
+        }
+    }
+}
+
+enum KeepAwakeActiveIcon: String, CaseIterable, Identifiable {
+    case chikit, coffee, eye, moon, light
+
+    var id: String { rawValue }
+
+    static var current: KeepAwakeActiveIcon {
+        Defaults.sanitizedKeepAwakeActiveIcon(
+            UserDefaults.standard.string(forKey: DefaultsKey.keepAwakeActiveIcon)
+        )
+    }
+
+    var systemSymbolName: String? {
+        switch self {
+        case .chikit: return nil
+        case .coffee: return "cup.and.saucer.fill"
+        case .eye: return "eye.fill"
+        case .moon: return "moon.fill"
+        case .light: return "lightbulb.fill"
+        }
+    }
+
+    /// Nudge down the menu bar canvas, in points. Symbols carrying their mass
+    /// above the shape's middle — steam over a cup, a bulb over its base — read
+    /// as sitting high when their ink is centered geometrically.
+    var menuBarDrop: CGFloat {
+        switch self {
+        case .coffee: return 1
+        case .light: return 0.5
+        case .chikit, .eye, .moon: return 0
+        }
+    }
+
+    func title(_ strings: Strings) -> String {
+        switch self {
+        case .chikit: return strings.keepAwakeActiveIconChikit
+        case .coffee: return strings.keepAwakeActiveIconCoffee
+        case .eye: return strings.keepAwakeActiveIconEye
+        case .moon: return strings.keepAwakeActiveIconMoon
+        case .light: return strings.keepAwakeActiveIconLight
+        }
+    }
+}
+
 enum Defaults {
     static let finderBundleIdentifier = "com.apple.finder"
     static let mandatoryAutoQuitExceptionBundleIDs = [finderBundleIdentifier]
 
+    static let allowedDurations = [0, 15, 30, 60, 120, 240, 480]
+    static let allowedKeepAwakeMouseJiggleIntervals = [1, 2, 5, 10, 15]
+    static let allowedBatteryLimits = [0, 5, 10, 15, 20]
     static let allowedMonitorIntervals = [1, 2, 5]
     static let allowedMenuBarPresets = ["dense"]
     static let allowedMenuBarMetricSpacings = ["standard", "compact"]
@@ -300,7 +386,22 @@ enum Defaults {
     static let registeredDefaults: [String: Any] = [
         DefaultsKey.appearance: AppAppearance.fallback.rawValue,
         DefaultsKey.liquidGlassEnabled: false,
+        DefaultsKey.clamshellPreferred: false,
+        DefaultsKey.defaultDuration: 0,
+        DefaultsKey.batteryLimit: 10,
+        DefaultsKey.keepAwakeAutoStart: false,
+        DefaultsKey.keepAwakeRightClickToggle: false,
+        DefaultsKey.keepAwakeAllowDisplaySleep: false,
+        DefaultsKey.keepAwakeExternalDisplay: false,
+        DefaultsKey.keepAwakeConnectedToPower: false,
+        DefaultsKey.keepAwakeMouseJiggleEnabled: false,
+        DefaultsKey.keepAwakeMouseJiggleInterval: 5,
+        DefaultsKey.hotkeyEnabled: true,
         DefaultsKey.launchAtLoginWanted: false,
+        DefaultsKey.keepAwakeShortcut: GlobalShortcut.keepAwakeDefault.storageValue,
+        DefaultsKey.keepAwakeIconTint: KeepAwakeIconTint.orange.rawValue,
+        DefaultsKey.keepAwakeActiveIcon: KeepAwakeActiveIcon.chikit.rawValue,
+        DefaultsKey.showCountdown: false,
         DefaultsKey.mixerShowFinder: true,
         DefaultsKey.mixerHideInactiveApps: false,
         DefaultsKey.mixerLowerVolumeOnHeadphonesDisconnect: false,
@@ -325,6 +426,7 @@ enum Defaults {
         DefaultsKey.panelUtilityCleaner: true,
         DefaultsKey.panelUtilityClipboard: true,
         DefaultsKey.panelUtilityWindowLayout: true,
+        DefaultsKey.panelShowKeepAwake: true,
         DefaultsKey.panelShowUtilities: true,
         DefaultsKey.panelShowControls: true,
         // Menu bar metrics start off (the icon stays clean) and are opt-in.
@@ -502,6 +604,34 @@ enum Defaults {
             }
         }
         defaults.removeObject(forKey: DefaultsKey.monitorShowFanControlBeta)
+    }
+
+    static func sanitizedDefaultDuration(_ minutes: Int) -> Int {
+        allowedDurations.contains(minutes) ? minutes : 0
+    }
+
+    static func sanitizedBatteryLimit(_ percent: Int) -> Int {
+        allowedBatteryLimits.contains(percent) ? percent : 10
+    }
+
+    static func sanitizedKeepAwakeMouseJiggleInterval(_ minutes: Int) -> Int {
+        allowedKeepAwakeMouseJiggleIntervals.contains(minutes) ? minutes : 5
+    }
+
+    static func sanitizedKeepAwakeIconTint(_ rawValue: String?) -> KeepAwakeIconTint {
+        guard let rawValue,
+              let tint = KeepAwakeIconTint(rawValue: rawValue) else {
+            return .orange
+        }
+        return tint
+    }
+
+    static func sanitizedKeepAwakeActiveIcon(_ rawValue: String?) -> KeepAwakeActiveIcon {
+        guard let rawValue,
+              let icon = KeepAwakeActiveIcon(rawValue: rawValue) else {
+            return .chikit
+        }
+        return icon
     }
 
     static func sanitizedMonitorInterval(_ seconds: Int) -> Int {

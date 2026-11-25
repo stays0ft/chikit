@@ -39,7 +39,7 @@ enum FeaturePreset: String, CaseIterable, Identifiable {
             // the gate applies normally.
             return [.windowLayout, .cleaner, .uninstaller, .notchMediaControls,
                     .autoQuit, .clipboardHistory, .finderRename,
-                    .mixer, .soundOutputSwitcher, .screenRecorder,
+                    .mixer, .soundOutputSwitcher, .screenRecorder, .keepAwake,
                     .monitorCPU, .monitorGPU, .monitorMemory,
                     .monitorNetwork, .monitorDisk, .monitorPower]
         case .battery:
@@ -108,7 +108,7 @@ extension AppFeature {
         case .mixer:
             return UserDefaults.standard.bool(forKey: DefaultsKey.preciseVolumeRollerEnabled)
                 ? .keyboard : .idle
-        case .soundOutputSwitcher, .cleaner, .uninstaller, .screenRecorder, .fanControl, .fileConverter:
+        case .soundOutputSwitcher, .keepAwake, .cleaner, .uninstaller, .screenRecorder, .fanControl, .fileConverter:
             return .idle
         }
     }

@@ -170,6 +170,10 @@ final class FeatureRuntime: ObservableObject {
             AudioInputDeviceManager.shared.syncWithPreferences()
         },
         .soundOutputSwitcher: { SoundOutputSwitcher.shared.syncWithPreferences() },
+        .keepAwake: {
+            KeepAwakeManager.shared.syncWithFeatures()
+            HotkeyManager.shared.syncWithPreferences()
+        },
         .screenRecorder: {
             ScreenCaptureService.shared.syncWithPreferences()
             ScreenRecorderService.shared.syncWithPreferences()

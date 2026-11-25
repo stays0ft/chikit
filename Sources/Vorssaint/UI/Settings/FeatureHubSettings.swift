@@ -234,6 +234,7 @@ struct FeatureHubSettings: View {
         case .windowsDock: return hub.groupWindowsDock
         case .clipboardFiles: return hub.groupClipboardFiles
         case .sound: return hub.groupSound
+        case .energyDisplay: return hub.groupEnergyDisplay
         case .tools: return hub.groupTools
         case .monitor: return hub.groupMonitor
         }
@@ -666,6 +667,7 @@ extension AppFeature {
         case .finderRename: return FeatureStrings.finderRename(L10n.shared.language).hubTitle
         case .mixer: return s.mixerSection
         case .soundOutputSwitcher: return s.soundOutputSwitcherTitle
+        case .keepAwake: return s.keepAwakeTitle
         case .screenRecorder: return FeatureStrings.recorder(L10n.shared.language).pageTitle
         case .notchMediaControls: return FeatureStrings.notchMedia(L10n.shared.language).pageTitle
         case .cleaner: return s.cleanerName
@@ -689,6 +691,7 @@ extension AppFeature {
         case .finderRename: return FeatureStrings.finderRename(L10n.shared.language).hubDescription
         case .mixer: return hub.descMixer
         case .soundOutputSwitcher: return hub.descSoundOutputSwitcher
+        case .keepAwake: return hub.descKeepAwake
         case .screenRecorder: return FeatureStrings.recorder(L10n.shared.language).hubDescription
         case .notchMediaControls: return FeatureStrings.notchMedia(L10n.shared.language).hubDescription
         case .cleaner: return hub.descCleaner

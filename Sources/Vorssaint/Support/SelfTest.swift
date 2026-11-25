@@ -83,11 +83,26 @@ enum SelfTest {
         }
         UserDefaults.standard.removeObject(forKey: "selftest")
 
+        for style in KeepAwakeActiveIcon.allCases {
+            guard let image = MenuBarGlyph.activeImage(style: style, tint: .orange) else {
+                failures.append("Keep Awake icon \(style.rawValue)")
+                continue
+            }
+            if image.size != MenuBarGlyph.pointSize {
+                failures.append("Keep Awake icon size \(style.rawValue)")
+            }
+            // image.size stays correct even when the symbol inside it is scaled
+            // too large, so an overflow only shows as ink clipped by the canvas.
+            if inkTouchesEdge(of: image) {
+                failures.append("Keep Awake icon \(style.rawValue) is clipped by its canvas")
+            }
+        }
+
         // Tools/MakeIcon.swift writes the glyph PNGs at MenuBarGlyph.pointSize.
         // Changing the canvas in one and not the other would squash the glyph.
         if Bundle.main.url(forResource: "MenuBarIcon", withExtension: "png") == nil {
             warnings.append("menu bar glyph asset not bundled")
-        } else if let rep = MenuBarGlyph.image()?
+        } else if let rep = MenuBarGlyph.image(active: false)?
             .representations.min(by: { $0.pixelsWide < $1.pixelsWide }) {
             if rep.pixelsWide != Int(MenuBarGlyph.pointSize.width)
                 || rep.pixelsHigh != Int(MenuBarGlyph.pointSize.height) {
@@ -111,6 +126,32 @@ enum SelfTest {
         }
     }
 
+    /// Whether any visible pixel of `image` sits on its outermost row or column.
+    /// Every menu bar glyph is drawn with a margin, so touching an edge means
+    /// the artwork outgrew its canvas and is being cropped.
+    private static func inkTouchesEdge(of image: NSImage) -> Bool {
+        let sampling = 2
+        let wide = Int(image.size.width) * sampling
+        let high = Int(image.size.height) * sampling
+        guard wide > 0, high > 0,
+              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: wide, pixelsHigh: high,
+                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
+                                         isPlanar: false, colorSpaceName: .deviceRGB,
+                                         bytesPerRow: 0, bitsPerPixel: 0),
+              let context = NSGraphicsContext(bitmapImageRep: rep) else { return false }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        // The context draws in pixels, so fill the whole bitmap.
+        image.draw(in: NSRect(x: 0, y: 0, width: CGFloat(wide), height: CGFloat(high)))
+        NSGraphicsContext.restoreGraphicsState()
+
+        func visible(_ x: Int, _ y: Int) -> Bool {
+            (rep.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.05
+        }
+        for x in 0..<wide where visible(x, 0) || visible(x, high - 1) { return true }
+        for y in 0..<high where visible(0, y) || visible(wide - 1, y) { return true }
+        return false
+    }
 }
 
 /// Prints every temperature sensor the monitor would consider, with its

@@ -24,6 +24,146 @@ enum Shell {
     }
 }
 
+/// Runs a command with administrator privileges (system password prompt).
+enum AdminShell {
+    // Chikit is a menu-bar agent (LSUIElement), so it is rarely the active
+    // app. SecurityAgent attaches its password dialog to the requesting process;
+    // when that process is an inactive agent the dialog can open behind the
+    // frontmost app and read as "no prompt appeared". Bringing the app forward
+    // first — exactly what onboarding and the Dock Preview intro already do for
+    // their own windows — makes the dialog surface in focus.
+    //
+    // `prompting` serializes the request: a second one while a dialog is already
+    // up returns false instead of stacking another SecurityAgent dialog (what a
+    // frustrated retry used to do, and what was linked to the instability in
+    // issue #63). Every caller already treats false as "permission not granted".
+    private static let promptLock = NSLock()
+    private static var prompting = false
+
+    static func runSync(_ command: String, prompt: String) -> Bool {
+        promptLock.lock()
+        if prompting {
+            promptLock.unlock()
+            return false
+        }
+        prompting = true
+        promptLock.unlock()
+        defer {
+            promptLock.lock()
+            prompting = false
+            promptLock.unlock()
+        }
+
+        bringAppToFront()
+        let source = appleScriptSource(command: command, prompt: prompt)
+        // A person typing a password is not a stuck command. Keep the
+        // established bound without rushing a prompt that is being read.
+        return Shell.run("/usr/bin/osascript", ["-e", source], timeout: 600).status == 0
+    }
+
+    static func run(_ command: String, prompt: String, completion: @escaping (Bool) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            completion(runSync(command, prompt: prompt))
+        }
+    }
+
+    /// Brings the app forward so the administrator dialog opens in focus. Safe
+    /// from any thread: hops to the main thread when it is not already on it.
+    private static func bringAppToFront() {
+        if Thread.isMainThread {
+            NSApp.activate(ignoringOtherApps: true)
+        } else {
+            DispatchQueue.main.sync {
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
+        Thread.sleep(forTimeInterval: 0.12)
+    }
+
+    static func appleScriptSource(command: String, prompt: String) -> String {
+        "do shell script \(appleScriptString(command)) with administrator privileges with prompt \(appleScriptString(prompt))"
+    }
+
+    private static func appleScriptString(_ value: String) -> String {
+        let escaped = value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        return "\"\(escaped)\""
+    }
+}
+
+/// NOPASSWD rule restricted to `pmset disablesleep 0/1`, so closed-lid mode can
+/// toggle without asking for the administrator password every time.
+/// The password is asked once, when installing (or removing) the rule.
+enum Sudoers {
+    static let rulePath = "/etc/sudoers.d/chikit-clamshell"
+
+    /// Serializes every touch of the SleepDisabled state. The probe below
+    /// re-applies the value it just read; racing it against a concurrent
+    /// disable (launch recovery, a session ending) could resurrect a stale
+    /// "1" after the flag was already cleared, leaving lid sleep off with
+    /// nothing left to repair it.
+    private static let sleepStateQueue = DispatchQueue(label: "com.chikit.utils.pmset-state")
+
+    /// Proves the passwordless path by running it: re-applying the current
+    /// SleepDisabled state through `sudo -n` changes nothing on the system and
+    /// exercises the exact call the feature makes. Listing checks (`sudo -l`)
+    /// reported the rule as ready on Macs where the real call still asked for
+    /// a password, which put every toggle behind a prompt (issue #269).
+    static func isConfigured() -> Bool {
+        sleepStateQueue.sync {
+            let report = Shell.run("/usr/bin/pmset", ["-g"])
+            guard report.status == 0 else { return false }
+            return pmsetDisableSleepOnQueue(SudoersSupport.sleepDisabled(inPmsetOutput: report.output))
+        }
+    }
+
+    /// Whether the rule file is visible on disk.
+    /// Uninstall offers the removal prompt from this instead of `isConfigured`,
+    /// so a rule that stopped working still gets cleaned up.
+    static var ruleFilesPresent: Bool {
+        FileManager.default.fileExists(atPath: rulePath)
+    }
+
+    static func install(completion: @escaping (Bool) -> Void) {
+        // Granted by uid, not username: a short name is free-form text on
+        // SSO-enrolled Macs (name@company.com, #915) and the old validation
+        // rejected it before the password prompt could even appear.
+        let rule = SudoersSupport.clamshellRule(uid: getuid())
+        // Write and validate the rule; a failed check rolls back.
+        let command = "mkdir -p /etc/sudoers.d && chmod 0755 /etc/sudoers.d && echo '\(rule)' > \(rulePath) && chmod 0440 \(rulePath) && /usr/sbin/visudo -c -f \(rulePath) || { rm -f \(rulePath); exit 1; }"
+        AdminShell.run(command, prompt: L10n.shared.s.adminPromptSudoersInstall) { ok in
+            completion(ok && isConfigured())
+        }
+    }
+
+    static func remove(completion: @escaping (Bool) -> Void) {
+        AdminShell.run("rm -f \(rulePath)",
+                       prompt: L10n.shared.s.adminPromptSudoersRemove) { ok in
+            completion(ok)
+        }
+    }
+
+    /// Toggles sleep through the password-free path. Fails silently
+    /// (returns false) when the rule is not installed.
+    @discardableResult
+    static func pmsetDisableSleep(_ on: Bool) -> Bool {
+        sleepStateQueue.sync { pmsetDisableSleepOnQueue(on) }
+    }
+
+    /// Queues asynchronous writes directly and runs completion there so
+    /// fallback work stays serialized in request order.
+    static func pmsetDisableSleep(_ on: Bool, completion: @escaping (Bool) -> Void) {
+        sleepStateQueue.async {
+            completion(pmsetDisableSleepOnQueue(on))
+        }
+    }
+
+    private static func pmsetDisableSleepOnQueue(_ on: Bool) -> Bool {
+        Shell.run("/usr/bin/sudo", ["-n", "/usr/bin/pmset", "disablesleep", on ? "1" : "0"]).status == 0
+    }
+}
+
 /// Sends Apple Events to another app IN-PROCESS (via NSAppleScript) instead of
 /// spawning `osascript`. The Automation consent is then attributed to THIS app —
 /// so it stays granted across updates, is re-requested if it was lost, and the

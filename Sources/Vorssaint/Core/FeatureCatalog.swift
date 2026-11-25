@@ -19,6 +19,8 @@ enum AppFeature: String, CaseIterable {
     case clipboardHistory, finderRename
     // Sound
     case mixer, soundOutputSwitcher
+    // Energy
+    case keepAwake
     // Tools
     case cleaner, uninstaller, screenRecorder, notchMediaControls, fileConverter
     // System monitor, one entry per metric family (temperatures live with
@@ -28,7 +30,7 @@ enum AppFeature: String, CaseIterable {
 
 /// Hub sections, in display order.
 enum FeatureGroup: String, CaseIterable {
-    case windowsDock, clipboardFiles, sound, tools, monitor
+    case windowsDock, clipboardFiles, sound, energyDisplay, tools, monitor
 }
 
 /// System permissions surfaced by the hub's transparency portal.
@@ -84,6 +86,8 @@ extension AppFeature {
             return .clipboardFiles
         case .mixer, .soundOutputSwitcher:
             return .sound
+        case .keepAwake:
+            return .energyDisplay
         case .cleaner, .uninstaller, .screenRecorder, .notchMediaControls, .fileConverter:
             return .tools
         case .monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower,
@@ -100,6 +104,7 @@ extension AppFeature {
         case .finderRename: return "pencil"
         case .mixer: return "slider.horizontal.3"
         case .soundOutputSwitcher: return "hifispeaker"
+        case .keepAwake: return "moon.zzz.fill"
         case .cleaner: return "sparkles"
         case .uninstaller: return "trash"
         case .screenRecorder: return "record.circle"
@@ -136,7 +141,7 @@ extension AppFeature {
         case .clipboardHistory: return [DefaultsKey.clipboardHistoryEnabled]
         case .finderRename: return [DefaultsKey.finderRenameEnabled]
         case .soundOutputSwitcher: return [DefaultsKey.soundOutputSwitcherEnabled]
-        case .windowLayout, .mixer,
+        case .windowLayout, .mixer, .keepAwake,
              .cleaner, .uninstaller, .screenRecorder, .fileConverter,
              .monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower,
              .fanControl:
@@ -153,6 +158,7 @@ extension AppFeature {
         case .windowLayout, .autoQuit:
             return [.accessibility]
         case .finderRename: return [.accessibility]
+        case .keepAwake: return [.accessibility]
         case .screenRecorder: return [.screenRecording, .accessibility, .microphone]
         case .cleaner: return [.fullDiskAccess, .notifications]
         case .uninstaller: return [.fullDiskAccess, .automationFinder]
@@ -173,7 +179,7 @@ extension AppFeature {
     /// is actually used.
     var onboardingPermissions: [AppPermission] {
         switch self {
-        case .cleaner, .uninstaller, .mixer:
+        case .keepAwake, .cleaner, .uninstaller, .mixer:
             return []
         default:
             return permissions.filter { $0 == .accessibility || $0 == .screenRecording }
@@ -205,6 +211,8 @@ extension AppFeature {
             let keys = feature.enabledKeys
             guard keys.isEmpty || keys.contains(where: boolFor) else { return false }
             switch (feature, permission) {
+            case (.keepAwake, .accessibility):
+                return boolFor(DefaultsKey.keepAwakeMouseJiggleEnabled)
             case (.mixer, .accessibility):
                 return boolFor(DefaultsKey.preciseVolumeRollerEnabled)
             case (.monitorCPU, .notifications):

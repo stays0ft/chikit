@@ -105,6 +105,11 @@ final class L10n: ObservableObject {
 struct Strings {
     // MARK: Menu bar & context menu
     let statusIdleTooltip: String
+    let statusActiveUntil: String      // + time
+    let statusActiveIndefinite: String
+    let menuEnableAwake: String
+    let menuDisableAwake: String
+    let menuActivateFor: String
     let menuSettings: String
     let menuAbout: String
     let menuQuit: String
@@ -125,13 +130,47 @@ struct Strings {
     let menuMinimize: String
     let menuZoom: String
     let menuClose: String
+    let minutes15: String
+    let minutes30: String
+    let hour1: String
+    let hours2: String
+    let hours4: String
+    let hours8: String
+    let indefinitely: String
+    let indefinite: String
 
 
     // MARK: Panel — header & footer
     let panelSettings: String
     let panelQuit: String
+    let keepAwakeTitle: String
+    let keepAwakeEndsIn: String        // + remaining
+    let keepAwakeUntilDisabled: String
+    let keepAwakeNormalRules: String
 
     let keepAwakeOptions: String
+    let keepAwakeMouseJiggle: String
+    let keepAwakeMouseJiggleCaption: String
+    let keepAwakeMouseJiggleInterval: String
+    let keepAwakeActiveIconLabel: String
+    let keepAwakeActiveIconChikit: String
+    let keepAwakeActiveIconCoffee: String
+    let keepAwakeActiveIconEye: String
+    let keepAwakeActiveIconMoon: String
+    let keepAwakeActiveIconLight: String
+    let keepAwakeIconTintLabel: String
+    let keepAwakeIconTintOrange: String
+    let keepAwakeIconTintGreen: String
+    let keepAwakeIconTintBlue: String
+    let keepAwakeIconTintPurple: String
+    let keepAwakeIconTintPink: String
+    let keepAwakeIconTintNone: String
+    let durationLabel: String
+    let clamshellTitle: String
+    let clamshellOnCaption: String
+    let clamshellNeedsSession: String
+    let clamshellReady: String
+    let clamshellNeedsPassword: String
 
     // MARK: Panel — system monitor
     let systemSection: String
@@ -151,12 +190,21 @@ struct Strings {
     let monitorUnavailable: String
     let energyAppsTitle: String
     let energyAppsIdle: String
+    let notifySessionEndedTitle: String
+    let notifySessionEndedBody: String
+    let notifyBatteryTitle: String
+    let notifyBatteryBody: String
+    let adminPromptClamshellOff: String
+    let adminPromptRecover: String
+    let adminPromptSudoersInstall: String
+    let adminPromptSudoersRemove: String
 
 
 
     // MARK: Settings — window & tabs
     let settingsTitle: String
     let tabGeneral: String
+    let tabEnergy: String
     let tabAdvanced: String
     let tabAbout: String
 
@@ -180,6 +228,21 @@ struct Strings {
     let languageLabel: String
     let menuBarSection: String
     let showCountdown: String
+    let globalHotkeySection: String
+    let hotkeyToggle: String
+    let hotkeyCaption: String
+    let sessionSection: String
+    let defaultDurationLabel: String
+    let keepAwakeAutoStart: String
+    let keepAwakeAutoStartCaption: String
+    let batteryProtectionSection: String
+    let batteryDisableBelow: String
+    let batteryNever: String
+    let batteryProtectionCaption: String
+    let clamshellSection: String
+    let configuring: String
+    let sudoersFailed: String
+    let clamshellExplanation: String
 
 
 
@@ -549,6 +612,8 @@ struct Strings {
     let monitorMemoryMetricLabel: String
     let memoryMetricUsed: String
     let memoryMetricApp: String
+    let keepAwakeRightClickToggle: String
+    let keepAwakeRightClickToggleCaption: String
     let uninstallerHomebrewPackageFormat: String
 }
 
@@ -557,6 +622,11 @@ struct Strings {
 extension Strings {
     static let ptBR = Strings(
         statusIdleTooltip: "Chikit: suspensão normal",
+        statusActiveUntil: "Chikit: ativo até",
+        statusActiveIndefinite: "Chikit: ativo indefinidamente",
+        menuEnableAwake: "Ativar manter acordado",
+        menuDisableAwake: "Desativar manter acordado",
+        menuActivateFor: "Ativar por…",
         menuSettings: "Ajustes…",
         menuAbout: "Sobre o Chikit",
         menuQuit: "Sair do Chikit",
@@ -575,9 +645,45 @@ extension Strings {
         menuZoom: "Zoom",
         menuClose: "Fechar",
 
+        minutes15: "15 minutos",
+        minutes30: "30 minutos",
+        hour1: "1 hora",
+        hours2: "2 horas",
+        hours4: "4 horas",
+        hours8: "8 horas",
+        indefinitely: "Indefinidamente",
+        indefinite: "Indefinida",
+
         panelSettings: "Ajustes",
         panelQuit: "Sair",
+        keepAwakeTitle: "Manter acordado",
+        keepAwakeEndsIn: "Termina em",
+        keepAwakeUntilDisabled: "Ativo até você desativar",
+        keepAwakeNormalRules: "O Mac segue as regras normais de energia",
         keepAwakeOptions: "Opções",
+        keepAwakeMouseJiggle: "Mover cursor levemente",
+        keepAwakeMouseJiggleCaption: "Durante uma sessão, move o cursor um pouco no intervalo escolhido.",
+        keepAwakeMouseJiggleInterval: "Intervalo",
+        keepAwakeActiveIconLabel: "Ícone ativo",
+        keepAwakeActiveIconChikit: "Chikit",
+        keepAwakeActiveIconCoffee: "Café",
+        keepAwakeActiveIconEye: "Olho",
+        keepAwakeActiveIconMoon: "Lua",
+        keepAwakeActiveIconLight: "Lâmpada",
+        keepAwakeIconTintLabel: "Cor do ícone ativo",
+        keepAwakeIconTintOrange: "Laranja",
+        keepAwakeIconTintGreen: "Verde",
+        keepAwakeIconTintBlue: "Azul",
+        keepAwakeIconTintPurple: "Roxo",
+        keepAwakeIconTintPink: "Rosa",
+        keepAwakeIconTintNone: "Sem cor",
+        durationLabel: "Duração",
+        clamshellTitle: "Continuar com a tampa fechada",
+        clamshellOnCaption: "Suspensão totalmente desativada. Atenção à energia",
+        clamshellNeedsSession: "Será aplicada sempre que “Manter acordado” estiver ativo",
+        clamshellReady: "Pronto. Liga e desliga sem senha",
+        clamshellNeedsPassword: "Pedirá a senha de administrador uma vez",
+
         systemSection: "Sistema",
         temperatures: "Temperaturas",
         cpuLabel: "CPU",
@@ -596,8 +702,18 @@ extension Strings {
         energyAppsTitle: "Uso significativo de energia",
         energyAppsIdle: "Sem uso significativo de energia",
 
+        notifySessionEndedTitle: "Sessão encerrada",
+        notifySessionEndedBody: "O tempo acabou. O Mac voltará a suspender normalmente.",
+        notifyBatteryTitle: "Chikit desativado",
+        notifyBatteryBody: "Bateria baixa. A suspensão normal foi restaurada para proteger a carga.",
+        adminPromptClamshellOff: "O Chikit precisa da sua senha para reativar a suspensão normal do Mac.",
+        adminPromptRecover: "O Chikit foi encerrado com a suspensão do Mac desativada. Digite a senha para restaurar a suspensão normal.",
+        adminPromptSudoersInstall: "O Chikit vai criar uma regra restrita (somente pmset disablesleep) para alternar a tampa fechada sem pedir senha. Esta é a única vez que a senha será necessária.",
+        adminPromptSudoersRemove: "O Chikit vai remover a regra de tampa fechada sem senha.",
+
         settingsTitle: "Ajustes do Chikit",
         tabGeneral: "Geral",
+        tabEnergy: "Energia",
         tabAdvanced: "Avançado",
         tabAbout: "Sobre",
         advancedResetSection: "Permissões",
@@ -618,6 +734,23 @@ extension Strings {
         languageLabel: "Idioma",
         menuBarSection: "Barra de menus",
         showCountdown: "Mostrar tempo restante ao lado do ícone",
+        globalHotkeySection: "Atalho global",
+        hotkeyToggle: "Ativar atalho para “Manter acordado”",
+        hotkeyCaption: "Funciona em qualquer app, sem permissões extras.",
+
+        sessionSection: "Sessão",
+        defaultDurationLabel: "Duração padrão",
+        keepAwakeAutoStart: "Manter acordado ao abrir o Chikit",
+        keepAwakeAutoStartCaption: "Inicia uma sessão com a duração padrão.",
+        batteryProtectionSection: "Proteção de bateria",
+        batteryDisableBelow: "Desativar com bateria abaixo de",
+        batteryNever: "Nunca",
+        batteryProtectionCaption: "Evita que uma sessão esquecida drene a bateria do MacBook.",
+        clamshellSection: "Tampa fechada",
+        configuring: "Configurando…",
+        sudoersFailed: "Não foi possível ativar a tampa fechada. Tente de novo.",
+        clamshellExplanation: "“Continuar com a tampa fechada” desativa completamente a suspensão enquanto “Manter acordado” estiver ativo e é revertido automaticamente quando a sessão termina ou o app é encerrado. Prefira usá-lo conectado à energia.",
+
         autoQuitName: "Encerrar ao fechar",
         autoQuitEnable: "Encerrar o app ao fechar a última janela",
         autoQuitEnableCaption: "Fechar a última janela de um app também o encerra.",
@@ -958,6 +1091,8 @@ extension Strings {
         monitorMemoryMetricLabel: "Medir memória como",
         memoryMetricUsed: "Memória usada",
         memoryMetricApp: "Memória de apps",
+        keepAwakeRightClickToggle: "Clique com o botão direito no ícone da barra de menus para alternar “Manter acordado”",
+        keepAwakeRightClickToggleCaption: "Substitui o menu de contexto do clique com o botão direito.",
         uninstallerHomebrewPackageFormat: "%@ também será removido do Homebrew."
     )
 }
@@ -967,6 +1102,11 @@ extension Strings {
 extension Strings {
     static let enUS = Strings(
         statusIdleTooltip: "Chikit: normal sleep",
+        statusActiveUntil: "Chikit: awake until",
+        statusActiveIndefinite: "Chikit: awake indefinitely",
+        menuEnableAwake: "Enable keep awake",
+        menuDisableAwake: "Disable keep awake",
+        menuActivateFor: "Activate for…",
         menuSettings: "Settings…",
         menuAbout: "About Chikit",
         menuQuit: "Quit Chikit",
@@ -985,9 +1125,45 @@ extension Strings {
         menuZoom: "Zoom",
         menuClose: "Close",
 
+        minutes15: "15 minutes",
+        minutes30: "30 minutes",
+        hour1: "1 hour",
+        hours2: "2 hours",
+        hours4: "4 hours",
+        hours8: "8 hours",
+        indefinitely: "Indefinitely",
+        indefinite: "Indefinite",
+
         panelSettings: "Settings",
         panelQuit: "Quit",
+        keepAwakeTitle: "Keep awake",
+        keepAwakeEndsIn: "Ends in",
+        keepAwakeUntilDisabled: "Active until you turn it off",
+        keepAwakeNormalRules: "The Mac follows its normal energy rules",
         keepAwakeOptions: "Options",
+        keepAwakeMouseJiggle: "Move pointer slightly",
+        keepAwakeMouseJiggleCaption: "During a session, moves the pointer a little at the chosen interval.",
+        keepAwakeMouseJiggleInterval: "Interval",
+        keepAwakeActiveIconLabel: "Active icon",
+        keepAwakeActiveIconChikit: "Chikit",
+        keepAwakeActiveIconCoffee: "Coffee",
+        keepAwakeActiveIconEye: "Eye",
+        keepAwakeActiveIconMoon: "Moon",
+        keepAwakeActiveIconLight: "Lightbulb",
+        keepAwakeIconTintLabel: "Active icon color",
+        keepAwakeIconTintOrange: "Orange",
+        keepAwakeIconTintGreen: "Green",
+        keepAwakeIconTintBlue: "Blue",
+        keepAwakeIconTintPurple: "Purple",
+        keepAwakeIconTintPink: "Pink",
+        keepAwakeIconTintNone: "No color",
+        durationLabel: "Duration",
+        clamshellTitle: "Keep going with the lid closed",
+        clamshellOnCaption: "Sleep fully disabled. Mind the power",
+        clamshellNeedsSession: "Applied whenever “Keep awake” is active",
+        clamshellReady: "Ready. Toggles without a password",
+        clamshellNeedsPassword: "Will ask for the administrator password once",
+
         systemSection: "System",
         temperatures: "Temperatures",
         cpuLabel: "CPU",
@@ -1006,8 +1182,18 @@ extension Strings {
         energyAppsTitle: "Apps using significant energy",
         energyAppsIdle: "No significant energy use",
 
+        notifySessionEndedTitle: "Session ended",
+        notifySessionEndedBody: "Time is up. The Mac will sleep normally again.",
+        notifyBatteryTitle: "Chikit disabled",
+        notifyBatteryBody: "Low battery. Normal sleep was restored to protect the charge.",
+        adminPromptClamshellOff: "Chikit needs your password to restore the Mac's normal sleep.",
+        adminPromptRecover: "Chikit quit while the Mac's sleep was disabled. Enter the password to restore normal sleep.",
+        adminPromptSudoersInstall: "Chikit will create a restricted rule (pmset disablesleep only) to toggle closed-lid mode without asking for a password. This is the only time the password is needed.",
+        adminPromptSudoersRemove: "Chikit will remove the password-free closed-lid rule.",
+
         settingsTitle: "Chikit Settings",
         tabGeneral: "General",
+        tabEnergy: "Energy",
         tabAdvanced: "Advanced",
         tabAbout: "About",
         advancedResetSection: "Permissions",
@@ -1028,6 +1214,23 @@ extension Strings {
         languageLabel: "Language",
         menuBarSection: "Menu bar",
         showCountdown: "Show remaining time next to the icon",
+        globalHotkeySection: "Global shortcut",
+        hotkeyToggle: "Enable shortcut for “Keep awake”",
+        hotkeyCaption: "Works in any app, no extra permissions.",
+
+        sessionSection: "Session",
+        defaultDurationLabel: "Default duration",
+        keepAwakeAutoStart: "Keep Awake when Chikit opens",
+        keepAwakeAutoStartCaption: "Starts a session with the default duration.",
+        batteryProtectionSection: "Battery protection",
+        batteryDisableBelow: "Disable when battery drops below",
+        batteryNever: "Never",
+        batteryProtectionCaption: "Keeps a forgotten session from draining the MacBook battery.",
+        clamshellSection: "Closed lid",
+        configuring: "Configuring…",
+        sudoersFailed: "Couldn't turn on closed-lid mode. Try again.",
+        clamshellExplanation: "“Keep going with the lid closed” fully disables sleep while “Keep awake” is active and is reverted automatically when the session ends or the app quits. Prefer using it plugged in.",
+
         autoQuitName: "Quit on close",
         autoQuitEnable: "Quit an app when its last window closes",
         autoQuitEnableCaption: "Closing an app's last window also quits it.",
@@ -1368,6 +1571,8 @@ extension Strings {
         monitorMemoryMetricLabel: "Measure memory as",
         memoryMetricUsed: "Memory Used",
         memoryMetricApp: "App Memory",
+        keepAwakeRightClickToggle: "Right-click the menu bar icon to toggle Keep Awake",
+        keepAwakeRightClickToggleCaption: "Replaces the right-click context menu.",
         uninstallerHomebrewPackageFormat: "%@ will also be removed from Homebrew."
     )
 }

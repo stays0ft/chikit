@@ -10,13 +10,14 @@ protocol PanelOrderItem: RawRepresentable, CaseIterable, Hashable where RawValue
 /// stable identifiers persisted in the saved order and the collapsed set, so
 /// renaming a case would orphan a user's stored layout — keep them stable.
 enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
-    case mixer, system, network, disk, power, fanControl, utilities, controls
+    case keepAwake, mixer, system, network, disk, power, fanControl, utilities, controls
 
     var id: String { rawValue }
 
     /// Localized display name, reused from the existing section titles.
     func title(_ s: Strings) -> String {
         switch self {
+        case .keepAwake: return s.keepAwakeTitle
         case .mixer: return s.mixerSection
         case .system: return s.systemSection
         case .network: return s.networkSection
@@ -30,6 +31,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
 
     var symbolName: String {
         switch self {
+        case .keepAwake: return "moon.zzz.fill"
         case .mixer: return "slider.horizontal.3"
         case .system: return "cpu"
         case .network: return "network"
@@ -46,6 +48,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     /// get a dedicated `panelShow*` key so every section is hideable.
     var visibilityKey: String {
         switch self {
+        case .keepAwake: return DefaultsKey.panelShowKeepAwake
         case .mixer: return DefaultsKey.monitorShowMixer
         case .system: return DefaultsKey.monitorShowSystem
         case .network: return DefaultsKey.monitorShowNetwork
@@ -66,6 +69,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
     /// feature's return).
     var featureGate: [AppFeature] {
         switch self {
+        case .keepAwake: return [.keepAwake]
         case .mixer: return [.mixer]
         case .system: return [.monitorCPU, .monitorGPU, .monitorMemory]
         case .network: return [.monitorNetwork]
