@@ -9247,45 +9247,6 @@ struct MetricsTests {
                "the previous capture outline stays visible by default, as it always was")
         expect(Defaults.registeredDefaults[DefaultsKey.screenshotLoupeStartsOn] as? Bool == false,
                "the always-on loupe is an opt-in and ships off")
-        expect(ScreenshotShareDuration.allCases.map(\.rawValue) == [3_600, 21_600, 86_400],
-               "temporary links allow only one, six or twenty-four hours")
-        let testShareEndpoint = ScreenshotSharingSupport.endpoint(
-            bundleIdentifier: ScreenshotSharingSupport.developerBundleIdentifier,
-            developerOverride: "https://test.example/")
-        expect(testShareEndpoint.absoluteString == "https://test.example"
-                && ScreenshotSharingSupport.endpoint(
-                    bundleIdentifier: "com.chikit.utils",
-                    developerOverride: "https://test.example").absoluteString
-                    == ScreenshotSharingSupport.productionEndpoint.absoluteString
-                && ScreenshotSharingSupport.endpoint(
-                    bundleIdentifier: ScreenshotSharingSupport.developerBundleIdentifier,
-                    developerOverride: "http://test.example")
-                    == ScreenshotSharingSupport.productionEndpoint,
-               "only the Developer build accepts a valid HTTPS test endpoint")
-        expect(ScreenshotSharingSupport.uploadURL(endpoint: testShareEndpoint,
-                                                  duration: .sixHours)?.absoluteString
-                == "https://test.example/v1/screenshots?expiresIn=21600",
-               "sharing builds the fixed upload route and expiration query")
-        let shareNow = Date(timeIntervalSince1970: 1_000)
-        let shareResponse = ScreenshotShareResponse(
-            id: String(repeating: "a", count: 32),
-            viewPath: "/s/\(String(repeating: "a", count: 32))",
-            expiresAt: "1970-01-01T01:16:40.125Z",
-            deleteToken: String(repeating: "b", count: 43))
-        expect(ScreenshotSharingSupport.record(response: shareResponse,
-                                                endpoint: testShareEndpoint,
-                                                now: shareNow)?.url.absoluteString
-                == "https://test.example/s/\(String(repeating: "a", count: 32))",
-               "a valid service response becomes an owner-held link record")
-        let forgedShareResponse = ScreenshotShareResponse(
-            id: "guessable",
-            viewPath: "/s/guessable",
-            expiresAt: "1970-01-01T01:16:40.125Z",
-            deleteToken: "short")
-        expect(ScreenshotSharingSupport.record(response: forgedShareResponse,
-                                                endpoint: testShareEndpoint,
-                                                now: shareNow) == nil,
-               "guessable ids and short deletion tokens are rejected")
         let recentCaptureIDs = (0..<14).map { _ in UUID() }
         expect(ScreenshotSupport.cappedRecentCaptureIDs(recentCaptureIDs)
                 == Array(recentCaptureIDs.prefix(12))
@@ -9984,8 +9945,6 @@ struct MetricsTests {
                "a recording carries the sound of the Mac unless the person turns it off")
         expect(Defaults.registeredDefaults[DefaultsKey.recorderMicrophone] as? Bool == false,
                "microphone recording is optional and ships off")
-        expect(Defaults.registeredDefaults[DefaultsKey.recorderSharingEnabled] as? Bool == true,
-               "temporary recording links stay visible but do nothing until explicitly used")
         expect(Defaults.registeredDefaults[DefaultsKey.recorderQuality] as? String == "balanced"
                 && Defaults.registeredDefaults[DefaultsKey.recorderFrameRate] as? Int == 60
                 && Defaults.registeredDefaults[DefaultsKey.recorderCountdown] as? Int == 3
@@ -10012,52 +9971,6 @@ struct MetricsTests {
         expect(RecorderSupport.exceptedOwnWindowIDs(
             ownWindowIDs: [1, 2, 3], protectedWindowIDs: [2, 4]) == [1, 3],
                "recording keeps existing ordinary app windows but never its protected chrome")
-
-        expect(RecordingShareDuration.allCases.map(\.rawValue) == [3_600, 21_600],
-               "recording links allow only one or six hours")
-        let recordingShareEndpoint = RecordingSharingSupport.endpoint(
-            bundleIdentifier: RecordingSharingSupport.developerBundleIdentifier,
-            developerOverride: "https://test.example/")
-        expect(RecordingSharingSupport.uploadURL(endpoint: recordingShareEndpoint,
-                                                 duration: .sixHours)?.absoluteString
-                == "https://test.example/v1/recordings?expiresIn=21600",
-               "recording sharing uses its fixed endpoint and expiration query")
-        let recordingID = String(repeating: "r", count: 32)
-        let recordingResponse = RecordingShareResponse(
-            id: recordingID,
-            viewPath: "/s/\(recordingID)",
-            expiresAt: "1970-01-01T06:16:40.000Z",
-            deleteToken: String(repeating: "t", count: 43))
-        expect(RecordingSharingSupport.record(response: recordingResponse,
-                                              endpoint: recordingShareEndpoint,
-                                              now: Date(timeIntervalSince1970: 1_000))?.id
-                == recordingID,
-               "a valid six-hour recording response becomes an owner-held record")
-        let recordingPlan = RecordingSharingSupport.encodingPlan(
-            duration: 30,
-            baseSize: CGSize(width: 3840, height: 2160),
-            sourceFrameRate: 60,
-            hasAudio: true)
-        expect(recordingPlan != nil
-                && max(recordingPlan!.size.width, recordingPlan!.size.height) <= 1920
-                && recordingPlan!.frameRate == 30
-                && recordingPlan!.audioBitRate == 128_000,
-               "a large short recording gets a web-sized video and keeps its audio")
-        if let recordingPlan {
-            let plannedBytes = (recordingPlan.videoBitRate + recordingPlan.audioBitRate)
-                * 30 / 8
-            expect(plannedBytes < RecordingSharingSupport.targetUploadBytes,
-                   "the first compression pass stays inside the upload budget")
-        }
-        expect(RecordingSharingSupport.encodingPlan(
-            duration: 3_600,
-            baseSize: CGSize(width: 1920, height: 1080),
-            sourceFrameRate: 30,
-            hasAudio: true) == nil,
-               "sharing refuses a duration that cannot fit without unusable quality")
-        expect(RecordingSharingSupport.retryScale(current: 1,
-                                                  actualBytes: 100_000_000) ?? 1 < 1,
-               "an oversized first pass retries at a lower bitrate")
 
         // MARK: Screen recorder geometry and policy
 
@@ -10893,18 +10806,6 @@ struct MetricsTests {
             return found
         }
         var englishFormats: [String: [String]] = [:]
-        // A key glyph in front of a button label reads as that button's
-        // shortcut, so neither command bar action button carries one.
-        for language in AppLanguage.allCases {
-            let recordingShareValues = Mirror(
-                reflecting: FeatureStrings.recorderShare(language)).children
-                .compactMap { $0.value as? String }
-            expect(recordingShareValues.count == 9
-                    && recordingShareValues.allSatisfy { !$0.isEmpty },
-                   "every recording share string is set for \(language.rawValue)")
-            expect(recordingShareValues.allSatisfy { !$0.contains("—") },
-                   "no em-dash in recording share strings (\(language.rawValue))")
-        }
         expect(Set(GlobalShortcutRole.allCases.map(\.defaultShortcut)).count
                 == GlobalShortcutRole.allCases.count,
                "no two shortcut roles share a default combination")

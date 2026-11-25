@@ -223,7 +223,6 @@ if (( TEST )); then
         Sources/Vorssaint/Core/ScreenshotStrings.swift \
         Sources/Vorssaint/Core/RecentCaptureStrings.swift \
         Sources/Vorssaint/Core/RecorderStrings.swift \
-        Sources/Vorssaint/Core/RecorderShareStrings.swift \
         Sources/Vorssaint/Core/FinderRenameStrings.swift \
         Sources/Vorssaint/Core/MenuBarAppearanceStrings.swift \
         Sources/Vorssaint/Core/AppAppearance.swift \
@@ -237,7 +236,6 @@ if (( TEST )); then
         Sources/Vorssaint/Core/NotchMediaStrings.swift \
         Sources/Vorssaint/Services/NotchMedia/NotchMediaSupport.swift \
         Sources/Vorssaint/Services/Recorder/RecorderSupport.swift \
-        Sources/Vorssaint/Services/Recorder/RecordingSharingSupport.swift \
         Sources/Vorssaint/Services/PrivateFileStore.swift \
         Sources/Vorssaint/Services/Recorder/RecorderTakeStore.swift \
         Sources/Vorssaint/Services/Recorder/RecorderMotion.swift \
@@ -286,7 +284,6 @@ if (( TEST )); then
         Sources/Vorssaint/Services/SpotlightNamesSupport.swift \
         Sources/Vorssaint/Services/QuickTools/ScreenshotCapturePolicy.swift \
         Sources/Vorssaint/Services/QuickTools/ScreenshotSupport.swift \
-        Sources/Vorssaint/Services/QuickTools/ScreenshotSharingSupport.swift \
         Sources/Vorssaint/Services/QuickTools/WindowActivationPolicy.swift \
         Sources/Vorssaint/Services/SessionActivity.swift \
         Sources/Vorssaint/Services/SessionActivitySupport.swift \
