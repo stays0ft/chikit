@@ -1900,8 +1900,8 @@ struct MetricsTests {
                "memory menu bar style defaults to percent")
         expect(registeredDefaults[DefaultsKey.monitorPwrTimeRemaining] as? Bool == true,
                "battery time is shown in the Power panel by default")
-        expect(registeredDefaults[DefaultsKey.windowLayoutShortcutsEnabled] as? Bool == false,
-               "window layout shortcuts stay off until enabled")
+        expect(registeredDefaults[DefaultsKey.windowLayoutShortcutsEnabled] as? Bool == true,
+               "window layout shortcuts (Rectangle's Control-Option set) are on by default")
         expect(registeredDefaults[DefaultsKey.windowEdgeSnapEnabled] as? Bool == false,
                "dragging windows to screen edges is opt-in")
         expect(registeredDefaults[DefaultsKey.windowGestureEnabled] as? Bool == false,
@@ -7229,14 +7229,14 @@ struct MetricsTests {
 
         // MARK: Features hub catalog
 
-        expect(AppFeature.allCases.count == 17, "feature catalog has 17 features")
+        expect(AppFeature.allCases.count == 18, "feature catalog has 18 features")
         expect(Set(AppFeature.allCases.map(\.rawValue)).count == AppFeature.allCases.count,
                "feature ids are unique")
         expect(AppFeature.allCases.map(\.rawValue) == [
             "windowLayout", "autoQuit",
             "clipboardHistory", "finderRename",
             "mixer", "soundOutputSwitcher",
-            "cleaner", "uninstaller", "screenRecorder", "notchMediaControls",
+            "cleaner", "uninstaller", "screenRecorder", "notchMediaControls", "fileConverter",
             "monitorCPU", "monitorGPU", "monitorMemory", "monitorNetwork", "monitorDisk", "monitorPower",
             "fanControl",
         ], "feature ids are stable (they persist inside availability keys)")

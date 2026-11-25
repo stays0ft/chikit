@@ -234,6 +234,7 @@ if (( TEST )); then
         Sources/Vorssaint/Core/PermissionGuideStrings.swift \
         Sources/Vorssaint/Core/FanControlStrings.swift \
         Sources/Vorssaint/Services/FanControl/FanControlSupport.swift \
+        Sources/Vorssaint/Services/Converter/ConverterSupport.swift \
         Sources/Vorssaint/Core/NotchMediaStrings.swift \
         Sources/Vorssaint/Services/NotchMedia/NotchMediaSupport.swift \
         Sources/Vorssaint/Services/Recorder/RecorderSupport.swift \
@@ -406,6 +407,8 @@ if (( DEV )); then
     /usr/libexec/PlistBuddy -c "Set :CFBundleName Chikit (Developer)" "$STAGE/Contents/Info.plist"
     /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Chikit (Developer)" "$STAGE/Contents/Info.plist"
     /usr/libexec/PlistBuddy -c "Set :CFBundleExecutable $EXECUTABLE" "$STAGE/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Set :NSServices:0:NSPortName $EXECUTABLE" "$STAGE/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Set :NSServices:0:NSMenuItem:default Convert with Chikit (Developer)" "$STAGE/Contents/Info.plist"
     FAN_PLIST="$STAGE/Contents/Library/LaunchDaemons/$FAN_HELPER_ID.plist"
     /usr/libexec/PlistBuddy -c "Set :Label $FAN_HELPER_ID" "$FAN_PLIST"
     /usr/libexec/PlistBuddy -c "Set :BundleProgram Contents/Library/LaunchServices/$FAN_HELPER_ID" "$FAN_PLIST"

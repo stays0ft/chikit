@@ -681,6 +681,7 @@ extension AppFeature {
         case .notchMediaControls: return FeatureStrings.notchMedia(L10n.shared.language).pageTitle
         case .cleaner: return s.cleanerName
         case .uninstaller: return s.uninstallerName
+        case .fileConverter: return "Convert"
         case .monitorCPU: return s.monitorShowCPU
         case .monitorGPU: return s.monitorShowGPU
         case .monitorMemory: return s.monitorShowMemory
@@ -709,6 +710,8 @@ extension AppFeature {
             return description + " · "
                 + FeatureStrings.whatsAppDownloads(L10n.shared.language).hubDescription
         case .uninstaller: return hub.descUninstaller
+        case .fileConverter:
+            return "Convert audio, video, images, documents, PDFs and Excel spreadsheets between formats, on this Mac."
         case .monitorCPU: return hub.descMonitorCPU
         case .monitorGPU: return hub.descMonitorGPU
         case .monitorMemory: return hub.descMonitorMemory

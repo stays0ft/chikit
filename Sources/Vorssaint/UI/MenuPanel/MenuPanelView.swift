@@ -472,7 +472,7 @@ private struct MenuPanelHeader: View {
 private enum UtilityPanelItem: String, PanelOrderItem, Identifiable {
     // Case order IS the default panel order (PanelLayout.itemOrder falls back
     // to allCases).
-    case cleaner, clipboard, windowLayout, uninstaller, screenRecorder
+    case cleaner, clipboard, windowLayout, uninstaller, screenRecorder, converter
 
     var id: String { rawValue }
 
@@ -485,6 +485,7 @@ private enum UtilityPanelItem: String, PanelOrderItem, Identifiable {
         case .windowLayout: return .windowLayout
         case .uninstaller: return .uninstaller
         case .screenRecorder: return .screenRecorder
+        case .converter: return .fileConverter
         }
     }
 }
@@ -494,6 +495,8 @@ struct UtilitiesSection: View {
     @ObservedObject private var permissions = Permissions.shared
     @ObservedObject private var features = FeatureRuntime.shared
     @State private var showUninstaller = false
+    @State private var showConverter = false
+    @AppStorage(DefaultsKey.panelUtilityConverter) private var showConverterAction = true
     @State private var showCleanerPanel = false
     @State private var showClipboardPanel = false
     @State private var showRecentCapturesPanel = false
@@ -517,6 +520,10 @@ struct UtilitiesSection: View {
             if showUninstaller {
                 PanelUninstallerView {
                     showUninstaller = false
+                }
+            } else if showConverter {
+                PanelConverterView {
+                    showConverter = false
                 }
             } else if showCleanerPanel {
                 PanelCleanerView {
@@ -581,8 +588,8 @@ struct UtilitiesSection: View {
     /// list. A hosted tool turns the panel into a work surface, so clicks
     /// elsewhere in the app must not dismiss it.
     private var isHostingUtility: Bool {
-        showUninstaller || showCleanerPanel || showClipboardPanel || showRecentCapturesPanel
-            || showWindowLayoutPanel
+        showUninstaller || showConverter || showCleanerPanel || showClipboardPanel
+            || showRecentCapturesPanel || showWindowLayoutPanel
     }
 
     private var hostedUtilityKeepsPopoverOpen: Bool {
@@ -613,6 +620,7 @@ struct UtilitiesSection: View {
         case .uninstaller: return showUninstallerAction
         case .cleaner: return showCleanerAction
         case .screenRecorder: return showScreenRecorder
+        case .converter: return showConverterAction
         }
     }
 
@@ -651,6 +659,16 @@ struct UtilitiesSection: View {
                                 visibility: $showUninstallerAction,
                                 action: {
                                     showUninstaller = true
+                                })
+        case .converter:
+            UtilityActionButton(title: "Convert",
+                                caption: "Audio, video, images, docs, PDF, Excel",
+                                systemImage: "arrow.triangle.2.circlepath",
+                                isEditing: editing,
+                                showsDragHandle: true,
+                                visibility: $showConverterAction,
+                                action: {
+                                    showConverter = true
                                 })
         case .cleaner:
             UtilityActionButton(title: l10n.s.cleanerName,
@@ -729,6 +747,7 @@ struct UtilitiesSection: View {
         showClipboard = true
         showWindowLayout = true
         showUninstallerAction = true
+        showConverterAction = true
         showCleanerAction = true
         showScreenRecorder = true
     }

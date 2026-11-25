@@ -141,6 +141,8 @@ extension AppFeature {
 
         case .cleaner: return FeatureSettingsDestination(.cleaner)
         case .uninstaller: return FeatureSettingsDestination(.uninstaller)
+        // On-demand tool with nothing to configure: the hub row is its home.
+        case .fileConverter: return FeatureSettingsDestination(.features)
         case .screenRecorder:
             return FeatureSettingsDestination(.screenRecorder, sectionAnchor: .screenRecorder)
         case .notchMediaControls:

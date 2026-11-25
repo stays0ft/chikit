@@ -108,7 +108,7 @@ extension AppFeature {
         case .mixer:
             return UserDefaults.standard.bool(forKey: DefaultsKey.preciseVolumeRollerEnabled)
                 ? .keyboard : .idle
-        case .soundOutputSwitcher, .cleaner, .uninstaller, .screenRecorder, .fanControl:
+        case .soundOutputSwitcher, .cleaner, .uninstaller, .screenRecorder, .fanControl, .fileConverter:
             return .idle
         }
     }

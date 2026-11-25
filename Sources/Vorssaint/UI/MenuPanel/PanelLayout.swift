@@ -73,7 +73,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .power: return [.monitorPower]
         case .fanControl: return [.fanControl]
         case .utilities: return [.cleaner, .clipboardHistory,
-                                 .windowLayout, .uninstaller, .screenRecorder]
+                                 .windowLayout, .uninstaller, .screenRecorder, .fileConverter]
         case .controls: return [.autoQuit]
         }
     }

@@ -20,7 +20,7 @@ enum AppFeature: String, CaseIterable {
     // Sound
     case mixer, soundOutputSwitcher
     // Tools
-    case cleaner, uninstaller, screenRecorder, notchMediaControls
+    case cleaner, uninstaller, screenRecorder, notchMediaControls, fileConverter
     // System monitor, one entry per metric family (temperatures live with
     // their parent metric: CPU temp with CPU, battery temp with power).
     case monitorCPU, monitorGPU, monitorMemory, monitorNetwork, monitorDisk, monitorPower, fanControl
@@ -84,7 +84,7 @@ extension AppFeature {
             return .clipboardFiles
         case .mixer, .soundOutputSwitcher:
             return .sound
-        case .cleaner, .uninstaller, .screenRecorder, .notchMediaControls:
+        case .cleaner, .uninstaller, .screenRecorder, .notchMediaControls, .fileConverter:
             return .tools
         case .monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower,
              .fanControl:
@@ -104,6 +104,7 @@ extension AppFeature {
         case .uninstaller: return "trash"
         case .screenRecorder: return "record.circle"
         case .notchMediaControls: return "rectangle.topthird.inset.filled"
+        case .fileConverter: return "arrow.triangle.2.circlepath"
         case .monitorCPU: return "cpu"
         case .monitorGPU: return "rectangle.connected.to.line.below"
         case .monitorMemory: return "memorychip"
@@ -136,7 +137,7 @@ extension AppFeature {
         case .finderRename: return [DefaultsKey.finderRenameEnabled]
         case .soundOutputSwitcher: return [DefaultsKey.soundOutputSwitcherEnabled]
         case .windowLayout, .mixer,
-             .cleaner, .uninstaller, .screenRecorder,
+             .cleaner, .uninstaller, .screenRecorder, .fileConverter,
              .monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower,
              .fanControl:
             return []
@@ -158,7 +159,7 @@ extension AppFeature {
         case .mixer: return [.audioCapture, .accessibility]
         case .monitorCPU, .monitorMemory, .monitorDisk, .monitorPower: return [.notifications]
         case .clipboardHistory, .soundOutputSwitcher, .monitorGPU, .monitorNetwork, .fanControl,
-             .notchMediaControls:
+             .notchMediaControls, .fileConverter:
             // Reads Now Playing info and sends playback commands through the
             // same MediaRemote technique the notch card already uses (see
             // NotchMediaService); macOS asks for no TCC permission for either,

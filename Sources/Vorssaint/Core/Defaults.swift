@@ -97,6 +97,7 @@ enum DefaultsKey {
     static let panelUtilityCleaning = "panelUtilityCleaning"
     static let panelUtilityURLCleaner = "panelUtilityURLCleaner" // legacy row id, kept so an old panelUtilityOrder is filtered cleanly
     static let panelUtilityUninstaller = "panelUtilityUninstaller"
+    static let panelUtilityConverter = "panelUtilityConverter"
     static let panelUtilityCleaner = "panelUtilityCleaner"
     static let panelUtilityMedia = "panelUtilityMedia" // legacy row id, kept so an old panelUtilityOrder is filtered cleanly
     static let panelUtilityClipboard = "panelUtilityClipboard"
@@ -493,6 +494,7 @@ enum Defaults {
         DefaultsKey.panelUtilityCleaning: true,
         DefaultsKey.panelUtilityURLCleaner: true,
         DefaultsKey.panelUtilityUninstaller: true,
+        DefaultsKey.panelUtilityConverter: true,
         DefaultsKey.panelUtilityCleaner: true,
         DefaultsKey.panelUtilityMedia: true,
         DefaultsKey.panelUtilityClipboard: true,
@@ -635,7 +637,7 @@ enum Defaults {
         DefaultsKey.screenshotShowLastRegion: true,
         DefaultsKey.screenshotLoupeStartsOn: false,
         DefaultsKey.screenshotBackdropPresets: "[]",
-        DefaultsKey.windowLayoutShortcutsEnabled: false,
+        DefaultsKey.windowLayoutShortcutsEnabled: true,
         DefaultsKey.windowDirectionalEnabled: false,
         DefaultsKey.windowDirectionalShortcut: GlobalShortcut.windowDirectionalDefault.storageValue,
         DefaultsKey.windowEdgeSnapEnabled: false,

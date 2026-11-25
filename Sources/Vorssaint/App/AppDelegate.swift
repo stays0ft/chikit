@@ -37,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        NSApp.servicesProvider = ConverterWindowController.shared
         // Before any window exists, so nothing is ever built with the wrong
         // appearance and then repainted.
         AppAppearanceController.shared.apply()
@@ -1039,6 +1040,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         let strings = L10n.shared.s
         let menu = NSMenu()
 
+        // Rectangle-style window layout actions, applied to the window that was
+        // frontmost before the menu opened.
+        if AppFeature.windowLayout.isAvailable {
+            let text = FeatureStrings.windowLayout(L10n.shared.language)
+            let groups: [[WindowLayoutAction]] = [
+                [.leftHalf, .rightHalf, .topHalf, .bottomHalf],
+                [.topLeft, .topRight, .bottomLeft, .bottomRight],
+                [.maximize],
+            ]
+            for group in groups {
+                for action in group {
+                    let item = NSMenuItem(title: action.title(text),
+                                          action: #selector(menuApplyWindowLayout(_:)), keyEquivalent: "")
+                    item.target = self
+                    item.representedObject = action
+                    item.image = NSImage(systemSymbolName: action.symbolName, accessibilityDescription: nil)
+                    menu.addItem(item)
+                }
+                menu.addItem(.separator())
+            }
+        }
+
         let settingsItem = NSMenuItem(title: strings.menuSettings, action: #selector(menuOpenSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
@@ -1069,6 +1092,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         DispatchQueue.main.async { [weak self] in
             self?.statusController.statusItem.menu = nil
         }
+    }
+
+    @objc private func menuApplyWindowLayout(_ sender: NSMenuItem) {
+        guard let action = sender.representedObject as? WindowLayoutAction else { return }
+        WindowLayoutService.shared.apply(action)
     }
 
     @objc private func menuOpenSettings() {

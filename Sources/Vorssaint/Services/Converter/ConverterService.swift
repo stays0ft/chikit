@@ -145,8 +145,29 @@ final class ConverterService: ObservableObject {
         case .imageIO: produced = viaImageIO(input, format, options, work)
         case .cwebp: produced = viaCWebP(input, options, work)
         case .pdfKit: produced = viaPDFKit(input, format, options, work)
-        case .textutil: produced = viaTextutil(input, format, work)
-        case .appKitPDF: produced = viaCoreTextPDF(input, options, work)
+        case .textutil:
+            // PDF to Word/ODT/RTF: LibreOffice's PDF import keeps blocks where
+            // they sit on the page; textutil only gets the text.
+            let filters = ["docx": "docx:MS Word 2007 XML", "odt": "odt:writer8", "rtf": "rtf:Rich Text Format"]
+            if format.kind == .pdf, Self.libreOfficePath != nil, let filter = filters[format.ext],
+               case .success(let doc) = viaLibreOffice(input, format, work, filter: filter,
+                                                       infilter: "writer_pdf_import") {
+                produced = .success(doc)
+            } else {
+                produced = viaTextutil(input, format, work)
+            }
+        case .appKitPDF:
+            // LibreOffice keeps the page layout of the original; the CoreText
+            // path only reproduces text and basic styling, so it is the fallback.
+            let ext = input.pathExtension.lowercased()
+            if Self.libreOfficePath != nil, ext != "md", ext != "markdown",
+               case .success(let pdf) = viaLibreOffice(input, format, work,
+                                                       filter: ext == "html" || ext == "htm"
+                                                           ? "pdf:writer_web_pdf_Export" : "pdf:writer_pdf_Export") {
+                produced = .success(pdf)
+            } else {
+                produced = viaCoreTextPDF(input, options, work)
+            }
         case .nativeSpreadsheet:
             produced = XLSXReader.isXLSX(input)
                 ? viaNativeSpreadsheet(input, format, work)
@@ -556,17 +577,21 @@ final class ConverterService: ObservableObject {
         return .success(folder)
     }
 
-    private func viaLibreOffice(_ input: URL, _ format: ConvertFormat, _ work: URL) -> Result<URL, ConvertError> {
+    private func viaLibreOffice(_ input: URL, _ format: ConvertFormat, _ work: URL,
+                                filter: String? = nil, infilter: String? = nil) -> Result<URL, ConvertError> {
         guard let soffice = Self.libreOfficePath else {
             return .failure(ConvertError(message: "LibreOffice is not installed (brew install --cask libreoffice)."))
         }
+        // A fallback attempt may follow a failed one, so start from a clean folder.
         let outDir = work.appendingPathComponent("lo-out", isDirectory: true)
         let profile = work.appendingPathComponent("lo-profile", isDirectory: true)
+        try? FileManager.default.removeItem(at: outDir)
         try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
-        let args = ["--headless", "--norestore", "--nolockcheck",
-                    "-env:UserInstallation=\(profile.absoluteString)",
-                    "--convert-to", ConverterSupport.libreOfficeFilter(for: format.ext),
-                    "--outdir", outDir.path, input.path]
+        var args = ["--headless", "--norestore", "--nolockcheck",
+                    "-env:UserInstallation=\(profile.absoluteString)"]
+        if let infilter { args.append("--infilter=\(infilter)") }
+        args += ["--convert-to", filter ?? ConverterSupport.libreOfficeFilter(for: format.ext),
+                 "--outdir", outDir.path, input.path]
         let result = run(soffice, args, timeout: 900)
         let files = ((try? FileManager.default.contentsOfDirectory(at: outDir, includingPropertiesForKeys: nil)) ?? [])
             .filter { !$0.lastPathComponent.hasPrefix(".") }
