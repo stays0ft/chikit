@@ -15,7 +15,6 @@ enum DefaultsKey {
     static let statusItemPlacementGeneration = "statusItemPlacementGeneration"
     static let hasOnboarded = "hasOnboarded"
     static let launchAtLoginWanted = "launchAtLoginWanted"  // the user's choice; the system record can be lost
-    static let previewSize = "previewSize"                // app switcher + dock preview thumbnail size
     static let appVolumes = "appVolumes"                  // [bundle id: 0...2]
     static let appOutputDevices = "appOutputDevices"      // [bundle id: audio device UID]
     static let mixerShowFinder = "mixerShowFinder"
@@ -294,7 +293,6 @@ enum Defaults {
     static let allowedMenuBarLabelStyles = ["compact", "classic"]
     static let allowedMenuBarMemoryStyles = ["dot", "percent", "both"]
     static let allowedMonitorMemoryMetrics = ["used", "app"]
-    static let allowedPreviewSizes = ["small", "normal", "large", "xlarge"]
     static let allowedClipboardHistoryLimits = [20, 50, 100, 250, 500, 1_000, 10_000, 0]
     static let allowedClipboardAutoClearDelayRange = 5...3_600
     static let defaultClipboardAutoClearDelay = 20
@@ -304,7 +302,6 @@ enum Defaults {
         DefaultsKey.appearance: AppAppearance.fallback.rawValue,
         DefaultsKey.liquidGlassEnabled: false,
         DefaultsKey.launchAtLoginWanted: false,
-        DefaultsKey.previewSize: "normal",
         DefaultsKey.mixerShowFinder: true,
         DefaultsKey.mixerHideInactiveApps: false,
         DefaultsKey.mixerLowerVolumeOnHeadphonesDisconnect: false,
