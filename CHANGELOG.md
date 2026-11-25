@@ -17,6 +17,10 @@ project.
 - Cleaner exclusions: leave chosen paths or apps out of every future scan, plus a manual rescan button.
 - A new app icon and menu bar mark, and a fixed indigo accent color in place of the system accent.
 
+### Kept
+- Keep Awake, including closed-lid mode, its automation, icon choices and global shortcut. It is part of the
+  installed-by-default set.
+
 ### Changed
 - Window layout is now halves, the four corners and maximize, with Rectangle-compatible default shortcuts
   (Control Option with the arrow keys, U, I, J, K and Return).
@@ -26,7 +30,7 @@ project.
   settings.
 
 ### Removed
-- Features that are not part of Chikit: Keep Awake, brightness, App Switcher, Dock Preview and Dock click,
+- Features that are not part of Chikit: brightness, App Switcher, Dock Preview and Dock click,
   window maximizer, Shelf, text snippets, Super key, radial menu, quick launcher, command bar, screenshot
   tools, screen text recognition, color picker, scratchpad, URL cleaner, Cleaning Mode, media tools, kill
   process, mouse and keyboard utilities, quick toggles, disk image installer, Bluetooth sleep, the

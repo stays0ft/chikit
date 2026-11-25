@@ -39,6 +39,16 @@ tools, with its own name, icon and look. See [Origin and licensing](#origin-and-
   video.
 - **Output switcher.** Send different apps to different outputs, and cycle outputs with a shortcut.
 
+**Energy**
+- **Keep Awake.** Stop the Mac from sleeping for 15 minutes up to 8 hours, or until you turn it off, from
+  the panel, a global shortcut (Control Option Command K) or the menu bar icon's right-click menu. It can
+  start with the app, start by itself while an external display or power is connected, stop when the
+  battery drops below a level, show a countdown in the menu bar, let the display sleep normally, and move
+  the mouse now and then. Closed-lid mode keeps the Mac running with the lid shut (display still sleeps);
+  it runs `pmset disablesleep`, asks for an administrator password the first time, and can install a
+  passwordless rule (`/etc/sudoers.d/chikit-clamshell`) so later toggles do not ask again. Uninstalling
+  restores normal sleep and removes that rule.
+
 **Monitoring**
 - **System monitor.** CPU, GPU, memory, network, disk and power, with history graphs, temperatures,
   battery health and optional alerts. Each metric is its own switch.
