@@ -14,10 +14,5 @@
 "NSCameraUsageDescription" = "Chikit zeigt deine Kamera nur im Vorschaufenster, das du öffnest, damit du vor einem Anruf prüfen kannst, wie du aussiehst. Es wird nichts aufgezeichnet und nichts verlässt deinen Mac.";
 
 /* macOS Downloads folder permission prompt. */
-"NSDownloadsFolderUsageDescription" = "Chikit prüft lokale Metadaten in Downloads, um nur ausgewählte bestätigte WhatsApp-Dateien zu prüfen, zu organisieren oder in den Papierkorb zu verschieben.";
 
 /* macOS user-selected organizer destination prompts. */
-"NSDesktopFolderUsageDescription" = "Chikit organisiert bestätigte WhatsApp-Downloads in einem Zielordner, den du ausdrücklich auswählst.";
-"NSDocumentsFolderUsageDescription" = "Chikit organisiert bestätigte WhatsApp-Downloads in einem Zielordner, den du ausdrücklich auswählst.";
-"NSNetworkVolumesUsageDescription" = "Chikit organisiert bestätigte WhatsApp-Downloads in einem Zielordner, den du ausdrücklich auswählst.";
-"NSRemovableVolumesUsageDescription" = "Chikit organisiert bestätigte WhatsApp-Downloads in einem Zielordner, den du ausdrücklich auswählst.";

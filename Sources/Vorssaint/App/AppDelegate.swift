@@ -36,11 +36,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         // appearance and then repainted.
         AppAppearanceController.shared.apply()
         GlobalShortcut.startObservingKeyboardLayout()
-        // UNUserNotificationCenter aborts in a process without a bundle;
-        // guard keeps ad-hoc runs of the bare binary alive for probing.
-        if Bundle.main.bundleIdentifier != nil {
-            UNUserNotificationCenter.current().delegate = self
-        }
         beginStartupWatch()
         Self.boundAccessibilityWaits()
         // Resolve the Accessibility Keyboard's pid now. The lookup is async, so
@@ -1460,18 +1455,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     private func markOnboardingComplete() {
         UserDefaults.standard.set(true, forKey: DefaultsKey.hasOnboarded)
         UserDefaults.standard.set(OnboardingInfo.currentFeatureSet, forKey: DefaultsKey.featuresOnboardingVersion)
-    }
-}
-
-extension AppDelegate: UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                didReceive response: UNNotificationResponse,
-                                withCompletionHandler completionHandler: @escaping () -> Void) {
-        if let transactionID = Notifier.whatsAppOrganizerTransactionID(from: response) {
-            DispatchQueue.main.async {
-                WhatsAppDownloadOrganizer.shared.undoLastRun(transactionID: transactionID)
-            }
-        }
-        completionHandler()
     }
 }

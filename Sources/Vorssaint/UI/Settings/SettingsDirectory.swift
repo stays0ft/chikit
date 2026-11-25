@@ -114,10 +114,7 @@ enum SettingsDirectory {
             // what is out of date, what is junk and what should go.
             (categories.appManagement, [
                 SettingsDirectoryItem(page: .cleaner, title: s.cleanerName, icon: "sparkles",
-                                      keywords: [s.cleanerScheduleTitle,
-                                                 FeatureStrings.whatsAppDownloads(language).title,
-                                                 FeatureStrings.whatsAppDownloads(language).automatic,
-                                                 FeatureStrings.whatsAppDownloads(language).fileTypes]),
+                                      keywords: [s.cleanerScheduleTitle]),
                 SettingsDirectoryItem(page: .uninstaller, title: s.uninstallerName, icon: "trash"),
             ]),
             (categories.utilities, [

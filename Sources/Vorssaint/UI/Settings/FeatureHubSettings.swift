@@ -489,16 +489,6 @@ struct PermissionsPortalSections: View {
         case .accessibility: return permissions.accessibility ? .granted : .missing
         case .screenRecording: return permissions.screenRecording ? .granted : .missing
         case .fullDiskAccess: return permissions.fullDiskAccess ? .granted : .missing
-        case .filesAndFolders:
-            guard AppFeature.cleaner.isAvailable,
-                  WhatsAppDownloadSupport.isEnabled else {
-                return .unknown
-            }
-            switch WhatsAppDownloadManager.shared.accessStatus {
-            case .available: return .granted
-            case .denied: return .missing
-            case .unknown: return .unknown
-            }
         case .notifications:
             switch permissions.notifications {
             case .granted: return .granted
@@ -630,7 +620,7 @@ private struct PermissionPortalRow: View {
         case .accessibility, .screenRecording, .fullDiskAccess: return true
         case .notifications: return Permissions.shared.notifications == .undetermined
         case .microphone: return Permissions.shared.microphone == .undetermined
-        case .filesAndFolders, .automationFinder, .audioCapture: return false
+        case .automationFinder, .audioCapture: return false
         }
     }
 
@@ -645,7 +635,7 @@ private struct PermissionPortalRow: View {
                 Permissions.shared.refresh()
             }
         case .microphone: Permissions.shared.requestMicrophone()
-        case .filesAndFolders, .automationFinder, .audioCapture:
+        case .automationFinder, .audioCapture:
             break
         }
     }
@@ -655,7 +645,6 @@ private struct PermissionPortalRow: View {
         case .accessibility: Permissions.shared.openAccessibilitySettings()
         case .screenRecording: Permissions.shared.openScreenRecordingSettings()
         case .fullDiskAccess: Permissions.shared.openFullDiskAccessSettings()
-        case .filesAndFolders: Permissions.shared.openFilesAndFoldersSettings()
         case .notifications: Permissions.shared.openNotificationSettings()
         case .automationFinder: Permissions.shared.openAutomationSettings()
         case .audioCapture: Permissions.shared.openAudioCaptureSettings()
@@ -702,13 +691,7 @@ extension AppFeature {
         case .soundOutputSwitcher: return hub.descSoundOutputSwitcher
         case .screenRecorder: return FeatureStrings.recorder(L10n.shared.language).hubDescription
         case .notchMediaControls: return FeatureStrings.notchMedia(L10n.shared.language).hubDescription
-        case .cleaner:
-            let description = hub.descCleaner
-            guard WhatsAppDownloadSupport.isEnabled else {
-                return description
-            }
-            return description + " · "
-                + FeatureStrings.whatsAppDownloads(L10n.shared.language).hubDescription
+        case .cleaner: return hub.descCleaner
         case .uninstaller: return hub.descUninstaller
         case .fileConverter:
             return "Convert audio, video, images, documents, PDFs and Excel spreadsheets between formats, on this Mac."
@@ -729,7 +712,6 @@ extension AppPermission {
         case .accessibility: return hub.permAccessibility
         case .screenRecording: return hub.permScreenRecording
         case .fullDiskAccess: return hub.permFullDisk
-        case .filesAndFolders: return hub.permFilesAndFolders
         case .notifications: return hub.permNotifications
         case .automationFinder: return hub.permAutomationFinder
         case .audioCapture: return hub.permAudioCapture
@@ -742,7 +724,6 @@ extension AppPermission {
         case .accessibility: return hub.explainAccessibility
         case .screenRecording: return hub.explainScreenRecording
         case .fullDiskAccess: return hub.explainFullDisk
-        case .filesAndFolders: return hub.explainFilesAndFolders
         case .notifications: return hub.explainNotifications
         case .automationFinder: return hub.explainAutomationFinder
         case .audioCapture: return hub.explainAudioCapture

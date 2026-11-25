@@ -250,8 +250,6 @@ if (( TEST )); then
         Sources/Vorssaint/Core/Localization.swift \
         Sources/Vorssaint/Core/Localizations/Strings+*.swift \
         Sources/Vorssaint/Core/FeatureStrings.swift \
-        Sources/Vorssaint/Core/WhatsAppDownloadStrings.swift \
-        Sources/Vorssaint/Core/WhatsAppOrganizerStrings.swift \
         Sources/Vorssaint/Services/GeneralPasteboardAccess.swift \
         Sources/Vorssaint/Services/Audio/MixerRoutingSupport.swift \
         Sources/Vorssaint/Services/Audio/MusicLaunchSupport.swift \
@@ -306,7 +304,6 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Cleaner/CleanerSchedule.swift \
         Sources/Vorssaint/Services/Cleaner/CleanerExclusions.swift \
         Sources/Vorssaint/Services/Uninstall/UninstallerSupport.swift \
-        Sources/Vorssaint/Services/ManagedDownloads/WhatsAppDownloadSupport.swift \
         Tests/MetricsTests.swift \
         -o build/metrics-tests
     # `set -e` would end the script on a failing run before the sweep below.

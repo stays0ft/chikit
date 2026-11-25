@@ -33,7 +33,7 @@ enum FeatureGroup: String, CaseIterable {
 
 /// System permissions surfaced by the hub's transparency portal.
 enum AppPermission: String, CaseIterable {
-    case accessibility, screenRecording, fullDiskAccess, filesAndFolders, notifications,
+    case accessibility, screenRecording, fullDiskAccess, notifications,
          automationFinder, audioCapture, microphone
 }
 
@@ -154,7 +154,7 @@ extension AppFeature {
             return [.accessibility]
         case .finderRename: return [.accessibility]
         case .screenRecorder: return [.screenRecording, .accessibility, .microphone]
-        case .cleaner: return [.fullDiskAccess, .filesAndFolders, .notifications]
+        case .cleaner: return [.fullDiskAccess, .notifications]
         case .uninstaller: return [.fullDiskAccess, .automationFinder]
         case .mixer: return [.audioCapture, .accessibility]
         case .monitorCPU, .monitorMemory, .monitorDisk, .monitorPower: return [.notifications]
@@ -216,16 +216,9 @@ extension AppFeature {
             case (.monitorPower, .notifications):
                 return boolFor(DefaultsKey.monitorAlertBattery)
                     || boolFor(DefaultsKey.monitorAlertBatteryTemperature)
-            case (.cleaner, .filesAndFolders):
-                return boolFor(DefaultsKey.whatsAppDownloadsEnabled)
             case (.cleaner, .notifications):
-                let cleanerNotifies = (stringFor(DefaultsKey.cleanerScheduleFrequency) ?? "off") != "off"
+                return (stringFor(DefaultsKey.cleanerScheduleFrequency) ?? "off") != "off"
                     && boolFor(DefaultsKey.cleanerScheduleNotify)
-                let whatsAppNotifies = boolFor(DefaultsKey.whatsAppDownloadsEnabled)
-                    && (boolFor(DefaultsKey.whatsAppDownloadsAutomaticEnabled)
-                        || boolFor(DefaultsKey.whatsAppOrganizerEnabled))
-                    && boolFor(DefaultsKey.whatsAppDownloadsNotify)
-                return cleanerNotifies || whatsAppNotifies
             case (.screenRecorder, .microphone):
                 return boolFor(DefaultsKey.recorderMicrophone)
             default:
@@ -267,7 +260,6 @@ extension AppPermission {
         case .accessibility: return "accessibility"
         case .screenRecording: return "rectangle.dashed.badge.record"
         case .fullDiskAccess: return "externaldrive.badge.person.crop"
-        case .filesAndFolders: return "folder.badge.person.crop"
         case .notifications: return "bell.badge"
         case .automationFinder: return "gearshape.2"
         case .audioCapture: return "waveform"

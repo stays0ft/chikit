@@ -56,35 +56,6 @@ enum DefaultsKey {
     // every future scan, on top of the built-in CleanerPolicy safety rules.
     static let cleanerExcludedPaths = "cleanerExcludedPaths"
     static let cleanerExcludedBundleIDs = "cleanerExcludedBundleIDs"
-    // Confirmed WhatsApp downloads in the top level of ~/Downloads.
-    static let whatsAppDownloadsEnabled = "whatsAppDownloadsEnabled"
-    static let whatsAppDownloadsAutomaticEnabled = "whatsAppDownloadsAutomaticEnabled"
-    static let whatsAppDownloadsCategories = "whatsAppDownloadsCategories" // comma-joined category ids
-    static let whatsAppDownloadsRetentionDays = "whatsAppDownloadsRetentionDays"
-    static let whatsAppDownloadsNotify = "whatsAppDownloadsNotify"
-    static let whatsAppDownloadsIncludeExisting = "whatsAppDownloadsIncludeExisting"
-    static let whatsAppDownloadsAutomaticStartDate = "whatsAppDownloadsAutomaticStartDate"
-    static let whatsAppDownloadsLastAutoRun = "whatsAppDownloadsLastAutoRun"
-    static let whatsAppDownloadsLastCleanup = "whatsAppDownloadsLastCleanup"
-    static let whatsAppDownloadsLastCleanupCount = "whatsAppDownloadsLastCleanupCount"
-    static let whatsAppDownloadsLastCleanupBytes = "whatsAppDownloadsLastCleanupBytes"
-    static let whatsAppDownloadsLastCleanupFailed = "whatsAppDownloadsLastCleanupFailed"
-    static let whatsAppDownloadsLastCleanupAutomatic = "whatsAppDownloadsLastCleanupAutomatic"
-    static let whatsAppDownloadsExclusions = "whatsAppDownloadsExclusions" // device:inode ids
-    static let whatsAppDownloadsAccessConfirmed = "whatsAppDownloadsAccessConfirmed"
-    // Experimental organizer for confirmed WhatsApp downloads.
-    static let whatsAppOrganizerEnabled = "whatsAppOrganizerEnabled"
-    static let whatsAppOrganizerDestinationPath = "whatsAppOrganizerDestinationPath"
-    static let whatsAppOrganizerDelayMinutes = "whatsAppOrganizerDelayMinutes"
-    static let whatsAppOrganizerCategories = "whatsAppOrganizerCategories"
-    static let whatsAppOrganizerLayout = "whatsAppOrganizerLayout"
-    static let whatsAppOrganizerDuplicateAction = "whatsAppOrganizerDuplicateAction"
-    static let whatsAppOrganizerRecords = "whatsAppOrganizerRecords"
-    static let whatsAppOrganizerUndoTransaction = "whatsAppOrganizerUndoTransaction"
-    static let whatsAppOrganizerLastRun = "whatsAppOrganizerLastRun"
-    static let whatsAppOrganizerLastMoved = "whatsAppOrganizerLastMoved"
-    static let whatsAppOrganizerLastDuplicates = "whatsAppOrganizerLastDuplicates"
-    static let whatsAppOrganizerLastFailed = "whatsAppOrganizerLastFailed"
     static let settingsWindowWidth = "settingsWindowWidth"     // last user-chosen content size (0 = unset)
     static let settingsWindowHeight = "settingsWindowHeight"
     static let panelUtilityCleaning = "panelUtilityCleaning"
@@ -404,33 +375,6 @@ enum Defaults {
         DefaultsKey.cleanerScheduleNotify: true,
         DefaultsKey.cleanerLastAutoRun: 0.0,
         DefaultsKey.cleanerLastAutoFreed: 0,
-        DefaultsKey.whatsAppDownloadsEnabled: false,
-        DefaultsKey.whatsAppDownloadsAutomaticEnabled: false,
-        DefaultsKey.whatsAppDownloadsCategories: "image,video,audio",
-        DefaultsKey.whatsAppDownloadsRetentionDays: 7,
-        DefaultsKey.whatsAppDownloadsNotify: true,
-        DefaultsKey.whatsAppDownloadsIncludeExisting: false,
-        DefaultsKey.whatsAppDownloadsAutomaticStartDate: 0.0,
-        DefaultsKey.whatsAppDownloadsLastAutoRun: 0.0,
-        DefaultsKey.whatsAppDownloadsLastCleanup: 0.0,
-        DefaultsKey.whatsAppDownloadsLastCleanupCount: 0,
-        DefaultsKey.whatsAppDownloadsLastCleanupBytes: 0,
-        DefaultsKey.whatsAppDownloadsLastCleanupFailed: 0,
-        DefaultsKey.whatsAppDownloadsLastCleanupAutomatic: false,
-        DefaultsKey.whatsAppDownloadsExclusions: [String](),
-        DefaultsKey.whatsAppDownloadsAccessConfirmed: false,
-        DefaultsKey.whatsAppOrganizerEnabled: false,
-        DefaultsKey.whatsAppOrganizerDestinationPath: "",
-        DefaultsKey.whatsAppOrganizerDelayMinutes: 5,
-        DefaultsKey.whatsAppOrganizerCategories: "image,video,audio,document,archive,other",
-        DefaultsKey.whatsAppOrganizerLayout: "flat",
-        DefaultsKey.whatsAppOrganizerDuplicateAction: "trashNew",
-        DefaultsKey.whatsAppOrganizerRecords: Data(),
-        DefaultsKey.whatsAppOrganizerUndoTransaction: Data(),
-        DefaultsKey.whatsAppOrganizerLastRun: 0.0,
-        DefaultsKey.whatsAppOrganizerLastMoved: 0,
-        DefaultsKey.whatsAppOrganizerLastDuplicates: 0,
-        DefaultsKey.whatsAppOrganizerLastFailed: 0,
         DefaultsKey.panelUtilityCleaning: true,
         DefaultsKey.panelUtilityURLCleaner: true,
         DefaultsKey.panelUtilityUninstaller: true,
@@ -614,26 +558,10 @@ enum Defaults {
     static func register() {
         let defaults = UserDefaults.standard
         migrateFanControlVisibility(in: defaults)
-        migrateWhatsAppDownloadsEnabled(in: defaults)
         defaults.register(defaults: registeredDefaults)
         defaults.register(defaults: AppFeature.availabilityDefaults)
         migrateLegacyMenuBarTemperatureMetric(in: defaults)
         migrateSilentHeadphonesDisconnectVolume(in: defaults)
-    }
-
-    /// The downloads cleanup for a messaging app used to sit in Cleaner for
-    /// everyone. Keep it visible only when someone already turned automatic
-    /// cleanup or the organizer on; everyone else gets the new off-by-default
-    /// choice.
-    static func migrateWhatsAppDownloadsEnabled(in defaults: UserDefaults) {
-        guard defaults.object(forKey: DefaultsKey.whatsAppDownloadsEnabled) == nil else {
-            return
-        }
-        let alreadyUsing = defaults.bool(forKey: DefaultsKey.whatsAppDownloadsAutomaticEnabled)
-            || defaults.bool(forKey: DefaultsKey.whatsAppOrganizerEnabled)
-        if alreadyUsing {
-            defaults.set(true, forKey: DefaultsKey.whatsAppDownloadsEnabled)
-        }
     }
 
     static func migrateFanControlVisibility(in defaults: UserDefaults) {

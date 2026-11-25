@@ -80,9 +80,6 @@ final class SettingsRouter: ObservableObject {
     /// on every `request`, so a stale target from an earlier search can never
     /// leak into a later, unrelated navigation.
     @Published private(set) var pendingFeatureTarget: SettingsFeatureTargetRequest?
-    /// One-shot hint for the Cleaner page's tool switcher, so a panel surface
-    /// can land directly on a specific tool. Consumed and cleared on arrival.
-    @Published var cleanerTool: String?
 
     private init() {}
 

@@ -175,15 +175,7 @@ final class FeatureRuntime: ObservableObject {
             ScreenRecorderService.shared.syncWithPreferences()
         },
         .notchMediaControls: { NotchMediaService.shared.syncWithPreferences() },
-        .cleaner: {
-            CleanerScheduler.shared.syncWithPreferences()
-            WhatsAppDownloadScheduler.shared.syncWithPreferences()
-            WhatsAppDownloadOrganizer.shared.syncWithPreferences()
-            if !AppFeature.cleaner.isAvailable || !WhatsAppDownloadSupport.isEnabled {
-                WhatsAppDownloadManager.shared.reset()
-                WhatsAppDownloadOrganizer.shared.stop()
-            }
-        },
+        .cleaner: { CleanerScheduler.shared.syncWithPreferences() },
         .monitorCPU: { FeatureRuntime.syncMonitor() },
         .monitorGPU: { FeatureRuntime.syncMonitor() },
         .monitorMemory: { FeatureRuntime.syncMonitor() },

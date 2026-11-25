@@ -14,10 +14,5 @@
 "NSCameraUsageDescription" = "Chikitは、開いたプレビューウインドウにのみカメラを表示し、通話前に自分の映りを確認できるようにします。何も録画されず、Macの外に送信されることもありません。";
 
 /* macOS Downloads folder permission prompt. */
-"NSDownloadsFolderUsageDescription" = "Chikitは、ダウンロード内のローカルメタデータを確認し、選択した確認済みWhatsAppファイルだけを確認、整理、またはゴミ箱へ移動します。";
 
 /* macOS user-selected organizer destination prompts. */
-"NSDesktopFolderUsageDescription" = "Chikitは、確認済みのWhatsAppダウンロードを、明示的に選択した保存先フォルダに整理します。";
-"NSDocumentsFolderUsageDescription" = "Chikitは、確認済みのWhatsAppダウンロードを、明示的に選択した保存先フォルダに整理します。";
-"NSNetworkVolumesUsageDescription" = "Chikitは、確認済みのWhatsAppダウンロードを、明示的に選択した保存先フォルダに整理します。";
-"NSRemovableVolumesUsageDescription" = "Chikitは、確認済みのWhatsAppダウンロードを、明示的に選択した保存先フォルダに整理します。";
