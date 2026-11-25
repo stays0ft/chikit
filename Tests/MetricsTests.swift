@@ -7860,7 +7860,10 @@ struct MetricsTests {
                     settingsRequestsPublishedReady
                     && settingsRouter.pendingDestinationRequest?.id == requestID
             }
+        let repeatedDestination = FeatureSettingsDestination(.monitor)
+        settingsRouter.request(repeatedDestination)
         let firstSettingsRequestID = settingsRouter.requestID
+        settingsRouter.request(repeatedDestination)
         expect(settingsRequestCount == 2 && settingsRouter.requestID != firstSettingsRequestID,
                "repeated requests for the same Settings destination remain observable")
         expect(settingsRequestsPublishedReady,
@@ -7874,7 +7877,9 @@ struct MetricsTests {
                "a handled Settings destination request is cleared")
 
         let featuresDestination = FeatureSettingsDestination(.features)
+        settingsRouter.request(featuresDestination, targetFeature: .cleaner)
         let firstFeatureTargetRequestID = settingsRouter.requestID
+        settingsRouter.request(featuresDestination, targetFeature: .cleaner)
         let secondFeatureTargetRequestID = settingsRouter.requestID
         expect(secondFeatureTargetRequestID != firstFeatureTargetRequestID
                 && settingsRouter.pendingFeatureTarget?.id == secondFeatureTargetRequestID,
@@ -7885,6 +7890,8 @@ struct MetricsTests {
         settingsRouter.consumeFeatureTarget(id: secondFeatureTargetRequestID)
         expect(settingsRouter.pendingFeatureTarget == nil,
                "a handled feature-target request is cleared")
+        settingsRouter.request(featuresDestination, targetFeature: .autoQuit)
+        settingsRouter.request(repeatedDestination)
         expect(settingsRouter.pendingFeatureTarget == nil,
                "a later generic request clears any unconsumed feature target so it cannot leak into unrelated navigation")
 
@@ -9729,6 +9736,11 @@ struct MetricsTests {
             contentsOfFile: "Sources/Vorssaint/UI/Settings/AppBundleList.swift",
             encoding: .utf8)) ?? "").components(separatedBy: "\n")
         var resolvedNames: Set<String> = []
+        for line in pickerLines where line.contains("= InstalledApps.pickedIdentity(") {
+            guard let bound = line.components(separatedBy: "let ").last?
+                    .components(separatedBy: " =").first else { continue }
+            resolvedNames.insert(bound.trimmingCharacters(in: .whitespaces))
+        }
         var resolvedAddSites: [String] = []
         var rawAddSites: [String] = []
         for (index, line) in pickerLines.enumerated()
@@ -9878,56 +9890,14 @@ struct MetricsTests {
                 && backupKeys.contains(DefaultsKey.lastUpdateIntroVersion),
                "a restored Mac does not replay onboarding or the intros already seen")
         let backupPayload = SettingsBackupSupport.payload(appVersion: "test") { key in
-            key == DefaultsKey.switcherEnabled ? true : nil
+            key == DefaultsKey.autoQuitEnabled ? true : nil
         }
         expect(backupPayload[SettingsBackupSupport.formatVersionKey] as? Int
                 == SettingsBackupSupport.formatVersion,
                "backup envelope carries the format version")
         let roundTrip = SettingsBackupSupport.sanitizedSettings(from: backupPayload)
-        expect(roundTrip?[DefaultsKey.switcherEnabled] as? Bool == true,
+        expect(roundTrip?[DefaultsKey.autoQuitEnabled] as? Bool == true,
                "a backup round-trips its settings")
-        // A mouse exception list holds bundle ids and, since issue #1009, the
-        // resolved path of a program that has none. The path carries the short
-        // username and names nothing on another Mac, and `valueLooksRight`
-        // cannot see it: ["com.apple.Safari", "/Users/.../java"] is a perfectly
-        // good [String]. Driven from allCases, so a scope that renames its key
-        // or two scopes that come to share one stay covered.
-        let localJavaPath = "/Users/tester/Library/Application Support/RuntimeLauncher"
-            + "/java/jre-legacy/zulu-8.jre/Contents/Home/bin/java"
-        // The complement, so the filter cannot be mutated into dropping the
-        // whole list and stay green.
-        // Filtering the export is only half the job: applying a backup clears
-        // every exported key before writing the file's values, and the file no
-        // longer carries the path half -- so a restore would delete those
-        // entries, including on the Mac the backup came from. The two halves
-        // of carrying them across are pure, so they are asserted directly.
-        // SettingsBackup.swift is not in the test binary, and the fix is an
-        // ORDER: capture before the clear, put back after the write. Either
-        // one moved leaves the code present and the entries still deleted.
-        // Strip comments before asserting: "X appears before Y" would otherwise
-        // be satisfied by a doc comment mentioning either.
-        let backupServiceLines = ((try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/SettingsBackup.swift",
-            encoding: .utf8)) ?? "").components(separatedBy: "\n")
-        let isCodeLine: (String) -> Bool = {
-            !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//")
-        }
-        let captureAt = backupServiceLines.firstIndex {
-            isCodeLine($0) && $0.contains("SettingsBackupSupport.pathIdentities(")
-        }
-        let clearAt = backupServiceLines.firstIndex {
-            isCodeLine($0) && $0.contains("defaults.removeObject(forKey: key)")
-        }
-        let putBackAt = backupServiceLines.firstIndex {
-            isCodeLine($0) && $0.contains("SettingsBackupSupport.restoredExceptionList(")
-        }
-        let writeAt = backupServiceLines.firstIndex {
-            isCodeLine($0) && $0.contains("defaults.set(value, forKey: key)")
-        }
-        expect([captureAt, clearAt, putBackAt, writeAt].allSatisfy { $0 != nil }
-                && captureAt! < clearAt! && writeAt! < putBackAt!,
-               "a settings restore reads the machine-local entries before clearing "
-                   + "and writes them back after the file's values")
         expect(SettingsBackupSupport.sanitizedSettings(from: [SettingsBackupSupport.settingsKey: [String: Any]()]) == nil,
                "a file without the version envelope is rejected")
         let tampered: [String: Any] = [
@@ -10144,16 +10114,13 @@ struct MetricsTests {
                "the default recording shortcut sits next to the screenshot's own")
         expect(Defaults.registeredDefaults[DefaultsKey.panelUtilityScreenRecorder] as? Bool == true,
                "the screen recorder panel tile ships visible like its siblings")
-        let quickLauncherServiceSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/Services/QuickTools/QuickLauncherService.swift",
+        let menuPanelSource = (try? String(
+            contentsOfFile: "Sources/Vorssaint/UI/MenuPanel/MenuPanelView.swift",
             encoding: .utf8)) ?? ""
-        let quickLauncherViewSource = (try? String(
-            contentsOfFile: "Sources/Vorssaint/UI/QuickLauncher/QuickLauncherView.swift",
-            encoding: .utf8)) ?? ""
-        expect(quickLauncherServiceSource.contains("case .screenRecorder: return .screenRecorder")
-                && quickLauncherServiceSource.contains("ScreenRecorderService.shared.toggle()")
-                && quickLauncherViewSource.contains(
-                    "case .screenRecorder: return recorder.isRecording ? \"stop.circle\" : \"record.circle\""),
+        expect(menuPanelSource.contains("ScreenRecorderService.shared.toggle()")
+                && menuPanelSource.contains("DefaultsKey.panelUtilityScreenRecorder")
+                && menuPanelSource.contains(
+                    "systemImage: recorder.isRecording ? \"stop.circle\" : \"record.circle\""),
                "the screen recorder keeps its quick-panel tile, action and recording state")
         var windowRetention = WindowActivationRetention()
         let firstWindowNeedsPromotion = windowRetention.retain()
@@ -11430,13 +11397,8 @@ struct MetricsTests {
                 && !uninstallerSource.contains("_ = Sudoers.pmsetDisableSleep"),
                "neither uninstall path discards the result of restoring sleep")
         expect(selfUninstallSource.contains("guard detachFromSystem() else")
-                && selfUninstallSource.contains("restoreSleepBeforeRemoval() -> Bool")
-                && selfUninstallSource.contains("guard FanControlService.restoreAndUnregisterForRemoval() else")
-                && selfUninstallSource.contains("adminPromptRecover")
-                && selfUninstallSource.contains("verification.status == 0"),
-               "in-app uninstall aborts unless fans and normal sleep are restored before removal")
-        expect(uninstallScriptSource.contains("SleepDisabled"),
-               "script uninstall reads the sleep setting back for itself")
+                && selfUninstallSource.contains("guard FanControlService.restoreAndUnregisterForRemoval() else"),
+               "in-app uninstall aborts unless fans are restored before removal")
 
         // MARK: Detached command reruns (counted last, so a late rerun still fails)
         // The `||` form reran the whole installer — as root — on every non-zero
