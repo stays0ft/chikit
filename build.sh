@@ -228,6 +228,7 @@ if (( TEST )); then
         Sources/Vorssaint/Core/AppearanceStrings.swift \
         Sources/Vorssaint/Core/BrandColor.swift \
         Sources/Vorssaint/Core/BatteryTimeStrings.swift \
+        Sources/Vorssaint/Core/KeepAwakeStrings.swift \
         Sources/Vorssaint/Core/PermissionGuideStrings.swift \
         Sources/Vorssaint/Core/FanControlStrings.swift \
         Sources/Vorssaint/Services/FanControl/FanControlSupport.swift \
@@ -278,6 +279,8 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Metrics/BatteryTimeSupport.swift \
         Sources/Vorssaint/Services/BoundedProcessRunner.swift \
         Sources/Vorssaint/Services/DetachedProcess.swift \
+        Sources/Vorssaint/Services/KeepAwakeAutomationSupport.swift \
+        Sources/Vorssaint/Services/SudoersSupport.swift \
         Sources/Vorssaint/Services/ShellSupport.swift \
         Sources/Vorssaint/Services/Metrics/NetworkProcessSupport.swift \
         Sources/Vorssaint/Services/Metrics/NetworkSampler.swift \

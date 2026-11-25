@@ -1196,6 +1196,78 @@ struct MetricsTests {
                "stored appearance values survive a relaunch")
         expect(AppAppearance.allCases.map(\.rawValue) == ["system", "light", "dark"],
                "appearance raw values are persisted keys and their order is the picker order")
+        expect(registeredDefaults[DefaultsKey.keepAwakeAutoStart] as? Bool == false,
+               "Keep Awake launch restore is opt-in")
+        expect(registeredDefaults[DefaultsKey.keepAwakeRightClickToggle] as? Bool == false,
+               "right-click Keep Awake toggle is opt-in")
+        expect(registeredDefaults[DefaultsKey.keepAwakeAllowDisplaySleep] as? Bool == false,
+               "Keep Awake keeps the display on by default")
+        expect(SettingsBackupSupport.exportKeys().contains(DefaultsKey.keepAwakeRightClickToggle),
+               "right-click Keep Awake preference follows settings backups")
+        expect(SettingsBackupSupport.exportKeys().contains(DefaultsKey.keepAwakeAllowDisplaySleep),
+               "display sleep preference follows settings backups")
+        expect(registeredDefaults[DefaultsKey.keepAwakeExternalDisplay] as? Bool == false,
+               "external-display Keep Awake is opt-in")
+        expect(registeredDefaults[DefaultsKey.keepAwakeConnectedToPower] as? Bool == false,
+               "power-connected Keep Awake is opt-in")
+        expect(registeredDefaults[DefaultsKey.hotkeyEnabled] as? Bool == true,
+               "global hotkey is on for clean installs")
+        expect(registeredDefaults[DefaultsKey.keepAwakeShortcut] as? String == "control+option+command:40",
+               "keep awake shortcut defaults to Ctrl+Opt+Cmd+K")
+        expect(registeredDefaults[DefaultsKey.keepAwakeIconTint] as? String == KeepAwakeIconTint.orange.rawValue,
+               "keep-awake active icon tint defaults to orange")
+        expect(registeredDefaults[DefaultsKey.keepAwakeActiveIcon] as? String == KeepAwakeActiveIcon.chikit.rawValue,
+               "keep-awake active icon defaults to the Chikit glyph")
+        expect(registeredDefaults[DefaultsKey.keepAwakeMouseJiggleEnabled] as? Bool == false,
+               "Keep Awake mouse movement is opt-in")
+        expect(registeredDefaults[DefaultsKey.keepAwakeMouseJiggleInterval] as? Int == 5,
+               "Keep Awake mouse movement defaults to five minutes")
+        expect(Defaults.sanitizedKeepAwakeMouseJiggleInterval(10) == 10,
+               "valid Keep Awake mouse movement interval is preserved")
+        expect(Defaults.sanitizedKeepAwakeMouseJiggleInterval(3) == 5,
+               "invalid Keep Awake mouse movement interval falls back to five minutes")
+        expect(Defaults.sanitizedKeepAwakeIconTint("pink") == .pink,
+               "valid keep-awake active icon tint is preserved")
+        expect(Defaults.sanitizedKeepAwakeIconTint("bad") == .orange,
+               "invalid keep-awake active icon tint falls back to orange")
+        expect(Defaults.sanitizedKeepAwakeActiveIcon("coffee") == .coffee,
+               "valid keep-awake active icon is preserved")
+        expect(Defaults.sanitizedKeepAwakeActiveIcon("bad") == .chikit,
+               "invalid keep-awake active icon falls back to the Chikit glyph")
+        expect(KeepAwakeActiveIcon.eye.systemSymbolName == "eye.fill",
+               "keep-awake eye option maps to its menu bar symbol")
+        expect(!KeepAwakeAutomationSupport.hasExternalDisplay(builtInFlags: []),
+               "no online display does not count as an external display")
+        expect(!KeepAwakeAutomationSupport.hasExternalDisplay(builtInFlags: [true]),
+               "the built-in screen does not count as an external display")
+        expect(KeepAwakeAutomationSupport.hasExternalDisplay(builtInFlags: [true, false]),
+               "an online non-built-in screen counts as an external display")
+        let combinedKeepAwakeConditions = KeepAwakeAutomationSupport.matchingConditions(
+            externalDisplayEnabled: true,
+            externalDisplayConnected: true,
+            powerEnabled: true,
+            connectedToPower: true
+        )
+        expect(combinedKeepAwakeConditions == [.externalDisplay, .power],
+               "enabled Keep Awake conditions combine with OR behavior")
+        expect(KeepAwakeAutomationSupport.action(
+            featureAvailable: true,
+            matchingConditions: [.externalDisplay],
+            sessionActive: false,
+            automaticSessionActive: false
+        ) == .activate, "an external display starts the automatic session")
+        expect(KeepAwakeAutomationSupport.action(
+            featureAvailable: true,
+            matchingConditions: [],
+            sessionActive: true,
+            automaticSessionActive: true
+        ) == .deactivate, "clearing every matching condition ends the automatic session")
+        expect(KeepAwakeAutomationSupport.action(
+            featureAvailable: true,
+            matchingConditions: [],
+            sessionActive: true,
+            automaticSessionActive: false
+        ) == .none, "clearing automatic conditions does not end a manual session")
         let sleepDisabledReport = """
         System-wide power settings:
          SleepDisabled\t\t1
@@ -1208,11 +1280,23 @@ struct MetricsTests {
         Currently in use:
          standby              1
         """
+        expect(SudoersSupport.sleepDisabled(inPmsetOutput: sleepDisabledReport),
+               "a pmset report with SleepDisabled 1 reads as lid sleep disabled")
+        expect(!SudoersSupport.sleepDisabled(inPmsetOutput: sleepEnabledReport),
+               "a pmset report with SleepDisabled 0 reads as lid sleep enabled")
+        expect(!SudoersSupport.sleepDisabled(inPmsetOutput: ""),
+               "an empty pmset report reads as lid sleep enabled")
         // The rule is granted by uid so every short name works, including the
         // email-style ones SSO enrollment produces (#915). The uid renders as
         // bare digits and the rest is a fixed literal, so the whole line must
         // stay inside a character set that neither sudoers nor a single-quoted
         // shell string can read as anything but itself.
+        expect(SudoersSupport.clamshellRule(uid: 501)
+               == "#501 ALL=(root) NOPASSWD: /usr/bin/pmset disablesleep 1, /usr/bin/pmset disablesleep 0",
+               "the closed-lid sudoers rule grants pmset disablesleep to the uid")
+        expect(SudoersSupport.clamshellRule(uid: uid_t.max)
+               .range(of: #"^#[0-9]+ [A-Za-z0-9()=:,./ ]+$"#, options: .regularExpression) != nil,
+               "the closed-lid sudoers rule never contains shell or sudoers metacharacters")
         expect(SpaceHopSupport.isParkedOnHiddenSpace(windowSpaces: [4], visibleSpaces: [3]),
                "a window whose only Space is not visible is parked on a hidden Space")
         expect(!SpaceHopSupport.isParkedOnHiddenSpace(windowSpaces: [3], visibleSpaces: [3]),
@@ -1589,6 +1673,20 @@ struct MetricsTests {
                                                                metricItemsShown: 2, renderedTitleLength: 0,
                                                                mustShowForSignal: true),
                "a signal brings the main item back even in the separate-items mode")
+        expect(MenuBarSpacingSupport.needsTitleRefreshTimer(keepAwakeActive: true,
+                                                            showsCountdown: true,
+                                                            hasEndDate: true),
+               "a visible finite Keep Awake countdown owns the title timer")
+        expect(!MenuBarSpacingSupport.needsTitleRefreshTimer(keepAwakeActive: false,
+                                                             showsCountdown: true,
+                                                             hasEndDate: true)
+                && !MenuBarSpacingSupport.needsTitleRefreshTimer(keepAwakeActive: true,
+                                                                  showsCountdown: false,
+                                                                  hasEndDate: true)
+                && !MenuBarSpacingSupport.needsTitleRefreshTimer(keepAwakeActive: true,
+                                                                  showsCountdown: true,
+                                                                  hasEndDate: false),
+               "idle, hidden and indefinite Keep Awake titles need no timer")
         let statusPlacementSuite = "com.chikit.tests.statusItemPlacement"
         if let statusDefaults = UserDefaults(suiteName: statusPlacementSuite) {
             statusDefaults.removePersistentDomain(forName: statusPlacementSuite)
@@ -1616,6 +1714,8 @@ struct MetricsTests {
                    "bumpPlacementGeneration does not seed any hardcoded preferred position")
             statusDefaults.removePersistentDomain(forName: statusPlacementSuite)
         }
+        expect(registeredDefaults[DefaultsKey.panelShowKeepAwake] as? Bool == true,
+               "Keep Awake panel section is shown by default")
         expect(registeredDefaults[DefaultsKey.panelShowUtilities] as? Bool == true,
                "Utilities panel section is shown by default")
         expect(registeredDefaults[DefaultsKey.panelShowControls] as? Bool == true,
@@ -1982,6 +2082,8 @@ struct MetricsTests {
                "the window layout keys are silenced too, though they have no role")
         expect(silenced.contains(.finderRename),
                "the scoped Finder key steps aside while its recorder is listening")
+        expect(silenced.contains(.keepAwake) && silenced.contains(.clipboardHistory),
+               "the features that hold a global key are all in the silenced list")
         expect(silenced.allSatisfy { AppFeature.allCases.contains($0) },
                "the silenced list only names real features, so re-syncing them restores the keys")
         expect(registeredDefaults[DefaultsKey.panelUtilityCleaner] as? Bool == true,
@@ -4864,6 +4966,9 @@ struct MetricsTests {
 
         expect(GlobalShortcutRole.activeRoles(isOn: { _ in false }).isEmpty,
                "no enabled gates means no active shortcuts")
+        expect(GlobalShortcutRole.activeRoles(isOn: { $0 == DefaultsKey.hotkeyEnabled })
+                   == [.keepAwake],
+               "keep awake activates on its own gate alone")
         expect(!GlobalShortcutRole.activeRoles(isOn: { $0 == DefaultsKey.clipboardHistoryShortcutEnabled })
                    .contains(.clipboard),
                "the clipboard shortcut needs the feature on too")
@@ -5007,6 +5112,15 @@ struct MetricsTests {
         expect(!verticalPlacement.closesPanel
                 && verticalPlacement.frame.maxY == 472,
                "vertical avoidance moves settings below the panel with the standard gap")
+
+        let adminSource = AdminShell.appleScriptSource(
+            command: #"printf "quoted" \ path"#,
+            prompt: #"Approve "update" \ now"#)
+        expect(adminSource == #"do shell script "printf \"quoted\" \\ path" with administrator privileges with prompt "Approve \"update\" \\ now""#,
+               "administrator source keeps commands and prompts inside AppleScript strings")
+        var adminCompileError: NSDictionary?
+        expect(NSAppleScript(source: adminSource)?.compileAndReturnError(&adminCompileError) == true,
+               "administrator source compiles in process")
 
         let inProcessScript = AppleScriptRunner.run(
             #"do shell script "/usr/bin/printf admin-probe""#)
@@ -5622,6 +5736,11 @@ struct MetricsTests {
                    && !strings.mixerSoundEffectsOutputTitle.contains("—")
                    && !strings.mixerSoundEffectsOutputTooltip.contains("—"),
                    "\(prefix) system sound output labels are present without em dash")
+            expect(!strings.keepAwakeRightClickToggle.isEmpty
+                   && !strings.keepAwakeRightClickToggleCaption.isEmpty
+                   && !strings.keepAwakeRightClickToggle.contains("—")
+                   && !strings.keepAwakeRightClickToggleCaption.contains("—"),
+                   "\(prefix) right-click Keep Awake labels are present without em dash")
             expectFormat(strings.homebrewConfirmUninstallBodyFormat, ["@"], "\(prefix) Homebrew uninstall format")
             expect(!strings.diskAvailable.isEmpty
                    && !strings.diskPurgeable.isEmpty
@@ -5981,13 +6100,14 @@ struct MetricsTests {
         }
         // MARK: Features hub catalog
 
-        expect(AppFeature.allCases.count == 18, "feature catalog has 18 features")
+        expect(AppFeature.allCases.count == 19, "feature catalog has 19 features")
         expect(Set(AppFeature.allCases.map(\.rawValue)).count == AppFeature.allCases.count,
                "feature ids are unique")
         expect(AppFeature.allCases.map(\.rawValue) == [
             "windowLayout", "autoQuit",
             "clipboardHistory", "finderRename",
             "mixer", "soundOutputSwitcher",
+            "keepAwake",
             "cleaner", "uninstaller", "screenRecorder", "notchMediaControls", "fileConverter",
             "monitorCPU", "monitorGPU", "monitorMemory", "monitorNetwork", "monitorDisk", "monitorPower",
             "fanControl",
@@ -6026,6 +6146,12 @@ struct MetricsTests {
                 && AppFeature.fanControl.isBeta
                 && !AppFeature.monitorPower.isBeta,
                "fan control is an on-demand beta with no broad permission")
+        expect(AppFeature.keepAwake.energyProfile == .idle
+                && AppFeature.keepAwake.group == .energyDisplay
+                && AppFeature.keepAwake.enabledKeys.isEmpty
+                && AppFeature.keepAwake.permissions == [.accessibility]
+                && AppFeature.keepAwake.onboardingPermissions.isEmpty,
+               "Keep Awake is on demand, needs no enable key and asks for Accessibility only for mouse movement")
 
         // MARK: Hardware-gated installs
 
@@ -6420,6 +6546,10 @@ struct MetricsTests {
         ]
         expect(activeSet(.accessibility, on: [DefaultsKey.finderRenameEnabled]).contains(.finderRename),
                "the enabled Finder rename shortcut uses accessibility")
+        expect(activeSet(.accessibility, on: [DefaultsKey.keepAwakeMouseJiggleEnabled]).contains(.keepAwake),
+               "keep awake uses accessibility only with the mouse jiggle on")
+        expect(!activeSet(.accessibility).contains(.keepAwake),
+               "keep awake without jiggle does not use accessibility")
         expect(activeSet(.accessibility).contains(.screenRecorder),
                "the recorder uses accessibility for anonymous typing timing while active")
         expect(activeSet(.accessibility, on: [DefaultsKey.preciseVolumeRollerEnabled]).contains(.mixer),
@@ -6491,6 +6621,23 @@ struct MetricsTests {
                    "no em-dash in visible hub strings (\(language.rawValue))")
             expect(hub.activeCountFormat.contains("%1$d") && hub.activeCountFormat.contains("%2$d"),
                    "count format keeps positional specifiers (\(language.rawValue))")
+        }
+        for language in AppLanguage.allCases {
+            let keepAwakeAutomationValues = Mirror(
+                reflecting: FeatureStrings.keepAwakeAutomation(language)
+            ).children.compactMap { $0.value as? String }
+            expect(!keepAwakeAutomationValues.isEmpty
+                    && keepAwakeAutomationValues.allSatisfy { !$0.isEmpty },
+                   "every Keep Awake automation string is set for \(language.rawValue)")
+            expect(keepAwakeAutomationValues.allSatisfy { !$0.contains("—") },
+                   "no em-dash in Keep Awake automation strings (\(language.rawValue))")
+            let displaySleepValues = Mirror(
+                reflecting: FeatureStrings.keepAwakeDisplaySleep(language)
+            ).children.compactMap { $0.value as? String }
+            expect(displaySleepValues.count == 2 && displaySleepValues.allSatisfy { !$0.isEmpty },
+                   "every Keep Awake display sleep string is set for \(language.rawValue)")
+            expect(displaySleepValues.allSatisfy { !$0.contains("—") },
+                   "no em-dash in Keep Awake display sleep strings (\(language.rawValue))")
         }
         for language in AppLanguage.allCases {
             let clipboard = FeatureStrings.clipboard(language)
@@ -6594,6 +6741,10 @@ struct MetricsTests {
         expect(!pageVisible(.monitor, available: allFeatures.subtracting(Set(FeatureVisibilitySupport.monitorFeatures))),
                "monitor page hides with every metric off")
         expect(pageVisible(.monitor, available: [.monitorNetwork]), "one metric keeps the monitor page")
+        expect(!pageVisible(.energy, available: allFeatures.subtracting([.keepAwake])),
+               "energy hides when Keep Awake is off")
+        expect(pageVisible(.energy, available: [.keepAwake]),
+               "Keep Awake alone keeps the energy page")
         expect(pageVisible(.general, available: []) && pageVisible(.about, available: [])
                 && pageVisible(.shortcuts, available: []),
                "app pages never hide")
@@ -8037,6 +8188,8 @@ struct MetricsTests {
         // MARK: Settings backup
 
         let backupKeys = SettingsBackupSupport.exportKeys()
+        expect(backupKeys.contains(DefaultsKey.keepAwakeActiveIcon),
+               "backup carries the Keep Awake appearance")
         expect(backupKeys.contains(DefaultsKey.launchAtLoginWanted),
                "the launch at login choice travels with the settings backup")
         expect(backupKeys.contains(DefaultsKey.appearance),
@@ -9477,8 +9630,13 @@ struct MetricsTests {
                 && !uninstallerSource.contains("_ = Sudoers.pmsetDisableSleep"),
                "neither uninstall path discards the result of restoring sleep")
         expect(selfUninstallSource.contains("guard detachFromSystem() else")
-                && selfUninstallSource.contains("guard FanControlService.restoreAndUnregisterForRemoval() else"),
-               "in-app uninstall aborts unless fans are restored before removal")
+                && selfUninstallSource.contains("restoreSleepBeforeRemoval() -> Bool")
+                && selfUninstallSource.contains("guard FanControlService.restoreAndUnregisterForRemoval() else")
+                && selfUninstallSource.contains("adminPromptRecover")
+                && selfUninstallSource.contains("verification.status == 0"),
+               "in-app uninstall aborts unless fans and normal sleep are restored before removal")
+        expect(uninstallScriptSource.contains("SleepDisabled"),
+               "script uninstall reads the sleep setting back for itself")
 
         // MARK: Detached command reruns (counted last, so a late rerun still fails)
         // The `||` form reran the whole installer — as root — on every non-zero
